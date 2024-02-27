@@ -1,0 +1,72 @@
+%%% DOCUMENTCLASS 
+%%%-------------------------------------------------------------------------------
+
+\documentclass[
+a4paper, % Stock and paper size.
+11pt, % Type size.
+% article,
+% oneside, 
+%draft,
+onecolumn, % Only one column of text on a page.
+openright, % Each chapter will start on a recto page.
+% openleft, % Each chapter will start on a verso page.
+% openany, % A chapter may start on either a recto or verso page.
+]{memoir}
+
+\input{header.tex}
+
+\date{2024}
+\author{Tanguy Lefort, \\[.5cm] under the supervision of Benjamin Charlier, Alexis Joly and Joseph Salmon.\\[.5cm] }
+\title{Crowdsourcing something}
+
+
+\begin{document}
+
+\frontmatter
+
+\maketitle
+
+\thispagestyle{empty}
+\begin{abstract}
+The small abstract
+\end{abstract}
+\clearpage
+
+
+\input{chapters/abstract.tex}
+\input{chapters/glossary.tex}
+\input{chapters/remerciements.tex}
+
+\clearpage
+
+\begingroup
+\setlength\afterchapskip{2cm}
+
+\tableofcontents*
+\endgroup
+\clearpage
+
+\mainmatter
+
+\import{chapters}{introduction.tex}
+\import{chapters}{waum.tex}
+\import{chapters}{peerannot.tex}
+\import{chapters}{plantnet.tex}
+\import{chapters}{conclusion.tex}
+
+\appendix
+
+\import{chapters}{introduction_french.tex}
+\import{chapters}{appendix.tex}
+\backmatter
+
+
+\chapter*{List of publications}
+
+\bibliographystyle{apalike}
+%%% BIBLIOGRAPHY
+%%% -------------------------------------------------------------
+
+\bibliography{biblio}
+
+\end{document}
