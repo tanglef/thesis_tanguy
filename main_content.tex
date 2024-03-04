@@ -14,7 +14,8 @@ openright, % Each chapter will start on a recto page.
 ]{memoir}
 
 \input{header.tex}
-
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
 \date{2024}
 \author{Tanguy Lefort, \\[.5cm] under the supervision of Benjamin Charlier, Alexis Joly and Joseph Salmon.\\[.5cm] }
 \title{Label ambiguity in crowdsourcing for classification and expert feedback}
@@ -59,9 +60,6 @@ Small abstract
 \import{chapters}{introduction_french.tex}
 \import{chapters}{appendix.tex}
 \backmatter
-
-
-\chapter*{List of publications}
 
 \bibliographystyle{apalike}
 %%% BIBLIOGRAPHY

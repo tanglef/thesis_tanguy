@@ -254,6 +254,7 @@ Note that we use the index notation $i$ for the tasks and $j$ for the workers in
 \begin{figure}[ht]
     \centering
     \includegraphics[width=\textwidth]{chapters/images/strategies_crowd_data.pdf}
+    \caption{pipleine of crowdsourcing experiments. The data is collected. We identify poorly performing workers and/or ambiguous tasks. Then labels are aggregated to be used in a supervised learning setting. If the tasks are available and the goal is to learn a predictor, deep-learning-based strategies can be used to learn the confusion model and the classifier at the same time.}
     \label{fig:pipeline_crowdsourcing}
 \end{figure}
 
@@ -640,23 +641,13 @@ Throughout this thesis, we evaluate our results using different metrics dependin
 
 There are few crowdsourced datasets openly available online that released both the votes $\{y_i^{(j)}\}_{i,j}$ with the tasks $(x_i)_i$, and with a (partial) ground truth to evaluate from.
 We present here three of them that are often used in the literature.
-The \texttt{CIFAR-10H} \citep{peterson_human_2019}dataset has been proposed to reflect human perceptual uncertainty in (a subpart of) the classical \texttt{CIFAR-10} dataset.
+The \texttt{CIFAR-10H} \citep{peterson_human_2019} dataset has been proposed to reflect human perceptual uncertainty in (a subpart of) the classical \texttt{CIFAR-10} dataset.
 Each worker has annotated a large number of (seemingly easy) tasks, thus leading to few disagreements.
-The \texttt{LabelMe} and \texttt{Music} datasets \citep{rodrigues2017learning} have very few votes per task, leading to more ambiguous vote distributions.
+The \texttt{LabelMe} and \texttt{Music} datasets \citep{rodrigues2014gaussian, rodrigues2017learning} have very few votes per task, leading to more ambiguous vote distributions.
 
 \subsubsection{The \texttt{CIFAR-10H} dataset}
 \label{subsubsec:cifar-10h_dataset}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{figure}[thb]
-    \centering
-    \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_CIFAR-10H}\label{subfig:cifar10h_feedback_effort}}
-    \subfloat[Load per worker distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_workerload_CIFAR-10H}\label{subfig:cifar10h_worker_load}}
-    \subfloat[Naive soft labels, entropy distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_entropy_CIFAR-10H}\label{subfig:cifar10h_entropy}}
-    \caption{\texttt{CIFAR-10H}: dataset visualization}
-    \label{fig:CIFAR-10H_dataset_visualization}
-\end{figure}
-
 Introduced by \citet{peterson_human_2019}, the crowdsourced dataset \texttt{CIFAR-10H} attempts to recapture the human labeling noise present when creating the dataset.
 We have transformed this dataset, mainly by creating a validation set.
 Hence, the training set for our version of \texttt{CIFAR-10H} consists of the first $9500$ test images from CIFAR-10, hence
@@ -669,20 +660,21 @@ Each worker labeled $200$ tasks (and was paid $\$1.50$ for that): $20$ for each 
 Answering time was also measured for each worker\footnote{Note that attention checks occurred every $20$ trial for each worker, for tasks whose labels were known.
 They have been removed from the dataset since the corresponding images are not available.}.
 The \texttt{CIFAR-10H} annotating effort is balanced: each task has been labeled by $50$ workers on average.
+\begin{figure}[thb]
+    \centering
+    \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_CIFAR-10H}\label{subfig:cifar10h_feedback_effort}} \hfill
+    \subfloat[Load per worker distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_workerload_CIFAR-10H}\label{subfig:cifar10h_worker_load}} \hfill
+    \subfloat[Naive soft labels, entropy distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_entropy_CIFAR-10H}\label{subfig:cifar10h_entropy}}
+    \caption{\texttt{CIFAR-10H}: dataset visualization}
+    \label{fig:CIFAR-10H_dataset_visualization}
+\end{figure}
+
+From \Cref{fig:CIFAR-10H_dataset_visualization}, we can see that the creation of a validation set leads to some (small) imbalances in the load per worker and feedback effort distribution.
+The entropy distribution peaks around $0$, meaning that the votes are not very ambiguous -- most tasks are easy to classify and workers agree.
 
 \subsubsection{The \texttt{LabelMe} dataset}
 \label{subsubsec:labelme}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% source: tanguy_phd/reproducible_paper/distribs.py
-\begin{figure}[thb]
-    \centering
-    \subfloat[Feedback effort per task]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_LabelMe}\label{subfig:labelme_feedback_effort}}
-    \subfloat[Load per worker distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_workerload_LabelMe}\label{subfig:labelme_worker_load}}
-    \subfloat[Naive soft labels, entropy distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_entropy_LabelMe}\label{subfig:labelme_entropy}}
-    \caption{\texttt{LabelMe}: dataset visualization}
-    \label{fig:LabelMe_dataset_visualization}
-\end{figure}
 
 Another real dataset in the crowdsourced image classification field that can be used is the \texttt{LabelMe} crowdsourced dataset created by \citet{rodrigues2018deep}.
 This dataset consists of $n_\text{task}=1000$ training images dispatched among $K=8$ classes:
@@ -694,26 +686,52 @@ This is a way sparser labeling setting than the \texttt{CIFAR-10H} dataset.
 
 Also, note that the \texttt{LabelMe} dataset has classes that overlap and thus lead to intrinsic ambiguities.
 This is the reason why the CoNAL strategy was introduced by \citet{chu2021learning}, see details in \Cref{subsec:conal}.
-For example, the classes \texttt{highway}, \texttt{insidecity}, \texttt{street} and \texttt{tallbuilding} (in rows) are overlapping for some tasks:
+For example, the classes \texttt{highway}, \texttt{insidecity}, \texttt{street} and \texttt{tallbuilding} are overlapping for some tasks:
 some cities have streets with tall buildings, leading to confusion.
+
+\begin{figure}[thb]
+    \centering
+    \subfloat[Feedback effort per task]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_LabelMe}\label{subfig:labelme_feedback_effort}} \hfill
+    \subfloat[Load per worker distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_workerload_LabelMe}\label{subfig:labelme_worker_load}} \hfill
+    \subfloat[Naive soft labels, entropy distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_entropy_LabelMe}\label{subfig:labelme_entropy}}
+    \caption{\texttt{LabelMe}: dataset visualization}
+    \label{fig:LabelMe_dataset_visualization}
+\end{figure}
+
+From \Cref{fig:LabelMe_dataset_visualization}, we can see that there are only up to three labels per task, leading to sparser votes per task.
+Most workers answered few tasks, leading to a peak in the load per worker distribution.
+There is also a vast consensus on tasks with a high peak for the entropy distribution near $0$. However, in this peak are also counted the tasks with only one label that the entropy can not separate.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The \texttt{Music} dataset}
 \label{subsubsec:music}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% source: tanguy_phd/reproducible_paper/distribs.py
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
+The goal of this classification task was to decide the genre of $ 30$-second musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
+The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop} and \texttt{reggae}.
+Each audio file was labeled by between $1$ and $7$ workers.
+To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
+Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
+
 \begin{figure}[thb]
     \centering
-    \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_Music}\label{subfig:music_feedback_effort}}
-    \subfloat[Load per worker distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_workerload_Music}\label{subfig:music_worker_load}}
+    \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_Music}\label{subfig:music_feedback_effort}}\hfill
+    \subfloat[Load per worker distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_workerload_Music}\label{subfig:music_worker_load}}\hfill
     \subfloat[Naive soft labels, entropy distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_entropy_Music}\label{subfig:music_entropy}}
     \caption{Music: dataset visualization}
     \label{fig:Music_dataset_visualization}
 \end{figure}
 
-\citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
-The goal of this classification task was to decide the genre of $30$ seconds musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
-The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop} and \texttt{reggae}.
-Each audio file was labeled by between $1$ and $7$ workers.
-To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
-Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
+From \Cref{fig:Music_dataset_visualization} we observe that each task received up to $7$ labels. Around $7.5\%$ of those tasks were annotated by a single worker. Hence the entropy can not be used to detect the ambiguity for them.
+Most workers labeled few tasks, and some outliers labeled more than $300$ music recordings.
+
+\subsection{List of publications}
+
+This thesis is supported by the following publications:
+\begin{itemize}
+    \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2022). Improve learning combining crowdsourced labels by weighting Areas Under the Margin. arXiv preprint arXiv:2209.15380.
+    \item Moreau, T., Massias, M., Gramfort, A., Ablin, P., Bannier, P. A., Charlier, B., \dots \& Vaiter, S. (2022). Benchopt: Reproducible, efficient and collaborative optimization benchmarks. Advances in Neural Information Processing Systems, 35, 25404-25421.
+    \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Peerannot: classification for crowdsourced image datasets with Python. Computo (SFDS)
+    \item Article MEE
+\end{itemize}

@@ -1,11 +1,11 @@
 
-%%% PACKAGES 
+%%% PACKAGES
 %%%------------------------------------------------------------------------------
 
 \usepackage[utf8x]{inputenc} % If utf8 encoding
 % \usepackage[lantin1]{inputenc} % If not utf8 encoding, then this is probably the way to go
 \usepackage[T1]{fontenc}    %
-\usepackage[round]{natbib} 
+\usepackage[round]{natbib}
 \usepackage[french,english]{babel} % English please
 \usepackage[final]{microtype} % Less badboxes
 
@@ -22,7 +22,7 @@
 
 %\usepackage{newtxmath}
 
-\usepackage{amssymb} 
+\usepackage{amssymb}
 \usepackage{amsmath,amssymb,mathtools,amsthm} % Math
 \usepackage{dsfont}
 %\renewcommand{\theta}{\uptheta}
@@ -44,6 +44,9 @@
 \usepackage{pgfplots}
 \usepackage{tikz,tkz-euclide}
 \usepackage{tikz-3dplot}
+\usepackage[edges]{forest}
+
+\definecolor{foldercolor}{RGB}{124,166,198}
 \usepackage[most]{tcolorbox}
 \usetikzlibrary{shapes.multipart,calc}
 \usetikzlibrary{decorations.markings}
@@ -58,6 +61,25 @@ boxrule=0pt,
 title={#1},
 }
 
+
+\tikzset{pics/folder/.style={code={%
+    \node[inner sep=0pt, minimum size=#1](-foldericon){};
+    \node[folder style, inner sep=0pt, minimum width=0.3*#1, minimum height=0.6*#1, above right, xshift=0.1*#1] at (-foldericon.west){};
+    \node[folder style, inner sep=0pt, minimum size=#1] at (-foldericon.center){};}
+    },
+    pics/folder/.default={20pt},
+    folder style/.style={draw=foldercolor!80!black,top color=foldercolor!40,bottom color=foldercolor}
+}
+
+\forestset{is file/.style={edge path'/.expanded={%
+        ([xshift=\forestregister{folder indent}]!u.parent anchor) |- (.child anchor)},
+        inner sep=1pt},
+    this folder size/.style={edge path'/.expanded={%
+        ([xshift=\forestregister{folder indent}]!u.parent anchor) |- (.child anchor) pic[solid]{folder=#1}}, inner ysep=0.6*#1},
+    folder tree indent/.style={before computing xy={l=#1}},
+    folder icons/.style={folder, this folder size=#1, folder tree indent=3*#1},
+    folder icons/.default={12pt},
+}
 \newenvironment{constructionbox}[1][]{
     \begin{eqbox}[#1]
  }{
@@ -72,13 +94,14 @@ title={#1},
 \usetikzlibrary{shapes.geometric}
 \usetikzlibrary{decorations.markings}
 \newcommand{\tl}[2]{\begin{tabular}{c} #1 \\ #2 \end{tabular} }
+\definecolor{lightgray}{gray}{.95}
 
 \usetikzlibrary{intersections, decorations.pathmorphing}
 
 \usepackage[outline]{contour}
 
 
-%\usepgfplotslibrary{external} 
+%\usepgfplotslibrary{external}
 %\tikzexternalize
 \usetikzlibrary{matrix}
 \usepgfplotslibrary{patchplots}
@@ -86,7 +109,7 @@ title={#1},
 \pgfplotsset{compat=1.11}
 \tikzset{>=stealth}
 
-\usepgfplotslibrary{external} 
+\usepgfplotslibrary{external}
 \tikzexternalize[prefix=tikz/]
 
 
@@ -143,7 +166,7 @@ title={#1},
     \BODY
     }%
   }
-  
+
   \newpage
   \mtcsetoffset{minitoc}{-2.0em}
   \renewcommand{\mtctitle}{Chapter \thechapter{} -- #1:}
@@ -163,7 +186,7 @@ title={#1},
     \BODY
     }%
   }
-  
+
   \newpage
   \vspace*{#2}
   \mtcsetoffset{minitoc}{-2.0em}
@@ -191,7 +214,7 @@ title={#1},
 
 
 
-%%% PAGE LAYOUT 
+%%% PAGE LAYOUT
 %%%------------------------------------------------------------------------------
 
 \setlrmarginsandblock{0.15\paperwidth}{*}{1} % Left and right margin
@@ -254,7 +277,7 @@ title={#1},
 \setlength{\absleftindent}{0.1\textwidth} % Width of abstract
 \setlength{\absrightindent}{\absleftindent}
 
-%%% HEADER AND FOOTER 
+%%% HEADER AND FOOTER
 %%%------------------------------------------------------------------------------
 
 \makepagestyle{standard} % Make standard pagestyle
@@ -303,8 +326,8 @@ title={#1},
 %%% TABLE OF CONTENTS
 %%%------------------------------------------------------------------------------
 
-\maxtocdepth{subsection} % Only parts, chapters and sections in the table of contents
-\settocdepth{subsection}
+% \maxtocdepth{subsection} % Only parts, chapters and sections in the table of contents
+% \settocdepth{subsection}
 
 \AtEndDocument{\addtocontents{toc}{\par}} % Add a \par to the end of the TOC
 
