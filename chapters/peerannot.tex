@@ -84,7 +84,7 @@ Crowdsourced datasets come in various forms. To store crowdsourcing datasets eff
 \caption{Template of a dataset folder in \texttt{peerannot}. Collected votes are in \texttt{answers.json}, all necessary information on the dataset are in \texttt{metadata.json}. Tasks are either in the \texttt{train}, \texttt{val} or \texttt{test} folders. \texttt{test} tasks are assumed to have an associated ground truth label.}
 \end{figure}
 
-The \texttt{answers.json} file stores the different votes for each task as described in \Cref{fig:toy-data}. This \texttt{.json} is the rosetta stone between the task IDs and the images. It contains the tasks’ id, the workers’s id and the proposed label for each given vote. Furthermore, storing labels in a dictionary is more memory-friendly than having an array of size $(n_{task}, n_{worker})$ and writing $y_i^{(j)}=-1$ when the worker $w_j$ did not see the task $x_i$ and $y_i^{(j)}\in[K]$ otherwise.
+The \texttt{answers.json} file stores the different votes for each task as described in \Cref{fig:toy-data}. This \texttt{.json} is the rosetta stone between the task IDs and the images. It contains the tasks' id, the workers's id and the proposed label for each given vote. Furthermore, storing labels in a dictionary is more memory-friendly than having an array of size $(n_{task}, n_{worker})$ and writing $y_i^{(j)}=-1$ when the worker $w_j$ did not see the task $x_i$ and $y_i^{(j)}\in[K]$ otherwise.
 
 \begin{figure}[htb]
 \centering
@@ -118,6 +118,7 @@ For both \texttt{CIFAR-10H} and \texttt{LabelMe}, the dataset was originally rel
 Other popular storage formats currently exist.
 For example, the \texttt{crowd-kit} \citep{CrowdKit2023} uses a dataframe where each row specifies the $3$-uplet $($task, worker, label$)$.
 This format is close to the \texttt{json} one, easily switchable between the two. However, it suffers from the redundancy of the task ID.
+More discussion on the \texttt{crowd-kit} library is available in \Cref{sec:benchopt}.
 
 The \texttt{LabelMe} dataset labels are stored in a dense matrix of size $(n_{\text{task}}, n_{\text{worker}})$, where each entry is the label given by the worker for the task. This format is not memory efficient for a large number of tasks or workers. Especially if workers do not get to label all tasks.
 
@@ -572,6 +573,13 @@ $ peerannot identify ./datasets/cifar10H/ -K 10 \
 
 The entropy, GLAD's difficulty, and WAUM's difficulty each show different images as exhibited in the interactive Figure. While the entropy and GLAD output similar tasks, in this case, the WAUM often differs. We can also observe an ambiguity induced by the labels in the \texttt{truck} category in \Cref{fig:identfication_c10h}, with the presence of a trailer that is technically a mixup between a \texttt{car} and a \texttt{truck}.
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.8\textwidth]{./images_peerannot/labelme_identification.pdf}
+    \caption{Most difficult tasks sorted by class from MV aggregation identified depending on the strategy used (entropy, GLAD or WAUM) using a VGG-16 model with two dense layers. We only display the \texttt{opencountry} class. All class results are available interactively in the main paper at \url{https://tanglef.github.io/computo_2023}.}
+    \label{fig:identfication_labelme}
+\end{figure}
+
 \paragraph{Results on the \texttt{LabelMe} dataset.}
 
 As for the $\texttt{LabelMe}$ dataset, one difficulty in evaluating tasks' intrinsic difficulty is that there is a limited amount of votes available per task.
@@ -584,13 +592,229 @@ The MV is also not suited in this case because of the low number of votes per ta
 
 The underlying difficulty of these tasks mainly comes from the overlap in possible labels. For example, \texttt{tallbuildings} are most often found \texttt{insidecities}, and so are \texttt{streets}. In the \texttt{opencountry} we find \texttt{forests}, river-\texttt{coasts} and \texttt{mountains}.
 
+\subsubsection{Identification of worker reliability}
 
+From the labels, we can explore different worker evaluation scores.
+GLAD's strategy estimates a reliability scalar coefficient $\alpha_j$ per worker.
+With strategies looking to estimate confusion matrices, we investigate two scoring rules for workers:
+\begin{itemize}
+    \item The trace of the confusion matrix: the closer to $K$ the better the worker.
+    \item The closeness to spammer metric \citep{raykar_ranking_2011} (also called spammer score) that is the Frobenius norm between the estimated confusion matrix $\hat{\pi}^{(j)}$ and the closest rank-$1$ matrix. The further to zero the better the worker. On the contrary, the closer to zero, the more likely it is for the worker to be a spammer. This score separates spammers from common workers and experts (with profiles as presented in \Cref{fig:confusionmatrix}).
+\end{itemize}
+
+When the tasks are available, confusion-matrix-based deep learning models can also be used.
+We thus add to the comparison the trace of the confusion matrices with CrowdLayer and CoNAL on the $\texttt{LabelMe}$ datasets.
+For CoNAL, we only consider the trace of the confusion matrix $\pi^{(j)}$ in the pairwise comparison.
+Moreover, for CrowdLayer and CoNAL we show in \Cref{fig:abilitieslabelme} the weights learned without the softmax operation by row to keep the comparison as simple as possible with the actual outputs of the model.
+
+Comparisons in \Cref{fig:abilitiescifarh} and \Cref{fig:abilitieslabelme} are plotted pairwise between the evaluated metrics.
+Each point represents a worker.
+Each off-diagonal plot shows the joint distribution between the scores of the y-axis row and the x-axis column.
+They allow us to visualize the relationship between these two variables.
+The main diagonal represents the (smoothed) marginal distribution of the score of the considered column.
+
+\paragraph{Results on CIFAR-10H workers.}
+
+The $\texttt{CIFAR-10H}$ dataset has few disagreements among workers.
+However, these strategies disagree on the ranking of good against best workers as they do not measure the same properties.
+We can use \texttt{peerannot} as shown in \Cref{lst:peeranot_identify_c10h_workers} to identify worker reliability on the $\texttt{CIFAR-10H}$ dataset with different strategies.
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
+! peerannot aggregate ./datasets/cifar10H/ -s GLAD
+for method in ["trace_confusion", "spam_score"]:
+    ! peerannot identify ./datasets/cifar10H/ \
+                    --n-classes=10 \
+                    -s {method} \
+                    --labels ./datasets/cifar10H/answers.json
+\end{minted}
+\caption{Command to identify worker reliability on the \texttt{CIFAR-10H} dataset using \texttt{peerannot}.}
+\label{lst:peeranot_identify_c10h_workers}
+\end{listing}
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=.8\textwidth]{./images_peerannot/fig-abilitiescifarh-output-1.pdf}
+    \caption{Comparison of ability scores by workers for the CIFAR-10H dataset. All metrics computed identify the same poorly performing workers. A mass of good and expert workers can be seen as the dataset presents few disagreements, thus few data to discriminate expert workers from the others.}
+    \label{fig:abilitiescifarh}
+\end{figure}
+
+From \Cref{fig:abilitiescifarh}, we can see that in this dataset, different methods easily separate the worst workers from the rest of the crowd (workers in the left tail of the distribution).
+Note that as different metrics investigate different properties, the best workers are not the same depending on the method used.
+However, overall all strategies agree on the worst workers in this case.
+
+\paragraph{Results on LabelMe workers.}
+Finally, let us evaluate workers for the $\texttt{LabelMe}$ dataset.
+Because of the lack of data (up to 3 labels per task), ranking workers is more difficult than in the $\texttt{CIFAR-10H}$ dataset.
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=.95\textwidth]{./images_peerannot/fig-abilities-labelme-output-1.pdf}
+    \caption{With few labels per task, workers are more difficult to rank. It is more difficult to separate workers with their abilities in this crowd. Hence the importance of investigating the generalization performance of the methods presented in the previous section.}
+    \label{fig:abilitieslabelme}
+\end{figure}
+
+We can see in \Cref{fig:abilitieslabelme} that the number of labels available by task highly impacts the worker evaluation scores.
+The spam score, DS model and CoNAL all show similar results in the distribution shape (bimodal distribution) whereas GLAD and CrowdLayer are more concentrated.
+However, this does not account for the ranking of a given worker by the methods considered.
+The exploration of the dataset lets us look at different scores, but generalization performance presented in \Cref{subsec:learning_peerannot} should also be considered in crowdsourcing.
+This difference in worker evaluation scores indeed further highlights the importance of using multiple test metrics to compare the model's prediction performance in crowdsourcing.
+Poorly performing workers could be removed from the dataset with naive strategies like MV or NS.
+However, some label aggregation strategies like DS or GLAD can sometimes use adversarial votes as information -- for example in binary classification, with a worker answering always the opposite label the confusion matrix retrieves the true label.
+We have seen that the library \texttt{peerannot} allows users to explore the datasets, both in terms of tasks and of workers, and easily compare predictive performance in this setting.
+
+In practice, the data exploration step can be used to detect possible ambiguities in the dataset's tasks, but also remove answers from spammers to improve the data quality as shown in \Cref{fig:pipeline_crowdsourcing}.
+The easy access to the different strategies allows the user to decide if, for their collected dataset, there is a need for more recent deep-learning-based strategies to improve the results.
+This is the case for the $\texttt{LabelMe}$ dataset.
+Otherwise, the user can decide that standard aggregation-based crowdsourcing strategies are sufficient and for example, if there are plenty of votes per task like in $\texttt{CIFAR-10H}$, that the entropy of the vote distribution is a criterion that identified enough ambiguous tasks for their case.
+As often, not a single strategy works best for all datasets, hence the need to perform easy comparisons with \texttt{peerannot}.
+
+\subsection{Case study with bird sound classification}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.95\textwidth]{./chapters/images_peerannot/fig-birdsrep-output-1.pdf}
+    \caption{Distribution of the number of tasks given per worker (left) and of the number of labels per task (right) in the Audio Birds letters dataset.}
+    \label{fig:birdsrep}
+\end{figure}
+We shared our results on the classical CIFAR-10H and LabelMe datasets.
+More recently, \citet{lehikoinen2023successful} developed a platform for bird sound classification.
+They released the data for the following crowdsourcing experiment.
+Given the sample of the audio of a species (denoted as a letter on their web portal), users were presented with a new audio sample (the candidate).
+The question is as follows: \emph{"Is the species vocalizing in the candidate the same as the species in the letter?"}
+The answer is a binary yes or no ($K=2$).
+In total, $n_{\text{worker}}=205$ workers labeled $n_{\text{task}}=79\, 592$ candidates.
+Each task received between $1$ and $77$ annotations.
+Workers answered between $1$ and $30\,759$ tasks (only one worker achieved that record, and $23\%$ of the workers answered $100$ tasks).
+There is no test set available as is in the original dataset.
+However, to have an idea of the level of performance of the label aggregation strategies, we use the fact that workers reported their level of expertise between $1$ and $4$.
+The latter corresponds to \emph{"I am a bird researcher or professional birdwatcher"}.
+This generates a test set of $13\,041$ tasks where the expert label is used as the current truth.
+This test set is only used to compute the $\mathrm{AccTrain}$ metric.
+Note that we do not perform deep-learning methods as the tasks of comparing the birds from two audio files and designing specific architectures to match this framework are out of the scope of this work.
+
+We then can run our aggregation strategies, and from @tbl-birds we see that strategies reach the same levels of label recovery, however naive they are. Indeed, most tasks have very few disagreements.
+Note that NS and MV performance difference comes from the random tie-breakers in case of equalities.
+
+\begin{table}[htbp]
+    \centering
+    \caption{AccTrain metric on simulated correlated mistakes considering classical feature-blind label aggregation strategies.}
+    \label{tab:accuracy_train_audiobirds}
+    \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \textbf{Method} & \textbf{MV} & \textbf{DS} & \textbf{GLAD} & \textbf{NS} \\
+    \hline
+    AccTrain & 0.954 	&0.946 &	0.950& 	0.960\\
+    \hline
+    \end{tabular}
+    \end{table}
+
+We can explore what tasks lead to the most disagreements depending on the entropy criterion or GLAD's difficulty-estimated latent variable.
+Using the entropy criterion, the most difficult tasks (highest entropy) and GLAD's difficulty, we recover the index of the most ambiguous tasks.
+As we work with audio files, we can listen to the most ambiguous tasks and see if they are indeed difficult to classify.
+Audio records of such identified tasks are made available at \url{https://tanglef.github.io/computo_2023/#case-study-with-bird-sound-classification}.
+
+\begin{itemize}
+    \item Entropy: we obtain the candidate \texttt{MRG18\_20180514\_000000\_203.mp3} that was to be compared with the letter \texttt{HLO15\_20180515\_021439\_31.mp3} (one worker agrees and another disagrees).
+    And the candidate \texttt{MRG24\_20180512\_000000\_437.mp3} that was to be compared with the letter \texttt{HLO12\_20180511\_150153\_42.mp3} (one worker agrees and another disagrees)
+    \item GLAD: we obtain the candidate \texttt{HLO04\_20180511\_034424\_15.mp3} that was to be compared with the letter \texttt{MRG11\_20180519\_000000\_506.mp3} (53 votes, 29 agreeing and 24 disagreeing). And the candidate \texttt{MRG27\_20180512\_000000\_597.mp3} that was to be compared with the letter \texttt{HLO01\_20180601\_080126\_30.mp3} (43 votes, 23 agreeing and 20 disagreeing).
+
+\end{itemize}
+In this dataset, a single task with two different votes has the highest entropy. GLAD's coefficient lets us explore tasks with multiple votes where workers were split.
+
+We can also explore the dataset from a worker's point of view and visualize workers' performance and how many are identified as poorly performing.
+This gives us an idea of the level of noise in the answers.
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=.85\textwidth]{./images_peerannot/fig-abilitiesbird-output-1.pdf}
+    \caption{Comparison of ability scores by workers for the birds audio dataset. Most workers do seem to perform similarly, with very little noise voluntarily induced.
+    }
+    \label{fig:abilitiesbirds}
+\end{figure}
+
+From \Cref{fig:abilitiesbirds}, we notice that very few workers are identified as spammers and that different worker identification strategies seem to perform similarly.
+This is consistent with the high level of agreement between workers in this dataset.
+
+One of the closing statements of \citet{lehikoinen2023successful} is \emph{"we learned lessons for how to better implement similar citizen science projects in the future"}.
+On one hand, identifying the most ambiguous tasks can help by saving only these tasks to the most expert workers and acquiring better data.
+On the other hand, combining the task difficulty with the worker ability performance metrics could help to create personal feeds of tasks to label and generate more worker participation.
+Finally, the label aggregation step can lead to training classifiers with better labels.
+We hope that allowing easy access thanks to the \texttt{peerannot} library to each of those steps can indeed help to better implement citizen science projects and use the collected data.
+
+\subsection{Conclusion on \texttt{peerannot}}
+We introduced \texttt{peerannot}, a library to handle crowdsourced datasets. This library enables both easy label aggregation and direct training strategies with classical state-of-the-art classifiers. The identification module of the library allows exploring the collected data from both the tasks and the workers' point of view for better scorings and data cleaning procedures.
+Our library also comes with templated datasets to better share crowdsourced datasets.
+Going beyond templating, it helps the crowdsourcing community to have openly accessible strategies to test, compare and improve to develop common strategies to analyze more and more common crowdsourced datasets.
+
+We hope that this library helps reproducibility in the crowdsourcing community and also standardizes training from crowdsourced datasets. New strategies can easily be incorporated into the open-source code available on GitHub\footnote{\url{https://github.com/peerannot/peerannot}}. Finally, as \texttt{peerannot} is mostly directed to handle classification datasets, one of our future works would be to consider other \texttt{peerannot} modules to handle crowdsourcing for object detection, segmentation and even worker evaluation in other contexts like peer-grading.
 
 \section{Benchmarking aggregation strategies with \texttt{Benchopt}}
 \label{sec:benchopt}
-XXX with Axel
-\subsection{What is \texttt{Benchopt}?}
-XXX take back the article a bit
 
-\subsection{Results with crowdsourcing real datasets}
-XXX Panoplie de datasets let's go sur les aggregations
+The \texttt{Benchopt} library is an open-source benchmarking tool for optimization algorithms.
+It is designed to provide a fair comparison of optimization algorithms on a wide range of problems.
+The machine learning community has created platforms to release datasets XXX, reproducibility challenges XXX and journals XXX  to counteract the reproducibility crisis XXX.
+However, the optimization community has not yet developed a standard benchmarking tool to compare optimization algorithms.
+This is where \texttt{Benchopt} comes in.
+
+\subsection{How does it work?}
+
+Starting from an input dataset $\mathcal{D}$ and an objective function $f$, the \texttt{Benchopt} library considers problems of the form:
+\[
+\argmin_{\theta\in\Omega} f(\theta, \mathcal{D},\Lambda) \enspace,
+\]
+where $\Lambda$ is a set of hyperparameters and $\Theta$ is the feasible set for $\theta$: the parameters in the objective.
+Following the iteration sequence $\{\theta_k\}_k$ generated by an optimization algorithm, the library computes the performance of the algorithm on the problem.
+Multiple objectives $f_1,f_2,\dots$ can be monitored.
+
+The library is designed to be modular and to allow easy integration of new optimization algorithms and new problems.
+It is not \texttt{scipy}-like an optimization module with a fixed set of methods, but rather a framework to compare them on a wide range of problems, add new ones and share them.
+
+\subsubsection{Workflow}
+
+Each benchmark is defined by three objects. Each of them is defined as a class object in the \texttt{benchopt} library:
+\begin{itemize}
+    \item An objective: the objective function to minimize (or maximize), its hyperparameters $\Lambda$ and the set of possible parameters $\Theta$. The objective defines the performance metrics to track along the optimization sequence.
+    \item Datasets: the data $\mathcal{D}$ to be used in the objective function. The dataset can be a simple toy dataset or a real-world dataset. It is defined separately from the objective to be modulable.
+    Datasets also define how to load and preprocess the data.
+    \item Solvers: the optimization algorithms to compare. Each solver is defined by its hyperparameters and outputs a sequence of parameters $\{\theta_k\}_k$.
+\end{itemize}
+
+\begin{figure}[htb]
+    \centering
+\begin{forest}
+    for tree={
+        font=\ttfamily,
+        grow'=0,
+    %     child anchor=west,
+    %     parent anchor=south,
+    %     anchor=west,
+        folder indent=.9em, folder icons,
+    edge=densely dotted,
+    % sep=10pt,
+                   }
+    [benchmark
+        [ $\ \text{datasets}$
+            [$\ \text{dataset1.py}$, is file]
+            [$\ \text{dataset2.py}$, is file]
+            [$\ \text{...}$, is file]
+        ]
+        [$\ \text{solvers}$
+            [$\ \text{solver1.py}$, is file]
+            [$\ \text{solver2.py}$, is file]
+            [$\ \text{...}$]
+        ]
+        [objective.py, is file]
+    ]
+\end{forest}
+\caption{Template of a benchmark folder in \texttt{Benchopt}.}
+\end{figure}
+
+
+\subsubsection{Iterations, steps and stopping criteria}
+
+\subsubsection{Examples on how to use it}
+
+
+\subsection{Case study: benchmarking label aggregation strategies in crowdsourcing}
+
