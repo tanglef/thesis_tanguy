@@ -29,7 +29,8 @@ openright, % Each chapter will start on a recto page.
 
 \thispagestyle{empty}
 \begin{abstract}
-Small abstract
+While classification datasets are composed of more and more data, the need for human expertise to label them is still present. Crowdsourcing platforms are a way to gather expert feedback at a low cost. However, the quality of these labels is not always guaranteed. In this thesis, we focus on the problem of label ambiguity in crowdsourcing. Label ambiguity has mostly two sources: the worker's ability and the task's difficulty. We first present a new indicator, the $\mathrm{WAUM}$ (Weighted Area Under the Magin), to detect ambiguous tasks given to workers. Based on the existing $\mathrm{AUM}$ in the classical supervised setting, this lets us explore large datasets while focusing on tasks that might require more relevant expertise or should be discarded from the actual dataset. We then present a new open-source Python library, PeerAnnot, that we developed to handle crowdsourced datasets in image classification. We created a benchmark in the Benchopt library to evaluate our label aggregation strategies for more reproducible results. Finally, we present a case study on the Pl@ntNet dataset, where we evaluate the current state of the platform's label aggregation strategy and propose ways to improve it. This setting with a large number of tasks, experts and classes is highly challenging for current crowdsourcing aggregation strategies. We report consistently better performance against competitors and propose a new aggregation strategy that could be used in the future to improve the quality of the Pl@ntNet dataset. We also release this large dataset of expert feedback that could be used to improve the quality of the current aggregation methods and provide a new benchmark.
+
 \end{abstract}
 \clearpage
 

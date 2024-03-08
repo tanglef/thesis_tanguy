@@ -41,7 +41,7 @@ For real datasets, \texttt{peerannot} is compatible with standard neural network
         \label{fig:pipeline_crowdsourcing_peerannot}
     \end{figure}
 
-\subsection{Identification, aggregation and learning}
+\subsection{Presenting the peerannot library usage}
 
 The \texttt{peerannot} library is available on \url{https://peerannot.github.io/} and can be installed using \texttt{pip}:
 \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
@@ -81,9 +81,10 @@ Crowdsourced datasets come in various forms. To store crowdsourcing datasets eff
             [answers.json, is file]
         ]
 \end{forest}
+\caption{Template of a dataset folder in \texttt{peerannot}. Collected votes are in \texttt{answers.json}, all necessary information on the dataset are in \texttt{metadata.json}. Tasks are either in the \texttt{train}, \texttt{val} or \texttt{test} folders. \texttt{test} tasks are assumed to have an associated ground truth label.}
 \end{figure}
 
-The \texttt{answers.json} file stores the different votes for each task as described in \Cref{fig:json}. This \texttt{.json} is the rosetta stone between the task IDs and the images. It contains the tasks’ id, the workers’s id and the proposed label for each given vote. Furthermore, storing labels in a dictionary is more memory-friendly than having an array of size $(n_{task}, n_{worker})$ and writing $y_i^{(j)}=-1$ when the worker $w_j$ did not see the task $x_i$ and $y_i^{(j)}\in[K]$ otherwise.
+The \texttt{answers.json} file stores the different votes for each task as described in \Cref{fig:toy-data}. This \texttt{.json} is the rosetta stone between the task IDs and the images. It contains the tasks’ id, the workers’s id and the proposed label for each given vote. Furthermore, storing labels in a dictionary is more memory-friendly than having an array of size $(n_{task}, n_{worker})$ and writing $y_i^{(j)}=-1$ when the worker $w_j$ did not see the task $x_i$ and $y_i^{(j)}\in[K]$ otherwise.
 
 \begin{figure}[htb]
 \centering
@@ -184,15 +185,12 @@ class NaiveSoft(CrowdModel):
 \label{listing:NS}
 \end{listing}
 
-
-\begin{listing}[!ht]
+\begin{listing}[H]
     \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
 class Dawid_Skene(CrowdModel):
     def __init__(self, answers, n_classes, **kwargs):
         super().__init__(answers)
-        self.n_classes = n_classes
-        self.n_workers = kwargs["n_workers"]
-        self.n_task = len(self.answers)
+        ...
 
     def get_crowd_matrix(self):
         ... # Convert json answers to tensor (task, worker, label)
@@ -215,6 +213,10 @@ class Dawid_Skene(CrowdModel):
         """
         ...
 
+\end{minted}
+\end{listing}
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
     def log_likelihood(self):
         ... # Compute the log likelihood of the model
 
@@ -244,8 +246,348 @@ class Dawid_Skene(CrowdModel):
 \end{listing}
 
 If a new user wants to add their strategy, they can follow the same structure and add it to the \texttt{peerannot} library. The strategy will then be available for all users to use through a pull request.
+Then, the \texttt{Benchopt} library can access it to provide comparisons with other strategies easily shared (see \Cref{sec:benchopt}).
+
+\subsection{Compare label aggregation strategies with simulated datasets}
+\label{subsec:simulated}
+
+Using the \texttt{peerannot} library, we can easily simulate crowdsourced answers for classification settings.
+Hereafter, we present two settings: one where workers answer independently, and another where mistakes are correlated.
+Another setting where the mistakes are dependent on the task's difficulty level is available in Appendix XXX.
+
+\subsubsection{Simulated independent mistakes}
+
+The independent mistakes setting considers that each worker $w_j$ answers follows a multinomial distribution with weights given at the row $y_i^\star$​ of their confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$ Each confusion row in the confusion matrix is generated uniformly in the simplex. Then, we make the matrix diagonally dominant (to represent non-adversarial workers) by switching the diagonal term with the maximum value by row. Answers are independent of one another as each matrix is generated independently and each worker answers independently of other workers. In this setting, the DS model is expected to perform better with enough data as we are simulating data from its assumed noise model.
+
+We simulate in \Cref{lst:indep_mistakes} $n_{\text{task}}=200$ tasks and $n_{\text{worker}}=30$ workers. The number of classes is $K=5$.
+Each task $x_i$ receives $|\mathcal{A}(x_i)|=10$ labels. With $200$ tasks and $30$ workers, asking for $10$ labels leads to around $\frac{200\times 10}{30}\simeq 67$ tasks per worker (with variations due to randomness in the assignations as seen in \Cref{fig:desc_independent}). Note that in practice achieving this result is not straightforward as workers can not label $67$ images without specific motivation (games, money rewards, \textit{etc.}).
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
+$ peerannot simulate --n-worker=30 --n-task=200  --n-classes=5 \
+                     --strategy independent-confusion \
+                     --feedback=10 --seed 0 \
+                     --folder ./simus/independent
+    \end{minted}
+    \caption{Simulation of independent mistakes in \texttt{peerannot}.}
+    \label{lst:indep_mistakes}
+\end{listing}
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=\textwidth]{./images_peerannot/fig-simu1-output-1.pdf}
+    \caption{Distribution of the number of tasks given per worker (left) and number of labels per task (right) in the independent mistakes setting.}
+    \label{fig:desc_independent}
+\end{figure}
+
+With the obtained answers, we can look at the aforementioned aggregation strategies' performance. The \texttt{peerannot aggregate} command takes as input the path to the data folder and the aggregation strategy \texttt{-{}-strategy/-s}. Other arguments are available and described in the \texttt{-{}-help} description.
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
+for strat in [
+    "MV", "NaiveSoft", "DS", "GLAD", "DSWC[L=5]", "DSWC[L=10]"
+    ]:
+  ! peerannot aggregate ./simus/independent/ -s {strat}
+    \end{minted}
+    \caption{Running aggregation on the independent mistakes generated dataset.}
+    \label{lst:indep_mistakes_agg}
+\end{listing}
+
+\begin{table}[htbp]
+    \centering
+    \caption{AccTrain metric on simulated independent mistakes considering classical feature-blind label aggregation strategies.}
+    \label{tab:accuracy_train_indep}
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
+    \hline
+    AccTrain & 0.765 & 0.775 & 0.890 & 0.775 & 0.770 & 0.760 \\
+    \hline
+    \end{tabular}
+    \end{table}
+
+As expected by the simulation framework, \Cref{tab:accuracy_train_indep} fits the DS model, thus leading to better accuracy in retrieving the simulated labels for the DS strategy. The MV and NS aggregations
+
+\paragraph*{Remark.} \texttt{peerannot} can also simulate datasets with an imbalanced number of votes chosen uniformly at random between $1$ and the number of workers available. For example:
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
+$ peerannot simulate --n-worker=30 --n-task=200  --n-classes=5 \
+                     --strategy independent-confusion \
+                     --imbalance-votes \
+                     --seed 0 \
+                     --folder ./simus/independent-imbalanced/
+    \end{minted}
+    \caption{Simulation of independent mistakes in \texttt{peerannot} with an imbalance in the number of votes per task.}
+    \label{lst:indep_mistakes_simu_imb}
+\end{listing}
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=\textwidth]{./images_peerannot/fig-simu2-output-1.pdf}
+    \caption{Distribution of the number of tasks given per worker (left) and the number of labels per task (right) in the independent mistakes setting with voting imbalance enabled.}
+    \label{fig:desc_independent_imbalance}
+\end{figure}
+
+With the obtained answers, we can look at the aforementioned aggregation strategies performance:
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
+for strat in [
+    "MV", "NaiveSoft", "DS", "GLAD", "DSWC[L=5]", "DSWC[L=10]"
+    ]:
+  ! peerannot aggregate ./simus/independent-imbalanced/ -s {strat}
+    \end{minted}
+    \caption{Running aggregation on the independent mistakes generated dataset.}
+    \label{lst:indep_mistakes_agg_imbalance}
+\end{listing}
+
+\begin{table}[htbp]
+    \centering
+    \caption{AccTrain metric on simulated independent mistakes, with votes imbalance, considering classical feature-blind label aggregation strategies.}
+    \label{tab:accuracy_train_indep}
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
+    \hline
+    AccTrain & 0.830 &	0.810 &	0.895 	&0.845& 	0.840 &	0.830\\
+    \hline
+    \end{tabular}
+    \end{table}
+
+While more realistic, working with an imbalanced number of votes per task can lead to disrupting orders of performance for some strategies (here GLAD is outperformed by other strategies).
+
+\subsubsection{Simulated correlated mistakes}
+The correlated mistakes are also known as the student-teacher or junior-expert setting \citep{maxmig}. Consider that the crowd of workers is divided into two categories: teachers and students (with $n_{\text{teacher}} + n_{\text{student}}=n_{\text{worker}}$). Each student is randomly assigned to one teacher at the beginning of the experiment. We generate the (diagonally dominant as in @sec-simu-independent) confusion matrices of each teacher and the students share the same confusion matrix as their associated teacher. Hence, clustering strategies are expected to perform best in this context. Then, they all answer independently, following a multinomial distribution with weights given at the row $y_i^\star$ of their confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$.
+
+We simulate $n_{\text{task}}=200$ tasks and $n_{\text{worker}}=30$ with $80\%$ of students in the crowd. There are $K=5$ possible classes. Each task receives $\vert\mathcal{A}(x_i)\vert=10$ labels. And, with the obtained answers, we can look at the aforementioned aggregation strategies' performance:
+
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
+$ peerannot simulate --n-worker=30 --n-task=200  --n-classes=5 \
+                     --strategy student-teacher \
+                     --ratio 0.8 \
+                     --feedback=10 --seed 0 \
+                     --folder ./simus/student_teacher
+    \end{minted}
+    \caption{Simulation of independent mistakes in \texttt{peerannot} with an imbalance in the number of votes per task.}
+    \label{lst:corr_mistakes}
+\end{listing}
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=\textwidth]{./images_peerannot/fig-simu3-output-1.pdf}
+    \caption{Distribution of the number of tasks given per worker (left) and the number of labels per task (right) in the correlated mistakes setting. }
+    \label{fig:desc_correlated_mistakes}
+\end{figure}
+
+\begin{table}[htbp]
+    \centering
+    \caption{AccTrain metric on simulated correlated mistakes considering classical feature-blind label aggregation strategies.}
+    \label{tab:accuracy_train_corr}
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
+    \hline
+    AccTrain & 0.705 &	0.645 &	0.755 	&0.795 &0.815 	&0.690\\
+    \hline
+    \end{tabular}
+    \end{table}
+
+With \Cref{tab:accuracy_train_corr}, we see that with correlated data ($24$ students and $6$ teachers), using $5$ confusion matrices with DSWC[L=5] outperforms the vanilla DS strategy that does not consider the correlations.
+The best-performing method here estimates only $10$ confusion matrices (instead of $30$ for the vanilla DS model).
+
+To summarize our simulations, we see that depending on workers answering strategies, different latent variable models perform best.
+However, these are unknown outside of a simulation framework, thus if we want to obtain labels from multiple responses, we need to investigate multiple models.
+This can be done easily with \texttt{peerannot} as we demonstrated using the \texttt{aggregate} module.
+However, one might not want to generate a label, simply learn a classifier to predict labels on unseen data. This leads us to another module part of \texttt{peerannot}.
+
+\subsubsection{More on confusion matrices in simulation settings}
+
+Moreover, the concept of confusion matrices has been commonly used to represent worker abilities.
+Let us remind that a confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$ of a worker $w_j$ is defined such that $\pi^{(j)}_{k,\ell} = \mathbb{P}(y_i^{(j)}=\ell\vert y_i^\star=k)$.
+These quantities need to be estimated since no true label is available in a crowd-sourced scenario.
+In practice, the confusion matrix of each worker is estimated via an aggregation strategy like Dawid and Skene's \citep{dawid_maximum_1979} presented in \Cref{sub:aggregating_votes}.
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=\textwidth]{./images_peerannot/fig-confusionmatrix-output-1.pdf}
+    \caption{Three types of profiles of worker confusion matrices simulated with \texttt{peerannot}. The spammer answers independently of the true label. Expert workers identify classes without mistakes. In practice common workers are good for some classes but might confuse two (or more) labels. All workers are simulated using the \texttt{peerannot simulate} command. }
+    \label{fig:confusionmatrix}
+\end{figure}
+In \Cref{fig:confusionmatrix},  we illustrate multiple workers' profiles (as reflected by their confusion matrix) on a simulated scenario where the ground truth is available. For that, we generate toy datasets with the \texttt{simulate} command from \texttt{peerannot}.
+In particular, we display a type of worker that can hurt data quality: the spammer.
+\Citet{raykar_ranking_2011} defined a spammer as a worker that answers independently of the true label:
+\begin{equation}\label{eq:spammer2}
+    \forall k\in[K],\ \mathbb{P}(y_i^{(j)}=k|y_i^\star) = \mathbb{P}(y_i^{(j)}=k)\enspace.
+\end{equation}
+
+Each row of the confusion matrix represents the label's probability distribution given a true label. Hence, the spammer has a confusion matrix with near-identical rows.
+Apart from the spammer, common mistakes often involve workers mixing up one or several classes.
+Expert workers have a confusion matrix close to the identity matrix.
+
+\subsection{Learning from crowdsourced tasks with \texttt{peerannot}}
+\label{subsec:learning_peerannot}
+
+The \texttt{peerannot} library has also integrated end-to-end learning strategies in the \texttt{aggregate-deep} module.
+Such strategies include CrowdLayer and CoNAL presented in \Cref{subsec:crowdlayer} and \Cref{subsec:conal}.
+
+Let us use \texttt{peerannot} to train a VGG-16 with two dense layers on the $\texttt{LabelMe}$ dataset. This model is called \texttt{modellabelme} in the \texttt{peerannot} library as this modification was introduced to reach state-of-the-art performance in \citet{chu2021learning}.
+Other models from the \texttt{torchvision} library can be used, such as Resnets, Alexnet \emph{etc.}
+The \texttt{aggregate-deep} command takes as input the path to the data folder, \texttt{-{}-output-name/-o} is the name for the output file, \texttt{-{}-n-classes/-K} the number of classes, \texttt{-{}-strategy/-s} the learning strategy to perform (\emph{e.g.}, CrowdLayer or CoNAL), the backbone classifier in \texttt{-{}-model} and then optimization hyperparameters for pytorch described with more details using the \texttt{peerannot aggregate-deep -{}-help} command as shown in \Cref{lst:learning_peerannot}.
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
+for strat in ["MV", "NaiveSoft", "DS", "GLAD"]:
+    !peerannot aggregate ./labelme/ -s {strat}
+    !peerannot train ./labelme -o labelme_${strat} \
+        -K 8 \
+        --labels=./labelme/labels/labels_labelme_${strat}.npy \
+        --model modellabelme \
+        --n-epochs 500 \
+        -m 50 -m 150 -m 250 --scheduler=multistep \
+        --lr=0.01 --num-workers=8 \
+        --pretrained \
+        --data-augmentation \
+        --optimizer=adam \
+        --batch-size=32 --img-size=224 \
+        --seed=1
+
+for strat in ["CrowdLayer", "CoNAL[scale=0]", "CoNAL[scale=1e-4]"]:
+    !peerannot aggregate-deep ./labelme \
+        -o labelme_${strat} \
+        --answers ./labelme/answers.json \
+        -s ${strat} \
+        --model modellabelme \
+        --pretrained \
+        --n-classes=8 \
+        --n-epochs=500 \
+        --lr=0.001 -m 300 -m 400 --scheduler=multistep \
+        --batch-size=228 --img-size=224 \
+        --optimizer=adam \
+        --num-workers=8 \
+        --data-augmentation \
+        --seed=1
+    \end{minted}
+    \caption{Command to learn from image classification tasks with crowdsourced labels using \texttt{peerannot}. Learning from tasks can be achieved by first aggregating labels, then, training a model. Or with end-to-end strategies calling the \texttt{aggregate-deep} command.}
+    \label{lst:learning_peerannot}
+\end{listing}
+
+\begin{table}[tbh]
+    \centering
+    \begin{tabular}{|l|c|c|}
+    \hline
+    \rowcolor{gray!20}
+    \textbf{Method} & \textbf{AccTest} & \textbf{ECE} \\
+    \hline
+    DS & 81.061 & 0.189 \\
+    MV & 85.606 & 0.143 \\
+    NS & 86.448 & 0.136 \\
+    CrowdLayer & 87.205 & 0.117 \\
+    GLAD & 87.542 & 0.124 \\
+    CoNAL[scale=0] & 88.468 & 0.115 \\
+    \cellcolor{green!20}CoNAL[scale=1e-4] & \cellcolor{green!20}88.889 & \cellcolor{green!20}0.112 \\
+    \hline
+    \end{tabular}
+    \caption{Generalization performance on LabelMe dataset depending on the learning strategy from the crowdsourced labels. The network used is a VGG-16 with two dense layers for all methods.}
+    \label{tav:perf-labelme}
+    \end{table}
+
+As we can see, CoNAL strategy performs best.
+In this case, it is expected behavior as CoNAL was created for the $\texttt{LabelMe}$ dataset.
+However, using \texttt{peerannot} we can look into \textbf{why modeling common confusion returns better results with this dataset}.
+To do so, we can explore the datasets from two points of view: worker-wise or task-wise in \Cref{subsec:exploration}.
+
+\subsection{Identifying tasks difficulty and worker abilities}
+\label{subsec:exploration}
+
+If a dataset requires crowdsourcing to be labeled, it is because expert knowledge is long and costly to obtain. In the era of big data, where datasets are built using web scraping (or using a platform like Amazon Mechanical Turk\footnote{\url{https://www.mturk.com/}}), citizen science is popular as it is an easy way to produce many labels.
+
+
+However, mistakes and confusion happen during these experiments.
+Sometimes involuntarily (\emph{e.g.,} because the task is too hard or the worker is unable to differentiate between two classes) and sometimes voluntarily (\emph{e.g.,} the worker is a spammer).
+
+Underlying all the learning models and aggregation strategies, the cornerstone of crowdsourcing is evaluating the trust we put in each worker depending on the presented task. And with the gamification of crowdsourcing \citep{plantgame2016,tinati2017investigation}, it has become essential to find scoring metrics both for workers and tasks to keep citizens in the loop so to speak.
+This is the purpose of the identification module in \texttt{peerannot}.
+
+Our test cases are both the $\texttt{CIFAR-10H}$ dataset and the $\texttt{LabelMe}$ dataset to compare the worker and task evaluation depending on the number of votes collected.
+Indeed, the $\texttt{LabelMe}$ dataset has only up to three votes per task whereas $\texttt{CIFAR-10H}$ accounts for nearly fifty votes per task.
+
+\subsubsection{Exploring tasks' difficulty}
+To explore the tasks' intrinsic difficulty, we propose to compare three scoring metrics:
+
+\begin{itemize}
+    \item the entropy of the NS distribution: the entropy measures the inherent uncertainty of the distribution to the possible outcomes. It is reliable with a big enough and not adversarial crowd. More formally:
+    $$
+    \forall i\in [n_{\text{task}}],\ \mathrm{Entropy}(\hat{y}_i^{NS}) = -\sum_{k\in[K]} (y_i^{NS})_k \log\left((y_i^{NS})_k\right) \enspace.
+    $$
+    \item GLAD's scoring: by construction, \citet{whitehill_whose_2009} introduced a scalar coefficient to score the difficulty of a task.
+    \item the Weighted Area Under the Margins (WAUM): introduced by \citet{lefort2022improve} and presented in \Cref{chap:waum}, this weighted area under the margins indicates how difficult it is for a classifier $\mathcal{C}$ to learn a task's label. This procedure is done with a budget of $T>0$ epochs. Given the crowdsourced labels and the trust we have in each worker denoted $s^{(j)}(x_i)>0$, the WAUM of a given task $x_i\in\mathcal{X}$ and a set of crowdsourced labels $\{y_i^{(j)}\}_j \in [K]^{|\mathcal{A}(x_i)|}$ is defined as:
+    $$\mathrm{WAUM}(x_i) := \frac{1}{|\mathcal{A}(x_i)|}\sum_{j\in\mathcal{A}(x_i)} s^{(j)}(x_i)\left\{\frac{1}{T}\sum_{t=1}^T  \sigma(\mathcal{C}(x_i))_{y_i^{(j)}} - \sigma(\mathcal{C}(x_i))_{[2]}\right\} \enspace,
+    $$
+    where we remind that $\mathcal{C}(x_i))_{[2]}$ is the second largest probability output by the classifier $\mathcal{C}$ for the task $x_i$.
+
+    The weights $s^{(j)}(x_i)$ are computed à la \citet{servajean2017crowdsourcing}:
+    $$
+    \forall j\in[n_\texttt{worker}], \forall i\in[n_{\text{task}}],\ s^{(j)}(x_i) = \left\langle \sigma(\mathcal{C}(x_i)), \mathrm{diag}(\pi^{(j)})\right\rangle \enspace,
+    $$
+    where $\hat{\pi}^{(j)}$ is the estimated confusion matrix of worker $w_j$ (by default, the estimation provided by DS).
+\end{itemize}
+
+The WAUM is a generalization of the AUM by \citet{pleiss_identifying_2020} to the crowdsourcing setting. A high WAUM indicates a high trust in the task classification by the network given the crowd labels. A low WAUM indicates difficulty for the network to classify the task into the given classes (taking into consideration the trust we have in each worker for the task considered). Where other methods only consider the labels and not directly the tasks, the WAUM directly considers the learning trajectories to identify ambiguous tasks. One pitfall of the WAUM is that it is dependent on the architecture used.
+
+Note that each of these statistics could prove useful in different contexts.
+The entropy is irrelevant in settings with few labels per task (small $|\mathcal{A}(x_i)|$). For instance, it is uninformative for $\texttt{LabelMe}$ dataset.
+The WAUM can handle any number of labels, but the larger the better. However, as it uses a deep learning classifier, the WAUM needs the tasks $(x_i)_i$ in addition to the proposed labels while the other strategies are feature-blind.
+
+\paragraph{Results on the \texttt{CIFAR-10H} dataset.}
+
+First, let us consider a dataset with a large number of tasks, annotations and workers: the $\texttt{CIFAR-10H}$ dataset by \citet{peterson_human_2019}.
+
+\begin{listing}[H]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
+$ peerannot identify ./datasets/cifar10H -s entropy -K 10 \
+                --labels ./   datasets/cifar10H/answers.json
+$ peerannot aggregate ./datasets/cifar10H/ -s GLAD
+$ peerannot identify ./datasets/cifar10H/ -K 10 \
+            --method WAUM \
+            --labels ./datasets/cifar10H/answers.json \
+            --model resnet34 \
+            --n-epochs 100 --lr=0.01 --img-size=32 \
+            --maxiter-DS=50 \
+            --pretrained
+
+    \end{minted}
+\caption{Command to identify ambiguous tasks on the \texttt{CIFAR-10H} dataset using \texttt{peerannot}.}
+\label{lst:peeranot_identify_c10h}
+\end{listing}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.8\textwidth]{./images_peerannot/c10h_identification.pdf}
+    \caption{Most difficult tasks sorted by class from MV aggregation identified depending on the strategy used (entropy, GLAD or WAUM) using a Resnet34. We only display the \texttt{truck} class. All class results are available interactively in the main paper at \url{https://tanglef.github.io/computo_2023}.}
+    \label{fig:identfication_c10h}
+\end{figure}
+
+The entropy, GLAD's difficulty, and WAUM's difficulty each show different images as exhibited in the interactive Figure. While the entropy and GLAD output similar tasks, in this case, the WAUM often differs. We can also observe an ambiguity induced by the labels in the \texttt{truck} category in \Cref{fig:identfication_c10h}, with the presence of a trailer that is technically a mixup between a \texttt{car} and a \texttt{truck}.
+
+\paragraph{Results on the \texttt{LabelMe} dataset.}
+
+As for the $\texttt{LabelMe}$ dataset, one difficulty in evaluating tasks' intrinsic difficulty is that there is a limited amount of votes available per task.
+Hence, the entropy in the distribution of the votes is no longer a reliable metric, and we need to rely on other models.
+
+Now, let us compare the tasks' difficulty distribution depending on the strategy considered using \texttt{peerannot}.
+Note that in this experiment, because the number of labels given per task is in $\{1,2,3\}$, the entropy only takes four values.
+In particular, tasks with only one label all have a null entropy, so not just consensual tasks.
+The MV is also not suited in this case because of the low number of votes per task.
+
+The underlying difficulty of these tasks mainly comes from the overlap in possible labels. For example, \texttt{tallbuildings} are most often found \texttt{insidecities}, and so are \texttt{streets}. In the \texttt{opencountry} we find \texttt{forests}, river-\texttt{coasts} and \texttt{mountains}.
+
+
 
 \section{Benchmarking aggregation strategies with \texttt{Benchopt}}
+\label{sec:benchopt}
 XXX with Axel
 \subsection{What is \texttt{Benchopt}?}
 XXX take back the article a bit
