@@ -27,7 +27,7 @@
 
 \section{Crowdsourcing in computer vision}
 
-Following the deep learning revolution, models with millions if not billions of parameters to optimize are trained nowadays, and to do so, we need to increase the size of our training datasets.
+Following the deep learning revolution, models with millions if not billions of parameters to optimize are trained nowadays. And to do so, we need to increase the size of our training datasets.
 The issue is, that in a training set in supervised classification (and we will mainly consider image classification for the rest of this work), the images need to come with a label to train from.
 While research has been conducted on inferring this label from the data itself, in the classical supervised learning datasets these labels have been collected and shared at some point during the creation of the dataset.
 
@@ -76,19 +76,27 @@ The project's birth began in 2008, released its first web application in 2011, m
     \label{fig:timeline-plantnet}
 \end{figure}
 
-The Pl@ntNet system can be interpreted as follows. A user records an observation (an image or group of images from the same plant) and asks for an identification.
-The current version of Pl@ntNet's computer vision model (referred to as the AI model and detailed in \Cref{chap:plantnet}) makes a prediction and outputs the most probable species.
-With these probabilities, similar observations with indicated species are shown to the user to help them make their decision.
+The Pl@ntNet system can be interpreted as follows. A user records an observation (an image or group of images from the same plant) and sends a query for identification.
+The current version of Pl@ntNet's computer vision model (referred to as Pl@ntNet's AI model and detailed in \Cref{chap:plantnet}) makes a prediction and outputs the most probable species.
 The user can then agree with the AI model, or input another species.
+With the predicted probabilities, similar observations with indicated species are shown to the user to help them make their decision.
+The observation is then shared (based on the user's consent) with the community and can be voted on by other users.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=.7\textwidth, clip, trim={0cm 0cm 0cm 2cm}]{chapters/images/cooperative learning Pl@ntNet schema.pdf}
+    \includegraphics[width=.65\textwidth, clip, trim={0cm 0cm 0cm 2cm}]{chapters/images/cooperative learning Pl@ntNet schema.pdf}
     \caption{Pl@ntNet pipeline from the observation taken in the field to the active training of the computer vision model.}
     \label{fig:pipeline-plantnet}
 \end{figure}
 
-\begin{figure}[tbh]
+Once the observation is registered, it can be revised at any time by other users.
+Currently, Pl@ntNet records over $50$K species, $6$M registered users and $21$M observations spread across $77$ floras.
+Over a billion image queries have been made, and the application has been downloaded over $10$M times on Google AppStore.
+In total, more than $22$M votes have been cast internationally.
+Each publicly shared observation presents, as in \Cref{fig:interface-plantnet} with an associated author, the current votes and the state of the current species determination.
+On the platform, users can vote for a malformed label, if the picture is about a leaf, a flower, a fruit, the bark, the habit or other. In this thesis, we only consider the species determination, not the other votes.
+
+\begin{figure}[H]
     \centering
     \begin{minipage}{.55\linewidth}
         \centering
@@ -103,19 +111,13 @@ The user can then agree with the AI model, or input another species.
     \label{fig:interface-plantnet}
 \end{figure}
 
-Once the observation is registered, it can be revised at any time by other users.
-Currently, Pl@ntNet records over $49$K species, $6$M registered users and $21$M observations.
-In total, more than $22$M votes have been cast internationally.
-Each publicly shared observation presents as in \Cref{fig:interface-plantnet} with an associated author, the current votes and the state of the current species determination.
-On the platform, users can vote for a malformed label, if the picture is about a leaf, a flower, a fruit, the bark, the habit or other. In this thesis, we only consider the species determination, not the other votes.
-
 When voting, users are shown the current computer vision prediction on the observation -- as shown in \Cref{fig:interface-ai}. This prediction influences users' votes, but also contains information.
 At the time of writing, Pl@ntNet's computer vision model is a DINOv2 \citep{oquab2024dinov2} transformer-based network.
 Using contrastive learning \citep{waida2023understanding} \emph{i.e.} representing similar images as close embedding to learn similar features for similar observations and then using supervised learning to finetune the model.
-Several transformations are performed during training such as data augmentation \citep{yang2023image}, data standardization and label smoothing \citep{muller2019does}.
 
-In \Cref{chap:plantnet}, we present the Pl@ntNet label aggregation strategy, but also how we can incorporate AI predictions into the label aggregation.
-Taking into account the AI vote is a delicate matter, as we don't want the AI to become overconfident in its prediction by taking into account mostly its predictions and discarding human votes.
+In \Cref{chap:plantnet}, we present the Pl@ntNet label aggregation strategy, but also how we can incorporate model predictions into the label aggregation.
+Taking into account the network's vote is a delicate matter, as we don't want the AI to become overconfident in its prediction by relying mostly on its predictions and discarding human votes.
+Human expertise being the main goal of the platform, we want to keep humans in the loop, especially botanical experts to keep improving end-users plant identifications.
 
 \subsection{Regarding ethics in crowdsourcing}
 \label{sub:ethics}
@@ -170,12 +172,14 @@ Previous work such as \citet{pirkkalainen2016two} identified four darkness pheno
 
 Within this thesis, we did not conduct any new crowdsourcing experiments.
 We used datasets from other research projects publicly available.
-The Pl@ntNet data collection process -- explained in \Cref{chap:plantnet} -- is a form of unpaid crowdsourcing where users know that their participation helps current research (explicit crowdsourcing, see \Cref{chap:history-crowdsourcing} for more details).
+The Pl@ntNet data collection process -- explained in \Cref{chap:plantnet} -- is a form of unpaid crowdsourcing where users know that their participation helps current research (known as explicit crowdsourcing, see \Cref{chap:history-crowdsourcing} for more details).
 
 \section{Problematic and thesis organization}
 
+\subsection{Organization of the thesis}
+
 In this thesis, we deal with image classification problems in crowdsourcing.
-The main problem we consider is: \emph{How to learn from crowdsourced labels?}
+The main setting we consider is: \emph{How to learn from crowdsourced labels?}
 As this is a large problem we want to focus on the data quality we learn our classifiers from, especially in a context with few labels given per task.
 The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, sinha2018fast,rodrigues2018deep,raykar_ranking_2011}, but very few models incorporate the tasks' difficulty \citep{whitehill_whose_2009, chu2021learning}.
 Moreover, when this difficulty is taken into account, it is often done without considering the actual images, only the answered labels \citep{whitehill_whose_2009}.
@@ -195,8 +199,12 @@ Our $\mathrm{WAUM}$ heavily relies on how easy it is for a model to learn the gi
 Furthermore, identifying possible ambiguous tasks lets us better explore large crowdsourced datasets and consider strategies to improve learning performance.
 In addition, the work of \citet{merler2004bias} and more recently \citet{pleiss_identifying_2020} show significant learning performance of models after pruning most unreliable tasks from the datasets.
 We show that similar improvements can be made in the crowdsourcing setting.
-In \cref{chap:peerannot}, we present our library \texttt{peerannot} to ease and standardize more how to deal with crowdsourced datasets in image classification.
-Finally, in \cref{chap:plantnet} we compare label aggregation strategies on a large subset of Pl@ntNet's database. We also investigate Pl@ntNet's current label aggregation strategy and how we could improve it using computer vision model predictions.
+In \cref{chap:peerannot}, we present our open-source \texttt{python} library \texttt{peerannot} to ease and standardize more how to deal with crowdsourced datasets in image classification.
+We handle label aggregation strategies, learning strategies and identification processes of ambiguous tasks and/or poorly performing workers.
+We also propose a framework to evaluate multiple datasets and aggregation strategies with the \texttt{Benchopt} framework.
+Finally, in \cref{chap:plantnet} we compare label aggregation strategies on a large subset of Pl@ntNet's south-western European database we released.
+This subset is challenging as it contains more than $6$ million tasks and over $800$ thousand workers with a large number of classes.
+We investigate Pl@ntNet's current label aggregation strategy performance and how we could improve it using the current computer vision model predictions.
 
 \subsection{Notation}
 
@@ -248,7 +256,7 @@ The final dataset can then be decomposed as:
 \end{equation}
 Note that we use the index notation $i$ for the tasks and $j$ for the workers in the crowdsourcing experiments.
 
-\subsection{Aggregating votes}
+\subsection{Existing label aggregation strategies}
 \label{sub:aggregating_votes}
 
 \begin{figure}[ht]
@@ -294,7 +302,7 @@ Another issue with the MV strategy is that by taking the mode of the votes' dist
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=.7\textwidth]{chapters/images/confusion_types.pdf}
+    \includegraphics[width=.96\textwidth]{chapters/images/ambiguity.pdf}
     \caption{Three different configurations where the MV strategy can lead to the same label. When there is consensus there is no ambiguity to select the label. However, ambiguities can happen differently. There can be ambiguities between all classes or between a subset of classes.}
     \label{fig:confusion-types}
 \end{figure}
@@ -310,7 +318,6 @@ In practice, the MV strategy is most often used as a baseline strategy.
 Note that some taskmasters improved majority vote accuracy using prevention systems that are not considered throughout this work.
 \citet{hoang2021tournesol} for example uses a vouching system where volunteer workers can be approved via specific institutional email domains.
 \citet{khattak_toward_2017} and \citet{peterson_human_2019} use trapping sets -- \emph{i.e.} separate set of tasks where a ground truth is known. This set is considered to evaluate worker abilities and identify poorly performing workers, or potential spammers. \citet{vuurens2011much} showed that these sets lead to still sensitive decisions regarding other types of spammers.
-% As seen in \Cref{subsub:mv} \Cpagerefrange{subsub:mv}{subsub:ns}
 
 \subsubsection{Naive Soft (NS)}
 \label{subsub:ns}
@@ -563,6 +570,14 @@ The posterior probability for the ground truth labels can be computed directly u
 \end{algorithmic}
 \end{algorithm}
 
+\paragraph*{Aggregations that are not considered}
+In this work, we do not consider modifying the data collection model, only the aggregation strategy.
+However, it is important to note that the data collection model can be modified to improve the quality of the labels.
+For example, \citet{khattak_toward_2017} uses trapping sets to evaluate workers and reweight their involvement in the final aggregation step.
+Other work such as \citet{chamberlain2018optimising} considers a validation process to improve crowdsourced data quality to balance the need for more labels. In opposition to the \textbf{Annotation Mode} on their platform \texttt{Phrase Detectives}, users have access to a \textbf{Validation Mode} where they can have access to tasks, and agree or disagree with answers.
+\citet{hoang2021tournesol} uses a vouching system where volunteer workers can be approved via specific institutional email domains.
+Aggregation strategies that rely on these data collection models are not considered in this work.
+
 \subsection{Integrating crowdsourcing in the neural network's architecture}
 In the era of deep learning, it is only expected to find new ways to introduce crowdsourcing into neural network architectures.
 Incorporating layers taking into account the crowd/tasks pairing in the architecture leads to a neural network able to be trained on crowdsourced data.
@@ -571,7 +586,7 @@ However, contrary to models seen in \Cref{sub:aggregating_votes}, these strategi
 We thus not only need the crowdsourced labels but also the associated tasks and a set of unseen data to validate/test the model on.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{CrowdLayer and its matrix weights strategy (MW)}
+\subsubsection{CrowdLayer and its matrix weights strategy (MW)-version}
 \label{subsec:crowdlayer}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -582,6 +597,8 @@ As multiple variants of CrowdLayer can exist, we only considered in this paper t
 Denoting $z=f(x_i)$ the output of the neural network classifier $f$ for a given task $x_i$ labeled by a worker $w_j$, the added layer multiplies $z$ by a matrix of weights $W^j \in\mathbb{R}^{K\times K}$.
 This matrix of weights per worker takes into account the local confusion of each worker.
 In practice, the forward pass $F$ on a task $x_i$ annotated by worker $w_j$ using CrowdLayer computes $F(x_i, w_j) = W^j\sigma(f(x_i))$.
+
+Also note that in practice, other CrowdLayer strategies are available (using a single scalar instead of a matrix for example) and that the MW strategy can be used with a regularization term to avoid overfitting on the workers' specificities \citep{tanoreg}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Common Noise Adaptation Layers (CoNAL)}
@@ -706,14 +723,6 @@ There is also a vast consensus on tasks with a high peak for the entropy distrib
 \subsubsection{The \texttt{Music} dataset}
 \label{subsubsec:music}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
-The goal of this classification task was to decide the genre of $ 30$-second musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
-The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop} and \texttt{reggae}.
-Each audio file was labeled by between $1$ and $7$ workers.
-To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
-Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
-
 \begin{figure}[thb]
     \centering
     \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_Music}\label{subfig:music_feedback_effort}}\hfill
@@ -722,6 +731,13 @@ Instead of working with the original audio files, we have used Mel spectrograms,
     \caption{Music: dataset visualization}
     \label{fig:Music_dataset_visualization}
 \end{figure}
+
+\citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
+The goal of this classification task was to decide the genre of $ 30$-second musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
+The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop} and \texttt{reggae}.
+Each audio file was labeled by between $1$ and $7$ workers.
+To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
+Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
 
 From \Cref{fig:Music_dataset_visualization} we observe that each task received up to $7$ labels. Around $7.5\%$ of those tasks were annotated by a single worker. Hence the entropy can not be used to detect the ambiguity for them.
 Most workers labeled few tasks, and some outliers labeled more than $300$ music recordings.
