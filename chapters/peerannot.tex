@@ -5,9 +5,9 @@
 \begin{keypointstwomargins}{Reproducible and open library}{-2cm}{-1cm}
         \textbf{Key points -- Community based data but what about codes\dots}
         \begin{enumerate}[leftmargin=*]
-        \item Reproducibility has been a demand from the scientific community. With crowdsourcing, the coupling of the label gathering step and the aggregation is key to create a classical supervised learning dataset. Different label aggregation strategies can lead to widely different results. Releasing publicly available datasets original version with collected labels would lead to better data quality.
+        \item Reproducibility has been a demand from the scientific community. With crowdsourcing, the coupling of the label-gathering step and the aggregation is key to creating a classical supervised learning dataset. Different label aggregation strategies can lead to widely different results. Releasing publicly available datasets' original version with collected labels would lead to better data quality.
         \item More than the data itself, as the crowdsourcing community is made of researchers with very diverse backgrounds, new models arise quickly. In multiple coding languages (if any) and with personalized data formats. We need formatting propositions that can handle large datasets, are easily accessible and understandable.
-        \item Aggregation strategies are often EM-based with a two steps procedure repeated. While performance is an important decision factor in using one strategy over another, how much time they take to run is essential. Especially with large datasets, we find memory scaling issues or a time complexity that forbids usage in applications.
+        \item Aggregation strategies are often EM-based with a two-step procedure repeated. While performance is an important decision factor in using one strategy over another, how much time it takes to run is essential. Especially with large datasets, we find memory scaling issues or a time complexity that forbids usage in applications.
         \end{enumerate}
 
         \textbf{Contributions -- peerannot and BenchOpt}
@@ -155,9 +155,9 @@ It inherits from the \texttt{CrowdModel} class template and is defined with at l
 \paragraph{Example of a label aggregation strategy.}
 
 For example, let us consider minimal working examples (MWE) for the \texttt{NS} and the \texttt{DS} strategies.
-The first in \Cref{listing:NS} is a non-parametric strategy without any optimization algorithm, and the second in \Cref{listing:DS} is an EM-based parametric strategy.
+The first in \Cref{listing:NS} is a non-parametric strategy without any optimization algorithm, and the second in \Cref{listing:DS} in \Cref{chap:app-peerannot} is an EM-based parametric strategy.
 
-\begin{listing}[!ht]
+\begin{listing}[ht]
 \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
 from ..template import CrowdModel
 import numpy as np
@@ -184,66 +184,6 @@ class NaiveSoft(CrowdModel):
 \end{minted}
 \caption{MWE for the NS label aggregation in \texttt{peerannot}.}
 \label{listing:NS}
-\end{listing}
-
-\begin{listing}[H]
-    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
-class Dawid_Skene(CrowdModel):
-    def __init__(self, answers, n_classes, **kwargs):
-        super().__init__(answers)
-        ...
-
-    def get_crowd_matrix(self):
-        ... # Convert json answers to tensor (task, worker, label)
-
-    def init_T(self):
-        ... # Initialize the confusion matrices
-
-    def m_step(self):
-        """Maximizing log likelihood
-        Returns:
-            p: (p_j)_j class marginals
-            pi: confusion matrices
-        """
-        ...
-
-    def e_step(self):
-        """Estimate indicator variables
-        Returns:
-            T: New estimate for the labels (n_task, n_worker)
-        """
-        ...
-
-\end{minted}
-\end{listing}
-\begin{listing}[H]
-    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
-    def log_likelihood(self):
-        ... # Compute the log likelihood of the model
-
-    def run(self, epsilon=1e-6, maxiter=50):
-        self.get_crowd_matrix()
-        self.init_T()
-        k, eps, ll = 0, np.inf, []
-        while k < maxiter and eps > epsilon:
-            self.m_step()
-            self.e_step()
-            likeli = self.log_likelihood()
-            ll.append(likeli)
-            if len(ll) >= 2:
-                eps = np.abs(ll[-1] - ll[-2])
-            k += 1
-
-    def get_probas(self):
-        return self.T
-
-    def get_answers(self):
-        return np.vectorize(self.converter.inv_labels.get)(
-            np.argmax(self.get_probas(), axis=1)
-        )
-\end{minted}
-\caption{MWE for the DS label aggregation in \texttt{peerannot}.}
-\label{listing:DS}
 \end{listing}
 
 If a new user wants to add their strategy, they can follow the same structure and add it to the \texttt{peerannot} library. The strategy will then be available for all users to use through a pull request.
@@ -753,7 +693,7 @@ We hope that this library helps reproducibility in the crowdsourcing community a
 
 The \texttt{Benchopt} library is an open-source benchmarking tool for optimization algorithms.
 It is designed to provide a fair comparison of optimization algorithms on a wide range of problems.
-The machine learning community has created platforms to release datasets XXX, reproducibility challenges XXX and journals XXX  to counteract the reproducibility crisis XXX.
+The machine learning community has created platforms to release datasets (\texttt{OpenML} \citep{OpenML2013} or \texttt{DataHub}\footnote{\url{https://datahub.io/}}), reproducibility challenges \footnote{\url{https://reproml.org/}} and journals (like Rescience\footnote{\url{https://rescience.github.io/}} or Computo\footnote{\url{https://computo.sfds.asso.fr}}) to counteract the reproducibility crisis \citep{baker2016reproducibility}.
 However, the optimization community has not yet developed a standard benchmarking tool to compare optimization algorithms.
 This is where \texttt{Benchopt} comes in.
 
@@ -761,23 +701,24 @@ This is where \texttt{Benchopt} comes in.
 
 Starting from an input dataset $\mathcal{D}$ and an objective function $f$, the \texttt{Benchopt} library considers problems of the form:
 \[
-\argmin_{\theta\in\Omega} f(\theta, \mathcal{D},\Lambda) \enspace,
+\argmin_{\theta\in\Theta} f(\theta, \mathcal{D},\Lambda) \enspace,
 \]
 where $\Lambda$ is a set of hyperparameters and $\Theta$ is the feasible set for $\theta$: the parameters in the objective.
 Following the iteration sequence $\{\theta_k\}_k$ generated by an optimization algorithm, the library computes the performance of the algorithm on the problem.
-Multiple objectives $f_1,f_2,\dots$ can be monitored.
+Multiple objectives $f_1,f_2,\dots$ can be monitored, but only one is used in the optimization problem.
 
 The library is designed to be modular and to allow easy integration of new optimization algorithms and new problems.
 It is not \texttt{scipy}-like an optimization module with a fixed set of methods, but rather a framework to compare them on a wide range of problems, add new ones and share them.
+Hardware components (number of CPUs, number of threads, GPU type, platform -- Linux version -- and libraries' version like \texttt{numpy}'s) are also stored for each benchmark.
 
 \subsubsection{Workflow}
 
 Each benchmark is defined by three objects. Each of them is defined as a class object in the \texttt{benchopt} library:
 \begin{itemize}
-    \item An objective: the objective function to minimize (or maximize), its hyperparameters $\Lambda$ and the set of possible parameters $\Theta$. The objective defines the performance metrics to track along the optimization sequence.
-    \item Datasets: the data $\mathcal{D}$ to be used in the objective function. The dataset can be a simple toy dataset or a real-world dataset. It is defined separately from the objective to be modulable.
+    \item \textbf{Objective}: the objective function to minimize (or maximize), its hyperparameters $\Lambda$ and the set of possible parameters $\Theta$. The objective defines the performance metrics to track along the optimization sequence.
+    \item \textbf{Datasets}: the data $\mathcal{D}$ to be used in the objective function. The dataset can be a simple toy dataset or a real-world dataset. It is defined separately from the objective to be modulable.
     Datasets also define how to load and preprocess the data.
-    \item Solvers: the optimization algorithms to compare. Each solver is defined by its hyperparameters and outputs a sequence of parameters $\{\theta_k\}_k$.
+    \item \textbf{Solvers}: the optimization algorithms to compare. Each solver is defined by its hyperparameters and outputs a sequence of parameters $\{\theta_k\}_k$.
 \end{itemize}
 
 \begin{figure}[htb]
@@ -810,11 +751,254 @@ Each benchmark is defined by three objects. Each of them is defined as a class o
 \caption{Template of a benchmark folder in \texttt{Benchopt}.}
 \end{figure}
 
+Datasets, solvers and objectives are compatible with hyperparameter settings. Solvers can have step sizes. Datasets can come with different versions or, in the case of simulations, different noise levels. Objectives can have different regularizations \emph{etc.}
+Then, for each combination of dataset, solver and objective, the library computes the performance of the solver on the objective using the dataset.
+These metrics are stored in a \texttt{parquet} file and then produce interactive figures using \texttt{plotly}. The full pipeline is described in \Cref{fig:benchopt}.
 
-\subsubsection{Iterations, steps and stopping criteria}
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=.95\textwidth]{./images_benchopt/benchopt_schema_objectives_with_logos.pdf}
+    \caption{Example of a benchmarking result with \texttt{Benchopt}. The library allows to compare the performance of different solvers on a given objective function. Results are stored in a \texttt{parquet} file as visualized using interactive \texttt{plotly} webpage. They can also be shared with the community using the \texttt{benchopt publish} command. Solvers in \texttt{Python}, \texttt{Julia} and \texttt{R} are currently supported.}
+    \label{fig:benchopt}
+\end{figure}
 
-\subsubsection{Examples on how to use it}
+\paragraph*{Benchmark structure and dependency relation.}
+
+As the main goal of the library is to compare solvers on different objectives, the dependency relation between the three classes is crucial.
+\begin{itemize}
+    \item Datasets are instantiated with a \texttt{.get\_data()} method that returns the data $\mathcal{D}$.
+    \item Objectives are instantiated with a \texttt{.get\_objective()} method that returns all objects necessary for solvers to run.
+    They also have a \texttt{.set\_data()} method that takes as arguments the keys of the dictionary returned by \texttt{.get\_data()}. It specifies how the data is used to compute the objective. Finally, the \texttt{.evaluate\_result()} method computes the objective.
+    \item Solvers are defined with a \texttt{.set\_objective()} method that takes as arguments the keys of the dictionary returned by \texttt{.get\_objective()}. It is the main communication between the objective and the solver. The \texttt{.run()} method computes the sequence of parameters $\{\theta_k\}_k$ following a sampling strategy and a stopping criterion (discussed hereafter). Finally, the \texttt{.get\_result()} returns the estimated solution by the solver to the objective.
+\end{itemize}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.8\textwidth, clip, trim={0cm 0cm 0cm 1.5cm}]{./images_benchopt/benchopt_schema_dependency.pdf}
+    \caption{Dependency relation between datasets, solvers and objective objects. The three classes are the core of the \texttt{Benchopt} library and communicate to run the optimization problem and monitor the performance on multiple datasets. First, the data from Datasets are passed to the Objective class. Then, the objective communicates this data for the solver to be instantiated and run. Finally, the solver returns the sequence of parameters $\{\theta_k\}_k$ to the objective to compute the performance metrics.}
+    \label{fig:benchopt-dep}
+\end{figure}
+
+\subsubsection{Iterations and stopping criteria}
+
+To evaluate each solver's performance, the library needs to define when to compute said performance during the iterative procedure.
+If done for each iterate, the cost of the benchmarking procedure can be high.
+Moreover, when to stop the optimization (using early stopping \citep{prechelt2002early}) in the optimization procedure is a crucial question.
+Some solvers do not converge for intrinsic reasons on some datasets.
+The library needs to be able to handle these cases and not let a solver run indefinitely.
+
+\paragraph{Iterates sampling.}
+The sampling for which the performance is computed is defined by the \texttt{solver.sampling\_strategy} attribute.
+It can either be \texttt{"iteration"} or \texttt{"tolerance"} depending on the way the solver itself is implemented (see \Cref{fig:implementation}).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[t]{0.45\textwidth}
+        \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
+def gd(grad, x0, lr, maxiter):
+    x = x0
+    for i in range(maxiter):
+        # Compute gradient
+        g = grad(x)
+        # Update parameters
+        theta -= lr * g
+    return theta
+        \end{minted}
+        \caption*{Example of gradient descent implementation based on the number of iterations.}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.45\textwidth}
+        \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
+def gd(grad, x0, lr, epsilon):
+    x = x0
+    norm_g = np.inf
+    while norm_g > epsilon:
+        # Compute gradient
+        g = grad(x)
+        # Update parameters
+        theta -= lr * g
+        # Update gradient norm
+        norm_g = np.sum(g**2)
+    return theta
+        \end{minted}
+        \caption*{Example of gradient descent implementation based on a threshold on the gradient's norm.}
+    \end{minipage}
+    \caption{Two examples of gradient descent implementations. The first one is based on the number of iterations and the second one on a threshold on the gradient's norm. In practice, both criteria are often combined.}
+    \label{fig:implementation}
+\end{figure}
+
+\begin{itemize}
+    \item iteration sampling: if the sampling strategy is set to \texttt{iteration}, the performance is computed for iterates of the solver following a geometrical growth sequence of parameter $\rho=1.5$. Starting from the first iterate, the next stopping iterate $\text{iter}_\text{stop}$ is computed as:
+    \[\text{iter}_\text{stop} = \max(\text{iter}_\text{stop} + 1 , \texttt{int}(\rho \star \text{iter}_\text{stop})) \enspace.\]
+    \item tolerance sampling: if the sampling strategy is set to \texttt{tolerance}, the performance is computed for iterates of the solver reaching a tolerance threshold. This threshold sequence follows a geometrical sequence of parameter $\rho=1.5$. Starting from $1$, the next stopping threshold $\text{thresh}_\text{stop}$ is computed when:
+    \[\text{thresh}_\text{stop} = \min\left(1, \max\left(\frac{\text{iter}_\text{stop}}{\rho}, 10^{-15}\right)\right) \enspace.\]
+\end{itemize}
+
+Note that if no difference is observed between two consecutive objective calls (the variation of the objective is zero), then $\rho$ is increased by a factor of $1.2$. This is to avoid computing the same objective multiple times and obtaining a flat curve. This growth can be manually changed if needed\footnote{\url{https://benchopt.github.io/user\_guide/performance\_curves.html\#changing-the-strategy-to-grow-the-computational-budget-stop-val}}.
+
+\paragraph{Stopping criterion.}
+The stopping criterion is defined by the \texttt{solver.stopping\_criterion} attribute.
+There are three possible stopping criteria and two fail-safes implemented in \texttt{Benchopt}:
+\begin{itemize}
+    \item Sufficient Decrease Criterion: defined by a tolerance $\varepsilon$ and a patience $p\in\mathbb{N}$. The solver is stopped when the relative decrease of the objective is less than $\varepsilon$ for $p$ evaluated samples.
+    \item Sufficient Progress Criterion: defined by a tolerance $\varepsilon$ and a patience $p\in\mathbb{N}$. The solver is stopped when the objective has not decreased by more than $\varepsilon$ for $p$ evaluated samples.
+    \item Single Run Criterion: the performance is evaluated only once at a given value.
+\end{itemize}
+
+The fail-safes are a maximum number of solver runs and a maximum time to run the solver. They are set to $10$ and $100$ seconds by default, respectively.
+
+\subsection{Case study: benchmarking aggregation strategies in crowdsourcing}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{./chapters/images_benchopt/thesis_fig.pdf}
+    \includegraphics[width=\textwidth]{./chapters/images_benchopt/thesis_fig_legend.pdf}
+    \caption{$\mathrm{AccTrain}$ score against computational time depending on the crowdsourced dataset and solver.}
+    \label{fig:benchopt_crowd}
+\end{figure}
+
+Let us run the \texttt{Benchopt} library to compare the performance of different label aggregation strategies on multiple datasets.
+We compare results from strategies within \texttt{peerannot}, \texttt{crowd-kit} and the Fast DS algorithms presented in \citet{sinha2018fast}.
+A description of datasets, new solvers and more points of comparison between \texttt{peerannot} and \texttt{crowd-kit} is provided hereafter.
+
+\subsubsection{Datasets, solver and library information}
+
+The list of all datasets compared in \Cref{fig:benchopt_crowd} is available in \Cref{tab:benchopt_datasets}.
+We use Krippendorff's $\alpha\in[0,1]$ \citep{krippendorff1980validity} to measure the consistency in votes for each dataset.
+A value over $0.8$ means a reliable dataset, between $0.6$ and $0.8$ the worker's answer includes inconsistencies.
+A low value indicates high levels of disagreement and possibly unreliable data without the proper strategies according to \citet{krippendorff2004reliability}.
+
+More formally, denoting $D_o$ the observed disagreement and $D_e$ the expected disagreement, Krippendorff's $\alpha$ is defined as:
+\begin{equation}
+    \alpha=1-\frac{D_o}{D_e} \enspace,
+\end{equation}
+with $D_o$ the observed disagreement and $D_e$ the expected disagreement.
+In a classification setting, this formula writes:
+\begin{equation}\label{eq:alphakripp}
+    \alpha=\frac{(n-1)\displaystyle\sum_{c\in[K]}o_{c,c} - \displaystyle\sum_{c\in [K]} n_c(n_c-1)}{n(n-1) - \displaystyle\sum_{c\in [K]} n_c(n_c-1)} \enspace,
+\end{equation}
+with $n=\sum_{c\in [K]} n_c$, $n_c=\sum_{k}o_{c,k}$ for $k\in [K]$ and
+\[o_{c,k}= \sum_{i\in [n_\text{task}]}\frac{1}{|\mathcal{A}(x_i)|-1}|\{(c,k)\text{-pairs in task }i\}| \enspace.\]
 
 
-\subsection{Case study: benchmarking label aggregation strategies in crowdsourcing}
+\begin{table}[htbp]
+    \centering
+    \caption{Dataset information}
+    \label{tab:benchopt_datasets}
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Dataset} & $n_\text{worker}$ & $n_\text{task}$ &$K$ & Krippendorff's $\alpha$ \\
+        \hline
+        \hline
+        AudioBirds \citep{lehikoinen2023successful} & 205 & 79592 & 2 & 0.81 \\
+        bluebirds \citep{WelinderEtal10b} & 50 & 300 & 2 & 0.126 \\
+        relevance-2 \citep{CrowdKit2023} & 120 & 600 & 2 & 0.262 \\
+        CIFAR-10H \citep{peterson_human_2019} & 200 & 1000 & 10 & 0.91 \\
+        LabelMe \citep{rodrigues2014gaussian} & 150 & 800 & 8 & 0.677 \\
+        Music \citep{rodrigues2017learning} & 80 & 400 & 10 & 0.301 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
+In addition to presented solvers, we add in the comparison the Fast-DS solvers \citep{sinha2018fast}, KOS \citep{karger2011iterative}, the Multi-Annotator Competence Estimation (MACE) \citep{hovy2013learning} and Worker Agreement with Aggregate (WAWA) \footnote{\url{https://success.appen.com/hc/en-us/articles/202703205-Calculating-Worker-Agreement-with-Aggregate-Wawa}}.
+
+\begin{constructionbox}[Computing Krippendorff's $\alpha$]
+Let us consider a toy example with a dataset of $n_\text{task}=5$ tasks and $n_\text{worker}=3$ workers with $K=3$ classes. Some workers do not get to answer some of the tasks.
+The votes are given as:
+
+\begin{center}
+\begin{tabular}{|c|ccccc|}
+    \hline
+    \textbf{Worker j / Task i} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\
+    \hline
+    1 &   & 1 & 1 & 2 & 1 \\
+    2 & 0 & 1 &   &   & 0 \\
+    3 & 0 & 2 &   & 2 & 0 \\
+    4 & 0 &   & 1 & 2 & 2 \\
+    \hline
+    $|\mathcal{A}(x_i)|$ & 3 & 3 & 2 & 3 & 4 \\
+    \hline
+\end{tabular}
+\end{center}
+
+The class-coincidence matrix associated to this dataset is:
+
+\begin{center}
+\begin{minipage}[t]{0.45\textwidth}
+\begin{center}
+    \begin{tabular}{|c|ccc|c|}
+        \hline
+        \textbf{Classes} $c$ & 0 & 1 & 2 & $n_c$ \\
+        \hline
+        0 & $o_{0,0}$  & $o_{0,1}$ & $o_{0,2}$ & $n_0$ \\
+        1 & $o_{1,0}$  & $o_{1,1}$ & $o_{1,2}$ & $n_1$\\
+        2 & $o_{2,0}$  & $o_{2,1}$ & $o_{2,2}$ & $n_2$ \\
+        \hline
+    \end{tabular}
+\end{center}
+\end{minipage}
+\hfill
+$\Longleftrightarrow$
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+\begin{center}
+\begin{tabular}{|c|ccc|c|}
+    \hline
+    \textbf{Classes} $c$ & 0 & 1 & 2 & $n_c$ \\
+    \hline
+    0 & $\tfrac{11}{3}$ & $ \tfrac{2}{3}$ & $\tfrac{2}{3}$ & $5$ \\
+    1 & $\tfrac{2}{3}$  & $3$ & $\tfrac{4}{3}$ & $5$\\
+    2 & $\tfrac{2}{3}$  & $\tfrac{4}{3}$ & $3$ & $5$ \\
+    \hline
+\end{tabular}
+\end{center}
+\end{minipage}
+\end{center}
+
+Let us detail two examples:
+\begin{itemize}
+    \item $o_{0,0}$: In the first task there are $6$ pairs of $(0,0)$ agreements over $3$ answers. In the tasks $2,3,4$ there are no votes for class $0$. And for task $5$ there are $2$ pairs of $(0,0)$ agreements over $4$ answers. Hence $o_{0,0}=\frac{6}{3-1} + \frac{2}{4-1}=\frac{6}{2} + \frac{2}{3}=\frac{11}{3}$.
+    \item $o_{2,1}$: In the tasks $1$, $3$ and $4$ there are no $(2,1)$ disagreements. In task $2$ there are $2$ pairs of $(2,1)$ disagreements over $3$ answers. And in task $5$ there is $1$ pair of $(2,1)$ disagreements over $4$ answers. Hence $o_{2,1}=\frac{2}{3-1} + \frac{1}{4-1}=\frac{2}{2} + \frac{1}{3}=\frac{4}{3}$.
+\end{itemize}
+Finally, we use \Cref{eq:alphakripp} and obtain with $n=5+5+5=15$:
+\begin{align*}
+\alpha  &= \frac{(n-1)\left(\frac{11}{3} + 3 + 3\right) - \left(5(5-1)  + 5(5-1) + 5(5-1)\right)}{n(n-1) - \left(5(5-1)  + 5(5-1) + 5(5-1)\right)} \\
+        &\simeq 0.502 \enspace.
+\end{align*}
+Hence this data is quite unreliable.
+
+Note that in settings other than classical classification (\emph{e.g.} ranking) the coincidence matrix might not be symmetrical.
+See \citet{krippendorff1980validity} for forms of $\alpha$ expression instead of \Cref{eq:alphakripp}.
+\end{constructionbox}
+
+Let us present the additional label aggregation strategies briefly. The PlantNet aggregation is presented in detail in \Cref{chap:plantnet}.
+\paragraph{WAWA.}
+This strategy, also known as the inter-rater agreement, weights each user by how much they agree with the MV labels on average. More formally, given a task $i$:
+\begin{align*}
+    \mathrm{WAWA}(i, \mathcal{D}) &= \argmax_{k\in [K]} \sum_{j\in \mathcal{A}(x_i)} \beta_j\mathds{1}(y_i^{(j)} = k) \\
+    \text{with } \beta_j &= \frac{1}{|\{y_{i'}^{(j)}\}_{i'}|} \sum_{i'=1}^{n_{\mathrm{task}}} \mathds{1}\left(y_{i'}^{(j)} = \mathrm{MV}(\{y_{i'}^{(j)}\}_j)\right)\enspace.
+    \end{align*}
+
+\paragraph{MACE \citep{hovy2013learning}.}
+The MACE strategy has been designed to be more robust against spammers.
+Contrary to the definition of spammers by \citet{raykar_ranking_2011}, they here consider spam as a state of the worker.
+
+Each worker can be spamming on each task. The probability for a worker to spam a task is given by a Bernoulli distribution with parameter $1-\theta_j\in[0, 1]$. Thus, denoting $S_{i,j}$ the spamming state of worker $j$ on task $i$, the probability of the worker to spam the task is drawn as $S_{i,j}\sim\mathcal{B}(1-\theta_j)$. If a worker is not spamming ($S_{i,j}=0$) then they answer the correct underlying label $y_i^\star$. If not, their answer is drawn at random from a multinomial distribution with parameter $\xi_j\in\Delta_{K}$ proper to each worker.
+For a given worker $j_0$, the distribution $\xi_{j_0}$ indicates what is their behavior when they are spamming.
+
+The associated likelihood -- maximized using the EM algorithm as in DS -- writes:
+\[\mathbb{P}(\{y_i^{(j)}\}_{i,j}|\theta,\xi) = \sum_{y^\star\in [K]^{n_\text{task}}}\sum_{S\in\{0,1\}^{n_\text{task}\times n_\text{worker}}}\left[\prod_{i=1}^{n_\text{task}} \mathbb{P}(y^\star_i) \prod_{j=1}^{n_\text{worker}} \mathbb{P}(S_{i,j}|\theta_j)\mathbb{P}(y_i^{(j)}|S_{i,j},y_i^\star, \xi_j)\right]\enspace.\]
+
+
+\paragraph{KOS \citep{karger2011iterative}.}
+Only set for binary classification $y_i^\star\in\{\pm 1\}$, the KOS strategy from a graph-theory perspective.
+Denote $G([n_\text{task}]\cup [n_\text{worker}], E)$ the graph where edge $(i,j)$ is connected if worker $j$ has answered task $i$. The neighborhood of a task $i$ is denoted $\partial_i$ and the same with index $j$ for workers.
+On each edge is stored the label answered by worker $j$ for task $i$: $y_i^{(j)}\in[K]$.
+
+The KOS strategy estimates how much a worker is reliable by how much their answers are consistent with the answers of their neighbors and the likelihood of a task having $y_i^\star=1$.
+Both pieces of information are propagated into the graph as messages.
+The final label is then estimated by the sign of the sum of the messages received by the task weighted by the workers' reliability.
+
+
+
+\paragraph{Fast-DS.}

@@ -291,7 +291,7 @@ By default, we rely on the \texttt{Est}$=$DS algorithm to get workers' confusion
 \end{algorithm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\paragraph{Training on the pruned dataset}
+\paragraph{Training on the pruned dataset.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Once a pruned dataset $\mathcal{D}_{\text{pruned}}$ has been obtained thanks to the $\mathrm{WAUM}$, one can create soft labels through an aggregation step, and use them to train a classifier.
 Aggregated soft labels contain information regarding human uncertainty, and could often be less noisy than NS labels.
@@ -313,13 +313,13 @@ We compare our $\mathrm{WAUM}$ scheme with several other strategies like $\mathr
 For $\mathrm{CoNAL}$, two regularization levels are considered: $\lambda=0$ and $\lambda=10^{-4}$ ($\lambda$ controls the distance between the global and the individual confusion matrices).
 More simulations and an overview of the methods compared are available in \Cref{subsec:Synthetic_dataset}.
 
-\paragraph*{Metrics investigated}
+\paragraph*{Metrics investigated.}
 After training, we report two performance metrics on a test set $\mathcal{D}_{\texttt{test}}$: top-$1$ accuracy and expected calibration error (ECE) (with $M=15$ bins as in \citet{guo_calibration_2017}).
 The ECE measures the discrepancy between the predicted probabilities and the probabilities of the underlying distribution.
 For ease of reporting results, we display the score $1-\mathrm{ECE}$ (hence, the higher the better, and the closer to $1$, the better the calibration).
 Reported errors represent standard deviations over the repeated experiments (10 repetitions on simulated datasets and 5 for real datasets).
 
-\paragraph*{Implementation details}
+\paragraph*{Implementation details.}
 For simulations, the training is performed with a three dense layers artificial neural network (an MLP with three layers) $(30, 20, 20)$ with batch size set to $64$.
 Workers are simulated with \texttt{scikit-learn} \citep{scikit-learn} classical classifiers.
 For \texttt{CIFAR-10H} the Resnet-$18$ \citep{he2016deep} architecture is chosen with batch size set to $64$.
@@ -596,7 +596,7 @@ One last example detected: the music \emph{Patches} by Clarence Carter is stored
 The true label is supposed to be \texttt{disco}, while the workers have provided the following labels: two have chosen \texttt{rock}, two \texttt{blues}, one \texttt{pop} and another one proposed \texttt{country}.
 The actual genre of this music is \texttt{country}-soul, so both the true label and five out of six workers are incorrect.
 
-\paragraph*{WAUM sensitivity to the neural network architecture}
+\paragraph*{WAUM sensitivity to the neural network architecture.}
 \begin{figure}[th]
   \centering
   \begin{tabular}{m{1.75cm} *{4}{>{\centering\arraybackslash}m{.15\linewidth}}}
@@ -735,7 +735,7 @@ Independently of pruning, the $\mathrm{WAUM}$ allows identifying early the image
 Extension of the $\mathrm{WAUM}$ to more general learning tasks (\emph{e.g} top-$k$ classification, \Cref{sec:margin_comparison}) would be natural, including sequential label.
 Indeed, the $\mathrm{WAUM}$ could help to identify tasks requiring additional expertise and guide how to allocate more experts/workers for such identified tasks. However, there is a community need for openly available datasets with both tasks and votes for such evaluation.
 
-\paragraph*{Broader Impact Statement}
+\paragraph*{Broader Impact Statement.}
 As this work proposes a method to prune tasks from training datasets based on human-derived data, we remind that pruning based on learning difficulty can induce a learning bias for the model.
 To mitigate this, only pruning a small portion of the dataset can help avoid any class with a small number of representatives to be removed of the dataset.
 Also, in this paper, we only remove tasks that are difficult to classify, we do not remove workers from the dataset.

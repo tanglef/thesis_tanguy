@@ -140,3 +140,112 @@ This is the case in Pl@ntNet where the workers' only gain in participating is pr
 RTE, France also created a crowdsourcing platform\footnote{\url{https://www.bdpv.fr/_BDapPV/}} to identify photovoltaic panels on images and delimit their area of occupancy \citep{kasmi2023crowdsourced}.
 
 In short, with crowdsourcing, we can classify workers, types of tasks/experimentation and the incentives to make workers answer those tasks. Each of these parts can play a role in the data collection process and quality of said data.
+
+\chapter{Peerannot appendix}
+\label{chap:app-peerannot}
+
+\section{Code structure to implement the DS model}
+\label{app:DS}
+
+In \texttt{peerannot}, iterative label aggregation strategies need a \texttt{.run()} method. We present an example of such a structure with the DS model in \Cref{listing:DS}.
+
+
+\section{Simulated mistakes with discrete difficulty levels on tasks}
+\label{sec:difficulty-levels}
+For an additional experiment, we consider the so-called discrete difficulty setting presented in \citet{whitehill_whose_2009}. Contrary to other simulations, we here consider that workers belong to two levels of abilities: \texttt{good} or \texttt{bad} and tasks have two levels of difficulties: \texttt{easy} or \texttt{hard}. The keyword \texttt{ratio-diff} indicates the prevalence of each level of difficulty of tasks as:
+\[\texttt{ratio-diff} = \frac{\mathbb{P}(\texttt{easy})}{\mathbb{P}(\texttt{hard})}, \text{ with }\mathbb{P}(\texttt{easy}) + \mathbb{P}(\texttt{hard})=1 \enspace.\]
+
+Tasks that are \texttt{easy} are answered correctly by every assigned worker. Tasks that are \texttt{hard} are answered following the confusion matrix assigned to each worker. Each worker then answers independently to the presented tasks.
+
+We simulate $200$ tasks and $100$ workers with $35\%$ of good workers and $50\%$ of \texttt{easy} tasks (\texttt{ratio-diff}$=1$). There are $K=5$ classes. Each task receives $|\mathcal{A}(x_i)|=10$ votes.
+\begin{listing}[ht]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{bash}
+$ peerannot simulate --n-worker=100 --n-task=200 \
+                     --n-classes=5 \
+                     --strategy discrete-difficulty \
+                     --ratio 0.35 \
+                     --ratio-diff 1 \
+                     --feedback 10 \
+                     --seed 0 \
+                     --folder ./simus/discrete_difficulty
+    \end{minted}
+    \caption{Simulation of discrete difficulty levels crowdsourced datasets in \texttt{peerannot}.}
+\label{listing:discrete_simu}
+\end{listing}
+
+\begin{table}[htbp]
+    \centering
+    \caption{AccTrain metric on simulated mistakes made when tasks are associated with a difficulty level considering classical feature-blind label aggregation strategies.}
+    \label{tab:accuracy_train_diff}
+    \begin{tabular}{|l|c|c|c|c|c|c|}
+    \hline
+    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=2]} & \textbf{DSWC[L=5]} & \textbf{NS} \\
+    \hline
+    AccTrain & 0.815 &	0.845 &	0.810 &	0.600 &	0.660 &	0.790 \\
+    \hline
+    \end{tabular}
+    \end{table}
+
+Finally, in this setting involving task difficulty coefficients, the only strategy that involves a latent variable for the task difficulty, knowing GLAD, outperforms the other strategies (see \Cref{tab:accuracy_train_diff}). Note that in this case, creating clusters of answers leads to worse decisions than an MV aggregation.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=.8\textwidth]{./chapters/images_peerannot/cell-20-output-1.pdf}
+    \caption{Distribution of the number of tasks given per worker (left) and of the number of labels per task (right) in the setting with simulated discrete difficulty levels.}
+\end{figure}
+
+\begin{listing}[ht]
+    \begin{minted}[linenos=true, bgcolor=lightgray, tabsize=4, fontfamily=courier, fontsize=\small, xleftmargin=5pt, xrightmargin=5pt]{python}
+class Dawid_Skene(CrowdModel):
+    def __init__(self, answers, n_classes, **kwargs):
+        super().__init__(answers)
+        ...
+
+    def get_crowd_matrix(self):
+        ... # Convert json answers to tensor (task, worker, label)
+
+    def init_T(self):
+        ... # Initialize the confusion matrices
+
+    def m_step(self):
+        """Maximizing log likelihood
+        Returns:
+            p: (p_j)_j class marginals
+            pi: confusion matrices
+        """
+        ...
+
+    def e_step(self):
+        """Estimate indicator variables
+        Returns:
+            T: New estimate for the labels (n_task, n_worker)
+        """
+        ...
+
+    def log_likelihood(self):
+        ... # Compute the log likelihood of the model
+
+    def run(self, epsilon=1e-6, maxiter=50):
+        self.get_crowd_matrix()
+        self.init_T()
+        k, eps, ll = 0, np.inf, []
+        while k < maxiter and eps > epsilon:
+            self.m_step()
+            self.e_step()
+            likeli = self.log_likelihood()
+            ll.append(likeli)
+            if len(ll) >= 2:
+                eps = np.abs(ll[-1] - ll[-2])
+            k += 1
+
+    def get_probas(self):
+        return self.T
+
+    def get_answers(self):
+        return np.vectorize(self.converter.inv_labels.get)(
+            np.argmax(self.get_probas(), axis=1)
+        )
+\end{minted}
+\caption{MWE for the DS label aggregation in \texttt{peerannot}.}
+\label{listing:DS}
+\end{listing}
