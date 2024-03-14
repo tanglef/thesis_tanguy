@@ -10,10 +10,10 @@
         \item Aggregation strategies are often EM-based with a two-step procedure repeated. While performance is an important decision factor in using one strategy over another, how much time it takes to run is essential. Especially with large datasets, we find memory scaling issues or a time complexity that forbids usage in applications.
         \end{enumerate}
 
-        \textbf{Contributions -- peerannot and BenchOpt}
+        \textbf{Contributions -- peerannot and Benchopt}
         \begin{enumerate}[leftmargin=*,start=4]
         \item We propose a new Python library \texttt{peerannot} fully documented. An \texttt{identify} module lets users identify ambiguous tasks from datasets using a wide range of strategies. The \texttt{aggregate} module performs label aggregation strategies. The \texttt{aggregate-deep} module uses learning strategies that are deep-learning based and have inserted the aggregation step inside the network's architecture. The \texttt{train} module allows to train classifiers from aggregated labels. Our library comes with data templates and examples available at \url{http://peerannot.github.io}
-        \item We created a crowdsourcing benchmark in the \texttt{BenchOpt} library to easily compare time performance on label aggregation strategies across libraries, on publicly available datasets.
+        \item We created a crowdsourcing benchmark in the \texttt{BenchOpt} library to easily compare time performance on label aggregation strategies across libraries, on publicly available datasets: \url{https://github.com/benchopt/benchmark\_crowdsourcing}.
         \end{enumerate}
 \end{keypointstwomargins}
 
@@ -890,12 +890,12 @@ with $n=\sum_{c\in [K]} n_c$, $n_c=\sum_{k}o_{c,k}$ for $k\in [K]$ and
         \textbf{Dataset} & $n_\text{worker}$ & $n_\text{task}$ &$K$ & Krippendorff's $\alpha$ \\
         \hline
         \hline
-        AudioBirds \citep{lehikoinen2023successful} & 205 & 79592 & 2 & 0.81 \\
-        bluebirds \citep{WelinderEtal10b} & 50 & 300 & 2 & 0.126 \\
-        relevance-2 \citep{CrowdKit2023} & 120 & 600 & 2 & 0.262 \\
-        CIFAR-10H \citep{peterson_human_2019} & 200 & 1000 & 10 & 0.91 \\
-        LabelMe \citep{rodrigues2014gaussian} & 150 & 800 & 8 & 0.677 \\
-        Music \citep{rodrigues2017learning} & 80 & 400 & 10 & 0.301 \\
+        AudioBirds \citep{lehikoinen2023successful} & 205 & 79 592 & 2 & 0.810 \\
+        bluebirds \citep{WelinderEtal10b} & 39 & 108 & 2 & 0.126 \\
+        relevance-2 \citep{CrowdKit2023} & 7 138 & 99 319 & 2 & 0.262 \\
+        CIFAR-10H \citep{peterson_human_2019} & 2 571 & 1000 & 10 & 0.910 \\
+        LabelMe \citep{rodrigues2014gaussian} & 77 & 1000 & 8 & 0.677 \\
+        Music \citep{rodrigues2017learning} & 44 & 700 & 10 & 0.301 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -987,7 +987,9 @@ Each worker can be spamming on each task. The probability for a worker to spam a
 For a given worker $j_0$, the distribution $\xi_{j_0}$ indicates what is their behavior when they are spamming.
 
 The associated likelihood -- maximized using the EM algorithm as in DS -- writes:
-\[\mathbb{P}(\{y_i^{(j)}\}_{i,j}|\theta,\xi) = \sum_{y^\star\in [K]^{n_\text{task}}}\sum_{S\in\{0,1\}^{n_\text{task}\times n_\text{worker}}}\left[\prod_{i=1}^{n_\text{task}} \mathbb{P}(y^\star_i) \prod_{j=1}^{n_\text{worker}} \mathbb{P}(S_{i,j}|\theta_j)\mathbb{P}(y_i^{(j)}|S_{i,j},y_i^\star, \xi_j)\right]\enspace.\]
+\begin{align*}
+\mathbb{P}(\{y_i^{(j)}\}_{i,j}|\theta,\xi) =& \\ \sum_{y^\star\in [K]^{n_\text{task}}}&\sum_{S\in\{0,1\}^{n_\text{task}\times n_\text{worker}}}\left[\prod_{i=1}^{n_\text{task}} \mathbb{P}(y^\star_i) \prod_{j=1}^{n_\text{worker}} \mathbb{P}(S_{i,j}|\theta_j)\mathbb{P}(y_i^{(j)}|S_{i,j},y_i^\star, \xi_j)\right]\enspace.
+\end{align*}
 
 
 \paragraph{KOS \citep{karger2011iterative}.}
@@ -999,6 +1001,96 @@ The KOS strategy estimates how much a worker is reliable by how much their answe
 Both pieces of information are propagated into the graph as messages.
 The final label is then estimated by the sign of the sum of the messages received by the task weighted by the workers' reliability.
 
+A task message denoted $x_{i\rightarrow j}$ is the log-likelihood of the task $i$ having $y_i^\star=1$.
+A worker message denoted $y_{j\rightarrow i}$ is the reliability of worker $j$.
+Both messages have scalar values.
+After random intialization, the messages are updated iteratively until convergence following the equations:
+\begin{align*}
+    x_{i\rightarrow j} &\gets \sum_{j'\in \partial_i\setminus j} y_i^{(j')}y_{j'\rightarrow i} \ \forall (i,j)\in E \\
+    y_{j\rightarrow i} &\gets \sum_{i'\in \partial_j\setminus i} y_{i'}^{(j)} x_{i'\rightarrow j} \ \forall (i,j)\in E\enspace.
+\end{align*}
+Finally, the estimated label is computed as:
+\[
+\forall i\in [n_\text{task}],\ \hat y_i^{\text{KOS}} = \mathrm{sign}\left(\sum_{j\in\partial_i} y_i^{(j)}y_{j\rightarrow i}\right)\enspace.
+\]
 
+\paragraph{Fast-DS \citep{sinha2018fast}.}
+As the DS strategy is known to have a high computational cost, \citet{sinha2018fast} proposed a faster version of the DS strategy.
+The Fast-DS strategy is based on the same principle as DS, but the computation of the posterior distribution on the estimated ground truth is restricted as a Dirac distribution.
+Note that this does not alleviate the memory issue of the DS strategy -- the $K^2\times n_{\text{worker}}$ parameters to estimate for the confusion matrices.
+Under the assumption that there is only a single label per task -- which is the case in this thesis -- this \emph{hard} version of the DS strategy claims to be faster than the original DS strategy while achieving similar performance in accuracy.
 
-\paragraph{Fast-DS.}
+More formally, following the DS notation from \Cref{subsub:ds} the Fast-DS method adds the following step in the ground truth estimation:
+\[
+T_{i,k} = \begin{cases} 1 & \text{if } k = \displaystyle\argmax_{k'\in[K]} \mathbb{P}\left(y_i^\star=k'|\{y_i^{(j)}\}_{j\in\mathcal{A}(x_i)}\right) \\ 0 & \text{otherwise} \end{cases} \enspace.
+\]
+The quantity $\mathbb{P}\left(y_i^\star=k'|\{y_i^{(j)}\}_{j\in\mathcal{A}(x_i)}\right)$ is estimated using Baye's theorem.
+
+However, empirical results show that the Fast-DS strategy with this \emph{hard} decision can reach lower accuracy.
+To alleviate this convergence issue, \citet{sinha2018fast} proposed to use a \emph{hybrid} version of the Fast-DS strategy.
+The hybrid strategy is defined as:
+\begin{itemize}
+    \item Run the classical DS algorithm first to estimate the marginal class likelihood $\rho\in\Delta_K$ at each iteration.
+    \item When the absolute difference between two consecutive iterates of $\rho$ is lower than a given threshold, switch to the \emph{hard} version of the DS strategy.
+\end{itemize}
+This hybrid strategy allows having a softer control on the label estimation at the beginning and better exploring the latent variable's space.
+Finishing with \emph{hard} labels allows faster convergence.
+However, in practice this gain -- as seen in \Cref{fig:benchopt_crowd} -- can be mitigated by the implementation of the DS strategy.
+
+\paragraph{Results interpretation.}
+Running \texttt{Benchopt} evaluation, we obtain \Cref{fig:benchopt_crowd} showing the accuracy of the different label aggregation strategies against the computational time.
+Depending on the dataset, some solvers -- \emph{i.e.} label aggregation strategy -- are more suited and less computationally expansive than others.
+
+For example, on the \texttt{BlueBirds} dataset, \texttt{peerannot}'s DS strategy is the fastest to reach the best accuracy. It is followed by the Fast-DS and then \texttt{crowd-kit}'s DS aggregation.
+As the $\alpha$ value is very low ($\alpha=0.126$), the dataset is unreliable.
+Hence, strategies that are specific to some workers' behaviors -- KOS for spammers, GLAD for ambiguous tasks -- are not suited and the DS strategy seems to be the best choice.
+
+In the case of datasets with a high level of agreement ($\alpha>0.8$) -- in AudioBirds and CIFAR-10H -- all strategies reach the level of performance. Notice that GLAD is again slower than most strategies (this conclusion can be seen in most cases). For those datasets, the simpler the strategy, the faster the same level of accuracy.
+
+For the \texttt{Music} dataset, the best performance is achieved by the fastest method in this case: $\mathrm{WAWA}$ (with similar time computation between \texttt{peerannot} and \texttt{crowd-kit}).
+And finally, for the \texttt{LabelMe} dataset, the best performance is achieved by the DS-based strategies.
+WAWA aggregation underperforms: as shown in \Cref{fig:LabelMe_dataset_visualization}, the tasks have very few labels and are ambiguous with the class overlap.
+
+Overall, the Pl@ntNet strategy does not perform better than other label aggregation strategies. This is because the algorithm is not suited for such crowdsourced datasets. It is based on the assumption that the number of possible classes is high to evaluate the worker's reliability. This is not the case in the datasets we consider. We have at most $K=10$. Hence why in \Cref{chap:plantnet} we released a large subset of Pl@ntNet's database to evaluate this strategy on a more suitable dataset.
+
+\subsubsection{More comparison between \texttt{peerannot} and \texttt{crowd-kit}.}
+
+Both \texttt{peerannot} and \texttt{crowd-kit} are open-source libraries to handle crowdsourced datasets.
+While \texttt{crowd-kit} proposes segmentation and regression crowdsourcing strategies, \texttt{peerannot} is focused on classification tasks.
+The learning strategies (CrowdLayer and CoNAL) are available in both libraries, and each library has label aggregations strategies with some in common (MV, GLAD, DS, WAWA) and some library-specific (Pl@ntNet, WDS, KOS, MACE).
+However, the main difference between the two libraries is the identification step. So let us focus on this.
+
+At the time of writing \texttt{crowd-kit} proposes four strategies to explore crowdsourced datasets:
+\begin{itemize}
+    \item Krippendorff's $\alpha$: to measure the consistency in votes for each dataset (also available in \texttt{peerannot}).
+    \item The consistency: Averaged posterior distribution of a label determination from workers' estimated reliability.
+    \item The uncertainty: the entropy of the distribution of the votes (also available in \texttt{peerannot}).
+    \item The accuracy of aggregates: the accuracy of a subset of worker's answers from aggregated labels (if the subset of workers is all workers and the aggregated label is the MV label, this simplifies as the weight of users in WAWA).
+\end{itemize}
+
+In \texttt{peerannot}, we added:
+\begin{itemize}
+    \item The $\mathrm{AUMC}$: deep learning based ambiguity score on tasks via MV aggregation (see \Cref{chap:waum}).
+    \item The $\mathrm{WAUM}$: deep learning based ambiguity score on tasks via weighted Areas Under the Margin (see \Cref{chap:waum}).
+    \item The spam score \citep{raykar_ranking_2011}: distance between the estimated confusion matrix and the closest rank-$1$ matrix for each worker. This allows identifying potential spammers.
+    \item The trace confusion: sum of the diagonal terms of the DS confusion matrices. Indicates the level of reliability per worker for their answered label. The closer the trace to $K$, the more reliable the worker.
+\end{itemize}
+
+The \texttt{peerannot} also supports top-$k$ classification metrics for deep-learning methods.
+We provide the \texttt{train} command to train deep learning models from \texttt{TorchVision} on the dataset and evaluate their accuracy and calibration if a test set is available. This allows users to have a fully end-to-end pipeline:
+\begin{itemize}
+    \item identify potential ambiguous tasks / bad workers,
+    \item aggregate the labels and train a computer vision network,
+    \item or directly train a computer vision network with deep-learning-based strategies to handle crowdsourced tasks.
+\end{itemize}
+Keeping the same framework from beginning to end, based on PyTorch, allows for a more seamless integration of the crowdsourcing pipeline in existing projects.
+
+\section{Conclusion}
+
+We presented the \texttt{peerannot} library: an open-source Python library to handle crowdsourced datasets.
+This library is designed to be modular and to allow easy integration of new label aggregation strategies, learning strategies and identification strategies on new datasets.
+
+To produce fair and reproducible comparisons of label aggregation strategies' performance, we added a new benchmark to the \texttt{Benchopt} library.
+This benchmark for crowdsourcing in classification problems allows us to compare the performance of different label aggregations depending on the ambiguity of a dataset.
+We showed that the \texttt{peerannot} library is a good candidate to handle crowdsourced datasets against standalone openly available methods (FDS) or other libraries like \texttt{crowd-kit}.
+
