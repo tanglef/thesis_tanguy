@@ -698,6 +698,7 @@ However, the optimization community has not yet developed a standard benchmarkin
 This is where \texttt{Benchopt} comes in.
 
 \subsection{How does it work?}
+\label{sub:benchopt_how}
 
 Starting from an input dataset $\mathcal{D}$ and an objective function $f$, the \texttt{Benchopt} library considers problems of the form:
 \[
@@ -861,7 +862,7 @@ Let us run the \texttt{Benchopt} library to compare the performance of different
 We compare results from strategies within \texttt{peerannot}, \texttt{crowd-kit} and the Fast DS algorithms presented in \citet{sinha2018fast}.
 A description of datasets, new solvers and more points of comparison between \texttt{peerannot} and \texttt{crowd-kit} is provided hereafter.
 
-\subsubsection{Datasets, solver and library information}
+\subsubsection{Datasets and solvers information}
 
 The list of all datasets compared in \Cref{fig:benchopt_crowd} is available in \Cref{tab:benchopt_datasets}.
 We use Krippendorff's $\alpha\in[0,1]$ \citep{krippendorff1980validity} to measure the consistency in votes for each dataset.
@@ -877,7 +878,7 @@ In a classification setting, this formula writes:
 \begin{equation}\label{eq:alphakripp}
     \alpha=\frac{(n-1)\displaystyle\sum_{c\in[K]}o_{c,c} - \displaystyle\sum_{c\in [K]} n_c(n_c-1)}{n(n-1) - \displaystyle\sum_{c\in [K]} n_c(n_c-1)} \enspace,
 \end{equation}
-with $n=\sum_{c\in [K]} n_c$, $n_c=\sum_{k}o_{c,k}$ for $k\in [K]$ and
+with $n=\sum_{c\in [K]} n_c$, and $n_c=\sum_{k}o_{c,k}$ for $k\in [K]$ and
 \[o_{c,k}= \sum_{i\in [n_\text{task}]}\frac{1}{|\mathcal{A}(x_i)|-1}|\{(c,k)\text{-pairs in task }i\}| \enspace.\]
 
 
@@ -976,8 +977,11 @@ Let us present the additional label aggregation strategies briefly. The PlantNet
 This strategy, also known as the inter-rater agreement, weights each user by how much they agree with the MV labels on average. More formally, given a task $i$:
 \begin{align*}
     \mathrm{WAWA}(i, \mathcal{D}) &= \argmax_{k\in [K]} \sum_{j\in \mathcal{A}(x_i)} \beta_j\mathds{1}(y_i^{(j)} = k) \\
-    \text{with } \beta_j &= \frac{1}{|\{y_{i'}^{(j)}\}_{i'}|} \sum_{i'=1}^{n_{\mathrm{task}}} \mathds{1}\left(y_{i'}^{(j)} = \mathrm{MV}(\{y_{i'}^{(j)}\}_j)\right)\enspace.
+    \text{with } \beta_j &= \frac{1}{|\{y_{i'}^{(j)}\}_{i'}|} \sum_{i'=1}^{n_{\mathrm{task}}} \mathds{1}\left(y_{i'}^{(j)} = \mathrm{MV}(i', \{y_{i'}^{(j)}\}_j)\right)\enspace.
     \end{align*}
+
+Note that even if they are not iterative strategies WAWA and WDS can still be shown in \texttt{Benchopt}.
+However, the performance is computed at the end of the aggregation process, and only the first point of the curve should be considered. Indeed, the second point is an artifact from \texttt{Benchopt}'s stopping criterion (the patience) described in \Cref{sub:benchopt_how}.
 
 \paragraph{MACE \citep{hovy2013learning}.}
 The MACE strategy has been designed to be more robust against spammers.
@@ -1004,10 +1008,10 @@ The final label is then estimated by the sign of the sum of the messages receive
 A task message denoted $x_{i\rightarrow j}$ is the log-likelihood of the task $i$ having $y_i^\star=1$.
 A worker message denoted $y_{j\rightarrow i}$ is the reliability of worker $j$.
 Both messages have scalar values.
-After random intialization, the messages are updated iteratively until convergence following the equations:
+After random initialization, the messages are updated iteratively until convergence following the equations:
 \begin{align*}
-    x_{i\rightarrow j} &\gets \sum_{j'\in \partial_i\setminus j} y_i^{(j')}y_{j'\rightarrow i} \ \forall (i,j)\in E \\
-    y_{j\rightarrow i} &\gets \sum_{i'\in \partial_j\setminus i} y_{i'}^{(j)} x_{i'\rightarrow j} \ \forall (i,j)\in E\enspace.
+    x_{i\rightarrow j} &\gets \sum_{j'\in \partial_i\setminus \{j\}} y_i^{(j')}y_{j'\rightarrow i} \ \forall (i,j)\in E \\
+    y_{j\rightarrow i} &\gets \sum_{i'\in \partial_j\setminus \{i\}} y_{i'}^{(j)} x_{i'\rightarrow j} \ \forall (i,j)\in E\enspace.
 \end{align*}
 Finally, the estimated label is computed as:
 \[
