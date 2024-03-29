@@ -5,14 +5,36 @@
 \begin{keypointstwomargins}{Pl@ntNet}{-2cm}{-1cm}
         \textbf{Key points -- Crowdsourcing plant species}
         \begin{enumerate}[leftmargin=*]
-        \item XXX        
+        \item Aiding botanists in plant species identification is a challenging task. Species are often visually close and their identification requires expert knowledge.
+        \item Pl@ntNet is a citizen science platform that allows users to upload images of plants and receive a list of possible species.
+        \item The collaborative aspect of Pl@ntNet allows users to vote on the species they think are present in the image and contribute to new labeled data, which is then used to train a computer vision and help new identifications.
         \end{enumerate}
 
         \textbf{Contributions -- Exploration of Pl@ntNet label aggregation strategy}
         \begin{enumerate}[leftmargin=*,start=4]
-        \item We release the Pl@ntNet label aggregation and compare it to other large citizen platforms.
-        \item We release a subset of Pl@ntNet with images url and collected labels in the South Western European Flora of more than $6$ million observations and $800$ thousand users in a large scale classification setting.
-        \item We discuss on how to integrate AI based votes in active learning systems without having a snowball effect where the AI is only learning from itself.
+        \item We release and evaluate the current Pl@ntNet label aggregation and compare it to other strategies.
+        \item We release a subset of Pl@ntNet with images url and collected labels in the South Western European Flora of more than $6$ million observations and $800$ thousand users in a large-scale classification setting.
+        \item We discuss how to integrate the current model's predictions in the votes aggregation. This is a challenging task due to the iterative aspect of Pl@ntNet: the current data helps train the next generation of models iteratively.
         \end{enumerate}
 \end{keypointstwomargins}
 
+
+\section{Crowdsourcing for plant species identification}
+
+\subsection{Presenting the voting interface}
+
+\subsection{A step in a bigger pipeline}
+
+\section{Pl@ntNet's label aggregation strategy}
+
+\subsection{Presentation of the algorithm}
+
+\subsection{Presenting a subset of Pl@ntNet to evaluate the current strategy}
+
+\section{Integrating model predictions in the aggregation}
+
+\subsection{Possible strategies}
+
+\subsection{Can we trust our current predicted probabilities?}
+
+\section{Conclusion}

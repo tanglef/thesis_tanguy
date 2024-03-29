@@ -116,7 +116,7 @@ For both \texttt{CIFAR-10H} and \texttt{LabelMe}, the dataset was originally rel
 \subsubsection{Other popular formats}
 
 Other popular storage formats currently exist.
-For example, the \texttt{crowd-kit} \citep{CrowdKit2023} uses a dataframe where each row specifies the $3$-uplet $($task, worker, label$)$.
+For example, the \texttt{crowd-kit} library\footnote{\url{https://github.com/Toloka/crowd-kit}} uses a dataframe where each row specifies the $3$-uplet $($task, worker, label$)$.
 This format is close to the \texttt{json} one, easily switchable between the two. However, it suffers from the redundancy of the task ID.
 More discussion on the \texttt{crowd-kit} library is available in \Cref{sec:benchopt}.
 
@@ -893,7 +893,7 @@ with $n=\sum_{c\in [K]} n_c$, and $n_c=\sum_{k}o_{c,k}$ for $k\in [K]$ and
         \hline
         AudioBirds \citep{lehikoinen2023successful} & 205 & 79 592 & 2 & 0.810 \\
         bluebirds \citep{WelinderEtal10b} & 39 & 108 & 2 & 0.126 \\
-        relevance-2 \citep{CrowdKit2023} & 7 138 & 99 319 & 2 & 0.262 \\
+        relevance-2 & 7 138 & 99 319 & 2 & 0.262 \\
         CIFAR-10H \citep{peterson_human_2019} & 2 571 & 1000 & 10 & 0.910 \\
         LabelMe \citep{rodrigues2014gaussian} & 77 & 1000 & 8 & 0.677 \\
         Music \citep{rodrigues2017learning} & 44 & 700 & 10 & 0.301 \\
@@ -984,6 +984,14 @@ Note that even if they are not iterative strategies WAWA and WDS can still be sh
 However, the performance is computed at the end of the aggregation process, and only the first point of the curve should be considered. Indeed, the second point is an artifact from \texttt{Benchopt}'s stopping criterion (the patience) described in \Cref{sub:benchopt_how}.
 
 \paragraph{MACE \citep{hovy2013learning}.}
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[height=8cm, keepaspectratio]{./images_benchopt/mace_plate.pdf}
+    \caption{Bayesian plate diagram representation of the MACE model. Only the labels $\{y_i^{(j)}\}_{i,j}$ are observed. Latent variables to estimate are the true labels ($y_i^\star$), the spamming state $(S_{i,j})_{i,j}$, the probability to spam $(\theta_j)_j$ and the worker behavior when spamming $(\xi_j)_j$.}
+    \label{fig:plate_mace}
+\end{figure}
+
 The MACE strategy has been designed to be more robust against spammers.
 Contrary to the definition of spammers by \citet{raykar_ranking_2011}, they here consider spam as a state of the worker.
 
@@ -995,6 +1003,7 @@ The associated likelihood -- maximized using the EM algorithm as in DS -- writes
 \mathbb{P}(\{y_i^{(j)}\}_{i,j}|\theta,\xi) =& \\ \sum_{y^\star\in [K]^{n_\text{task}}}&\sum_{S\in\{0,1\}^{n_\text{task}\times n_\text{worker}}}\left[\prod_{i=1}^{n_\text{task}} \mathbb{P}(y^\star_i) \prod_{j=1}^{n_\text{worker}} \mathbb{P}(S_{i,j}|\theta_j)\mathbb{P}(y_i^{(j)}|S_{i,j},y_i^\star, \xi_j)\right]\enspace.
 \end{align*}
 
+In \Cref{fig:plate_mace}, we represent the associated bayesian plate diagram.
 
 \paragraph{KOS \citep{karger2011iterative}.}
 Only set for binary classification $y_i^\star\in\{\pm 1\}$, the KOS strategy from a graph-theory perspective.
@@ -1017,6 +1026,46 @@ Finally, the estimated label is computed as:
 \[
 \forall i\in [n_\text{task}],\ \hat y_i^{\text{KOS}} = \mathrm{sign}\left(\sum_{j\in\partial_i} y_i^{(j)}y_{j\rightarrow i}\right)\enspace.
 \]
+
+\begin{constructionbox}[Visualizing KOS.]
+Let us consider the binary answers:
+\begin{center}
+\begin{tabular}{|c|ccccc|}
+    \hline
+    \textbf{Worker j / Task i} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\
+    \hline
+    1 &    & 1  & 1  & -1  &  1 \\
+    2 & -1 & 1  &    &     &  1 \\
+    3 & 1  & 1  &    & 1   &  1 \\
+    4 & -1 &    & 1  & -1  & -1 \\
+    \hline
+\end{tabular}
+\end{center}
+
+The associated graph representing workers in blue and tasks in red is:
+
+\begin{minipage}[c]{0.40\textwidth}
+    \begin{center}
+    \includegraphics[width=\textwidth]{./images_benchopt/network_kos.pdf}
+    \end{center}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.45\textwidth}
+    Each task sends a message $x_{i\rightarrow j}$ to each worker who answered them. Each worker sends a message $y_{j\rightarrow i}$ to each task they answered.
+
+    For example, task $5$ sends messages to workers $4,3,2$ and $1$
+
+    Thus $\partial_{\textcolor{red}{5}}=\{1,2,3,4\}$.
+
+    Worker $4$ sends messages to tasks $1,3,4$ and $5$.
+
+    Thus $\partial_{\textcolor{blue}{4}}=\{1,3,4,5\}$.
+\end{minipage}
+
+At a given step, the reliability of worker $\textcolor{blue}{4}$ concerning their answer to task $\textcolor{red}{5}$ is thus updated as follows:
+\[
+    y_{\textcolor{blue}{4}\rightarrow \textcolor{red}{5}} = \sum_{i'\in \partial_{\textcolor{blue}{4}}\setminus \{\textcolor{red}{5}\}} y_{i'}^{(\textcolor{blue}{4})} x_{i'\rightarrow \textcolor{blue}{4}} = -1\times x_{\textcolor{red}{1}\rightarrow \textcolor{blue}{4}} + 1\times x_{\textcolor{red}{3}\rightarrow \textcolor{blue}{4}} + (-1)\times x_{\textcolor{red}{4}\rightarrow \textcolor{blue}{4}}  + (-1)\times x_{\textcolor{red}{5}\rightarrow \textcolor{blue}{4}}\enspace.
+\]
+\end{constructionbox}
 
 \paragraph{Fast-DS \citep{sinha2018fast}.}
 As the DS strategy is known to have a high computational cost, \citet{sinha2018fast} proposed a faster version of the DS strategy.
