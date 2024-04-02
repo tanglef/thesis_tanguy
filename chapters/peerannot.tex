@@ -1138,6 +1138,8 @@ We provide the \texttt{train} command to train deep learning models from \texttt
 \end{itemize}
 Keeping the same framework from beginning to end, based on PyTorch, allows for a more seamless integration of the crowdsourcing pipeline in existing projects.
 
+As we will see in \Cref{chap:plantnet}, the \texttt{peerannot} library is more suited for classification tasks with a high number of classes, tasks and/or workers. Indeed, for the dataset we will consider, none of the aggregation strategies from \texttt{crowd-kit} could be run due to memory issues that are directly linked to the data format choice.
+
 \section{Conclusion}
 
 We presented the \texttt{peerannot} library: an open-source Python library to handle crowdsourced datasets.
