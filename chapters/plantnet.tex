@@ -18,20 +18,15 @@
         \end{enumerate}
 \end{keypointstwomargins}
 
-\begin{figure}[thb]
-        \centering
-        \includegraphics[width=.75\linewidth]{images/plantnet_schema_global_green.pdf}
-        \caption{Pl@ntNet system of human-AI interaction for plant species recognition. Users take their plant observations in the Pl@ntNet application. A prediction is output by the AI model. Users can validate the prediction or propose another species. The whole votes collection is used to evaluate user expertise and actively revise observations identifications.}
-        \label{fig:plantnet-system}
-    \end{figure}
-
-
 \section{Crowdsourcing for plant species identification}
 
 Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,borowiec2022}.
 However, to train them we need large annotated datasets.
 These datasets are often created thanks to citizen science approaches, collecting both reliable and useful information \citep{brown2019potential}.
 Among existing plant recognition applications, the Pl@ntNet citizen science platform \citep{affouard2017pl} enables global data collection by allowing users to upload and annotate plant observations.
+
+We first introduce the problem of labeling a plant observation and the complexity of plant taxonomy. Then, we present the Pl@ntNet platform and its voting interface.
+Finally, we discuss the current label aggregation strategy and propose ways to improve it.
 
 \subsection{Plant taxonomy generalities}
 First, we need to understand the complexity of plant taxonomy.
@@ -60,6 +55,7 @@ For example, the + \emph{Laburnocytisus adamii} results of the transplant of two
 \subsubsection{Checklists and referentials}
 
 The plant name is generally composed of only two parts: the genus and the species.
+In this work, we do not consider vernacular names -- the common names of plants -- as they can vary from one region to another.
 Botanists have created checklists of accepted plant species.
 
 One of the largest is the International Plant Names Index (IPNI) \citep{IPNI2024}.
@@ -77,10 +73,49 @@ Synonyms are not rare in plant taxonomy and can be due to different reasons such
 As an example, in WCVP there are $357347$ plant species and $565200$ synonyms for those species.
 
 Moreover, note that checklists might not always cover all the species and synonyms from one another.
-For example, the \emph{Pilosella officinarum Vaill.} is listed in POWO with $161$ possible synonyms  -- $141$ accepted synonyms and $20$ illegitimate -- while in the GBIF it is listed with $241$ possible synonyms.
+For example, the \emph{Pilosella officinarum} Vaill. is listed in POWO with $161$ possible synonyms  -- $141$ accepted synonyms and $20$ illegitimate -- while in the GBIF it is listed with $241$ possible synonyms.
 In the Pl@ntNet database, synonyms are only considered at the species level, resulting in $22$ possible accepted synonyms for this species.
 
+\begin{figure}[tbh]
+        \centering
+        \includegraphics[width=.95\textwidth]{./images_plantnet/level2.pdf}
+        \caption{Regional areas at level 2: subcontinental botanical regions of the world.  }
+        \label{fig:level2}
+\end{figure}
+
+The international system groups areas of the world at different levels to record plant distributions and have standardized comparisons. This system is called the World Geographical Scheme for Recording Plant Distributions (WGSRPD) \citep{brummitt2001world}. The first level represents the nine botanical continents -- Europe, Africa, Asia-Temperate, Asia-Tropica, Australasia, Pacific, Northern America, Southern America and Antarctic.
+The second level is the subcontinental regions of the world -- see \Cref{fig:level2} for a representation. It divides each botanical continent between $2$ and $10$ subdivisions. For example, Europe is divided into Northern, Middle, Southwestern, Southeastern and Eastern Europe.
+Levels 3 and 4 include states, provinces or botanical areas.
+In Pl@ntNet, level 2 is used to filter the species that can be observed in a given area and adapt the models' predictions.
+In addition, users can specify to which flora -- either a level 2 subdivision or a Pl@ntNet project like "Useful plants" or "World Flora" -- they wish to associate their contribution.
+
 \subsection{What is a plant observation?}
+
+\begin{figure}[bth]
+        \centering
+        \begin{minipage}[b]{0.3\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/quadra1.JPG}
+        %     \caption{Caption for Image 1}
+        %     \label{fig:image1}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[b]{0.3\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{/images_plantnet/quadra2.jpeg}
+        %     \caption{Caption for Image 2}
+        %     \label{fig:image2}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[b]{0.3\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/quadra3.jpeg}
+        %     \caption{Caption for Image 3}
+        %     \label{fig:image3}
+        \end{minipage}
+        \caption{Quadrats used in the field to estimate the abundance of species. They are often in a hard rectangle shape material like wood or soft with meters of ribbon to delimit the surface. (\textcopyright Pierre Bonnet)}
+        \label{fig:quadrats}
+    \end{figure}
 
 Contrary to classical datasets, Pl@ntNet observations are not a single image but a set of images taken by a user in the field.
 A single image of a plant might not be enough to identify the species.
@@ -92,27 +127,209 @@ In the field, some recommendations include\footnote{\url{https://ibis.geog.ubc.c
         \item physical traits of the plant -- height, color range, hairy (length, width), texture (velvety, rough, smooth), is it stingy, thorny? \emph{etc.}
         \item position and number of leaves, flowers (symmetrical, shape), fruits or seeds (size, flesh), \emph{etc.}
         \item blooming period
+        \item the type of bark -- smooth, rough, flaky, color, color changes depending on the season
+        \item the roots -- if safely available for both the identifier and the identified plant -- to see rooted stems, rhizomes, bulbs or tubers. A horizontal expansion of the roots can be a sign of a rhizome.
         \item the aroma (minty, pungent)
         \item grown habits -- bushy, sprawling around, erected, vine-like
+        \item other species around, abundance of the species
         \item \dots
 \end{itemize}
 
 Once these criteria are gathered, the botanist can identify possible species.
 To filter out the possible species, the botanist will also consider the habitat -- sand, marshes, rocky fields -- the elevation -- sea level, mountain -- and the region to narrow the confusion.
+The use of a determination key can also help the identification.
+
+\begin{figure}[bth]
+        \centering
+        \begin{minipage}[b]{0.49\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/scabiosa.jpg}
+            \caption*{Observation of a \emph{Scabiosa columbaria} L. (\textcopyright Llandrich anna)}
+        %     \label{fig:image1}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[b]{0.49\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/knautia.jpg}
+            \caption*{Observation of a \emph{Knautia arvensis} (L.) Coult. (\textcopyright Francois Mansour)}
+        %     \label{fig:image3}
+        \end{minipage}
+        \caption{Two observations of different species known to be difficult to identify from one another: a \emph{Scabiosa columbaria} L. and a \emph{Knautia arvensis} (L.) Coult. The flowers are visually close, but the leaves from the bottom view on the \emph{Scabiosa} and the structural differences in the second photo allow a clear identification.}
+        \label{fig:scabiosa-knautia}
+    \end{figure}
+
+In practice, botanists use quadrats -- plots of ground of a specific size -- to count the number of species in a given area and estimate the abundance of each species. Such quadrats are shown in \Cref{fig:quadrats}.
+
 
 Most of these criteria (like the aroma, texture or habitat), can be difficult or even impossible yet to be gathered from multiple images, and much less from a single one.
 Hence, the use of multiple images is crucial to correctly identify the species or at least narrow down the possible species.
 Botanists will observe multiple organs (flower, fruit, leaf), from different angles (a flower from the bottom view can have specific traits not visible from the side).
 These characteristics can be transmitted via multiple images for the same observation.
-
+We give an example in \Cref{fig:scabiosa-knautia} of two species that are visually close but can be distinguished using multiple images in the same observation.
 
 \subsection{Presenting the voting interface}
 
+\subsubsection{Author contribution.}
+
+\begin{figure}[H]
+        \centering
+        \begin{minipage}[b]{0.38\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{./images_plantnet/pothos_marble.png}
+            \caption*{Observation of a plant which necessitates identification (\textcopyright Tanguy Lefort). The image is sent to Pl@ntNet's computer vision model for identification. A similarity search is performed to present similar pictures for each proposed species.}
+        %     \label{fig:image1}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[b]{0.55\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{./images_plantnet/pothos_marble_plantnet.png}
+            \caption*{Pl@ntNet identification results}
+        %     \label{fig:image3}
+        \end{minipage}
+        \caption{From an image query, Pl@ntNet outputs possible species. For visual aid, close-looking images are also shown for each proposed species. The user can then click on the \emph{compare picture} button to make their choice. Then, the user can vote on the species by clicking on \emph{It's the right species} button. Here the probability of \emph{Epipremnum aureum} (Linden \& André) G.S.Bunting to be the right species is $65\%$ -- also known as \emph{Pothos aureus} Linden \& André.}
+        \label{fig:pothos_id}
+\end{figure}
+
+In Pl@ntNet, an observation is a set of images taken by a user in the field.
+The author user can then upload these images to the platform.
+The platform will then propose a list of possible species for the observation with the associated predicted probabilities and other images that are close-looking to the picture taken.
+The author can then vote on the species they think are present in the observation as illustrated in \Cref{fig:pothos_id}.
+
+The vote is guided by the computer vision model predictions (see \Cref{sub:pipeline_plantnet}) and other pictures selected via a similarity search algorithm.
+This similarity search is important as the same species can have different visual presentations at multiple stages of its life cycle.
+The similarity search is based on the features from the last layer of Pl@ntNet's network.
+These features are hashed using the Random Maximum Margin Hashing algorithm \citep{joly2011random} and then an approximate $k$-nearest neighbors is applied \citep{joly2008posteriori}.
+
+If a user disagrees with the model's predictions, they can enter the name of the species freely in the input box as shown in \Cref{fig:pothos_sharing}.
+The user input is guided by the name of possible species in the currently selected flora.
+
+% \begin{wrapfigure}[14]{l}{.55\textwidth}
+        \begin{figure}[tbh]
+        \centering
+        \includegraphics[width=.65\textwidth]{./images_plantnet/free_sharing_pothos.png}
+        \caption{The author can select one of the model's predicted species or input freely the name of a species. The user input is guided by the name of possible species in the currently selected flora (here World Flora). Note that by clicking on the gear icon, a user can change the flora.}
+        \label{fig:pothos_sharing}
+        \end{figure}
+% \end{wrapfigure}
+
+The author can also input any text freely -- hence adding possible noisy votes.
+At this stage, there is no filter performed on the existence of the given species in the database.
+The author can also share the location of the observation, and add additional inputs in a specific reserved field -- the habitat, the aroma or any other feature they would like to share.
+Some users unfortunately might mistake the different fields and input information as the species name, a cleaning step is thus a necessary step in the platform.
+
+\subsubsection{Other users contributions.}
+
+Once the observation is shared online, it is time for others to enter the collaborative playground.
+Any user can visit the \emph{identify} Pl@ntNet platform and vote on observations.
+The view is as presented in \Cref{fig:others_plantnet}.
+
+\begin{figure}[tbh]
+        \centering
+        \includegraphics[width=.95\textwidth]{./images_plantnet/plantnet_others.png}
+        \caption{View of observations as a user (\textcopyright Pavlos). The current prediction is shown, with the initial species proposed. Suggestions from other users are on the right, with a field to propose your thoughts or accept someone else's. Anyone can vote for the organ shown in the image -- in this case, users agree on the flower. The quality is accepted by 2 users and there is no vote to reject the observation based on the fact there is no plant in the actual image.}
+        \label{fig:others_plantnet}
+\end{figure}
+
+The initial author determination -- if existing -- is shown, with the current prediction.
+In the \emph{suggested name} box, all registered species votes are shown with the number of agreements.
+In \Cref{fig:others_plantnet}, 5 different users voted: 3 for the species \emph{Vesalea grandifolia} Villarreal Hua Feng Wang \& Landrein, 1 for the \emph{Zabelia triflora} (R.Br. ex Wall.) Makino ex Hisauti \& H.Hara and one user voted for \emph{undertermined} -- meaning they could not identify the species or there is not enough information provided to their knowledge to identify the species.
+There is a field for a new vote, where the user is guided to propose an existing species but can enter any text freely.
+By clicking on the Pl@ntNet icon next to it, the model's predictions are shown with the associated probabilities and close-looking examples to guide the identification as in \Cref{fig:pothos_id}.
+
+In addition to the species, users (as authors) can vote on the organ shown in the image(s).
+The organs can be a leaf, flower, fruit, bark, habit (form in which the plant grows) or other.
+Users can approve or disapprove the quality of the image -- if the plant is not correctly visible, the image is blurry, or the organ is not visible.
+If there is no plant in the image, they can also flag it with the \emph{no plant} button.
+
+In the upper-right section of the presented observation, the user can see if the observation was associated with any geolocalisation, if the observation is considered as \textbf{valid} by the Pl@ntNet algorithm and if it was reviewed by others.
+The \emph{valid} status is given by the Pl@ntNet algorithm presented in \Cref{sub:algo_plantnet} and is a proxy for the quality of the observation.
+
+The iNaturalist platform uses a research grade status to indicate the quality of the observation\footnote{\url{https://www.inaturalist.org/posts/39072-research-grade}}:
+\begin{itemize}
+        \item there is a picture or recording of sound,
+        \item the genus and/or species name of the organism are specified,
+        \item the GPS coordinates are associated,
+        \item the observation is timed and dated,
+        \item the observatory is identified,
+        \item there is at least a $2/3$ agreement consensus by users on the identified species.
+\end{itemize}
+In Pl@ntNet, the data quality is monitored by this \textbf{valid} status that depends on the estimated reliability of a user and the agreement of the community on the observation.
+We explain in more detail the algorithm used to estimate the reliability of a user in \Cref{sub:algo_plantnet}.
+
+\subsubsection{What is not an observation.}
+
+Until now, we described what is an observation.
+So, let us show examples of what isn't an observation.
+
+\begin{figure}[bth]
+        \centering
+        \begin{minipage}[t]{0.25\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/katyykkk_no_plant.png}
+            \caption*{A drawing is not a plant (\textcopyright Katyykk)}
+        %     \label{fig:image1}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.25\textwidth}
+            \centering
+            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/eugenio_perez_perez_shroom.png}
+            \caption*{A fungus is not in the Plantae kingdom (\textcopyright eugenio perez perez)}
+        %     \label{fig:image3}
+        \end{minipage}
+        \hfill
+         \begin{minipage}[t]{0.47\textwidth}
+                \centering
+                \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/PA0L0_D1_B3LL0_minecraft.png}
+                \caption*{A video game tree (minecraft version of a birch tree) is not a real plant. (\textcopyright PA0L0\_D1\_B3LL0)}
+            %     \label{fig:image3}
+            \end{minipage}
+        \caption{Three examples of images that are not plant observations.}
+        \label{fig:not_an_observation}
+    \end{figure}
+
+More generally, drawings -- even realistic -- of plants or photos of images of plants are not considered plant observations.
+The same goes for fungi, which are not part of the Plantae kingdom and thus are not identified by Pl@ntNet.
+Finally, images of video games -- even if they represent plants -- are not considered plant observations.
+We show examples of these in \Cref{fig:not_an_observation}.
+Photos of people, animals, pornographic images or any other object that is not a plant are also not considered plant observations.
+These images are flagged, removed from the platform and are not used to train the models.
+
+Another possible issue is the presence of multiple species in the same observation.
+These observations are flagged as \emph{malformed}, we provide an example in \Cref{fig:malformed_observation}.
+Users can cast their vote to indicate that the observation is malformed and should not be considered.
+
+\begin{figure}[htbp]
+        \centering
+        \includegraphics[width=.75\textwidth]{./images_plantnet/maformed_leonardo_liberati.png}
+        \caption{Malformed observation: each image is associated with a different species (\textcopyright Leonardi Liberati).}
+        \label{fig:malformed_observation}
+\end{figure}
+
 \subsection{A step in a bigger pipeline}
+\label{sub:pipeline_plantnet}
+
+\begin{figure}[thb]
+        \centering
+        \includegraphics[width=.65\linewidth]{images/plantnet_schema_global_green.pdf}
+        \caption{Pl@ntNet system of human-AI interaction for plant species recognition. Users take their plant observations in the Pl@ntNet application. A prediction is output by the AI model. Users can validate the prediction or propose another species. The whole votes collection is used to evaluate user expertise and actively revise observations identifications.}
+        \label{fig:plantnet-system}
+    \end{figure}
+
+The gathering and aggregation of votes is only a part of the Pl@ntNet pipeline.
+Schematized in \Cref{fig:plantnet-system}, the Pl@ntNet system is a loop between curating the data and training a computer vision model.
+The label aggregation algorithm is presented in detail in \Cref{sec:aggregation_plantnet}.
+Let us briefly address the computer vision model part.
+
+At the time of writing, the model in use in Pl@ntNet is DINOv2 \citep{oquab2024dinov2} a transformer-based network.
+
+XXX ask more details to JCf
+
 
 \section{Pl@ntNet's label aggregation strategy}
+\label{sec:aggregation_plantnet}
 
 \subsection{Presentation of the algorithm}
+\label{sub:algo_plantnet}
 
 \subsection{Introducing a subset of Pl@ntNet to evaluate the current strategy}
 
