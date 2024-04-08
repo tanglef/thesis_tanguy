@@ -173,6 +173,19 @@ The $\AUM\mathrm{C}$ strategy lacks the worker abilities and task difficulty.
 There is no worker-specific margin, the MV aggregation strategy removed the worker-specific information from the $\AUM$.
 In the following, we introduce the $\WAUM$: a statistic that generalizes the $\AUM$ to the crowdsourcing setting by aggregating worker-specific margins into a weighted average to consider both worker abilities and task difficulty.
 
+\subsubsection{Out-of-Model-Scope and task difficulty.}
+Identifying ambiguous tasks in a training set seems close to the Out-Of-Distribution (OOD) detection problem -- when we aim at detecting data that is not from the same distribution as our training set \citep{schorn2020facer,wang2022vim}.
+Given a new data point, a monitoring system is built to detect if that point comes from the same distribution as the data used to train a model or whether it deviates significantly from that distribution.
+Similarly, recent works argue that the Out-Of-Model-Scope (OMS) detection problem is a more general problem than OOD detection \citep{granese2021doctor,guerin2023out}.
+Given a model, we construct its scope as the set of data where the model is correct.
+A monitor is built so that, given a new task, we can detect if the model is suited or not to classify it.
+It is a model-dependent problem, and the scope is defined by the model's architecture and training data, contrary to the OOD problem which is only dependent on the training data.
+
+However, both the OOD and the OMS detection problems are not the same as identifying ambiguous tasks in our setting.
+Indeed, OOD detection relies on testing whether the task is from the same distribution as the training set without a network.
+The OMS detection relies on testing whether the task is in the trained model scope at evaluation time.
+We consider with the $\AUM$, and the $\WAUM$, the task difficulty in the training set, given a new model, how to identify ambiguous tasks before the evaluation step.
+
 \subsection{Definition and construction of the WAUM}
 \label{sub:def_waum}
 % Explain weights choice and variations
@@ -233,7 +246,7 @@ In \Cref{eq:trust_factor}, the diagonal of the confusion matrix $\hat{\pi}^{(j)}
     \end{constructionbox}
 
 
-\paragraph{Why variance or entropy-based identifications are not always suited.}
+\subsubsection{Why variance or entropy-based identifications are not always suited.}
 
 The natural choice instead of the $\mathrm{WAUM}$ would be to use the entropy of the votes to detect ambiguous tasks. However, the entropy of the votes is not always suited for difficulty identification.
 Indeed, when large amounts of votes per task are available, the entropy of the votes and the $\mathrm{WAUM}$ coincide well, as in \Cref{fig:entropy_vs_waum}(a).
@@ -252,7 +265,7 @@ Yet, when votes are scarce, as in \Cref{fig:entropy_vs_waum}(b) and (c), entropy
     \label{fig:entropy_vs_waum}%
 \end{figure}
 
-\paragraph{Dataset Pruning and hyperparameter tuning.} Our procedure (\Cref{alg:WAUMstack}) proceeds as follows.
+\subsubsection{Dataset Pruning and hyperparameter tuning.} Our procedure (\Cref{alg:WAUMstack}) proceeds as follows.
 We initialize our method by estimating the confusion matrices for all workers.
 For each worker $w_j$, the $\mathrm{AUM}$ is computed for its labeled tasks, and so is its worker-dependent trust scores $s^{(j)}(x_i)$ with \Cref{eq:trust_factor} during the training phase of a classifier.
 The $\mathrm{WAUM}$ in \Cref{eq:WAUM} is then computed for each task.
@@ -264,7 +277,7 @@ Following the recommendations from \citet{pleiss_identifying_2020}, we need $T$ 
 In practice, a guideline given is to train until the first learning rate scheduler drops to only keep the beginning of the scores trajectories without finetuning.
 The main assumptions to identify ambiguous tasks is thus not to over-train the neural network in the $\mathrm{WAUM}$ (or $\mathrm{AUMC}$) step, and to be able to run a DS-like algorithm to recover the diagonal of the confusion matrix for \Cref{eq:trust_factor}.
 
-\paragraph*{Refined initialization: estimating confusion matrices.}
+\subsubsection*{Refined initialization: estimating confusion matrices.}
 By default, we rely on the \texttt{Est}$=$DS algorithm to get workers' confusion matrices, but other estimates are possible: DS might suffer from the curse of dimensionality when the number $K$ of classes is large ($K^2$ coefficients needed per worker).
 
 \begin{algorithm}[tb]
@@ -291,7 +304,7 @@ By default, we rely on the \texttt{Est}$=$DS algorithm to get workers' confusion
 \end{algorithm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\paragraph{Training on the pruned dataset.}
+\subsubsection{Training on the pruned dataset.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Once a pruned dataset $\mathcal{D}_{\text{pruned}}$ has been obtained thanks to the $\mathrm{WAUM}$, one can create soft labels through an aggregation step, and use them to train a classifier.
 Aggregated soft labels contain information regarding human uncertainty, and could often be less noisy than NS labels.
@@ -313,13 +326,13 @@ We compare our $\mathrm{WAUM}$ scheme with several other strategies like $\mathr
 For $\mathrm{CoNAL}$, two regularization levels are considered: $\lambda=0$ and $\lambda=10^{-4}$ ($\lambda$ controls the distance between the global and the individual confusion matrices).
 More simulations and an overview of the methods compared are available in \Cref{subsec:Synthetic_dataset}.
 
-\paragraph*{Metrics investigated.}
+\subsubsection*{Metrics investigated.}
 After training, we report two performance metrics on a test set $\mathcal{D}_{\texttt{test}}$: top-$1$ accuracy and expected calibration error (ECE) (with $M=15$ bins as in \citet{guo_calibration_2017}).
 The ECE measures the discrepancy between the predicted probabilities and the probabilities of the underlying distribution.
 For ease of reporting results, we display the score $1-\mathrm{ECE}$ (hence, the higher the better, and the closer to $1$, the better the calibration).
 Reported errors represent standard deviations over the repeated experiments (10 repetitions on simulated datasets and 5 for real datasets).
 
-\paragraph*{Implementation details.}
+\subsubsection*{Implementation details.}
 For simulations, the training is performed with a three dense layers artificial neural network (an MLP with three layers) $(30, 20, 20)$ with batch size set to $64$.
 Workers are simulated with \texttt{scikit-learn} \citep{scikit-learn} classical classifiers.
 For \texttt{CIFAR-10H} the Resnet-$18$ \citep{he2016deep} architecture is chosen with batch size set to $64$.
@@ -473,7 +486,7 @@ Ablation studies by architecture are performed on \texttt{CIFAR-10H} and \texttt
     \label{fig:worse_C10H}
 \end{figure}
 
-\paragraph*{\texttt{CIFAR-10H} dataset.} The training part of \texttt{CIFAR-10H} consists of the $10\,000$ tasks extracted from the test set of the classical CIFAR-10 dataset \citep{krizhevsky2009learning}, and $K=10$.
+\subsubsection*{\texttt{CIFAR-10H} dataset.} The training part of \texttt{CIFAR-10H} consists of the $10\,000$ tasks extracted from the test set of the classical CIFAR-10 dataset \citep{krizhevsky2009learning}, and $K=10$.
 A total of $n_\texttt{worker}=2571$ workers participated on the Amazon Mechanical Turk platform, each labeling $200$ images ($20$ from each original class), leading to approximately $50$ answers per task.
 We have randomly extracted $500$ tasks for a validation set (hence $n_{\texttt{train}}=9500$).
 This dataset is notoriously more curated \citep{aitchison2020statistical} than a common dataset in the field: most difficult tasks were identified and removed at the creation of the CIFAR-10 dataset, resulting in few ambiguities.
@@ -546,7 +559,7 @@ We refer to the \emph{"labeler instruction sheet"} of \citet[Appendix C]{krizhev
         Even if the two tasks are very similar, because the workers are different the associated proposed labels can differ and add noise during training.}
 \end{figure}
 
-\paragraph{\texttt{LabelMe} dataset.} This dataset consists in classifying $1000$ images in $K=8$ categories.
+\subsubsection{\texttt{LabelMe} dataset.} This dataset consists in classifying $1000$ images in $K=8$ categories.
 In total $77$ workers are reported in the dataset (though only $59$ of them answered any task at all).
 Each task has between $1$ and $3$ labels. A validation set of $500$ images and a test set of $1188$ images are available.
 
@@ -565,7 +578,7 @@ For example, the classes \texttt{highway}, \texttt{insidecity}, \texttt{street} 
     \label{fig:worse_labelme}
 \end{figure}
 
-\paragraph*{\texttt{Music} dataset.}
+\subsubsection*{\texttt{Music} dataset.}
 
 \begin{figure}[thb]
     \centering
@@ -596,7 +609,7 @@ One last example detected: the music \emph{Patches} by Clarence Carter is stored
 The true label is supposed to be \texttt{disco}, while the workers have provided the following labels: two have chosen \texttt{rock}, two \texttt{blues}, one \texttt{pop} and another one proposed \texttt{country}.
 The actual genre of this music is \texttt{country}-soul, so both the true label and five out of six workers are incorrect.
 
-\paragraph*{WAUM sensitivity to the neural network architecture.}
+\subsubsection*{WAUM sensitivity to the neural network architecture.}
 \begin{figure}[th]
   \centering
   \begin{tabular}{m{1.75cm} *{4}{>{\centering\arraybackslash}m{.15\linewidth}}}

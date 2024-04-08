@@ -18,7 +18,25 @@
         \end{enumerate}
 \end{keypointstwomargins}
 
+While crowdsourcing is advertised to collect a large number of data easily, with strategies to mitigate the noise, openly available datasets are still scarce and with a low number of classes ($K\leq 10$ in general).
+In this chapter, we focus on the Pl@ntNet platform, a citizen science platform for plant species recognition.
+One of the challenges in this classification setting is the large number of possible species ($K>10^4$).
+After presenting the platform and voting system, we will investigate the current label aggregation strategy in Pl@ntNet.
+We compare it with other strategies that can handle this large number of classes, workers and tasks.
+Finally, we propose to improve the current algorithm by taking advantage of the Pl@ntNet pipeline.
+
+Note that in previous chapters, the crowdsourcing experiments concerned workers paid to answer multiple tasks.
+In Pl@ntNet, contributions are by volunteers and the tasks are not paid.
+We thus slightly adapt the vocabulary used in this chapter to reflect this difference.
+People voting are called users.
+The tasks are observations of plants (detailed in \Cref{sub:obs_plantnet_what}) for which we wish to identify the species.
+To reflect this change, we write $\mathcal{U}$ the set of all users. Each user $u$ has a unique identifier used as an index, and we denote $\mathcal{U}_i$ the set of users that have voted on observation $i$.
+We thus have $\mathcal{U} = \bigcup_{i\in [n_\texttt{task}]} \mathcal{U}_i$.
+The vote of user $u$ on observation $i$ is denoted $y_i^u\in [K]$.
+
+
 \section{Crowdsourcing for plant species identification}
+\label{sec:introducing_plantnet}
 
 Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,borowiec2022}.
 However, to train them we need large annotated datasets.
@@ -90,6 +108,7 @@ In Pl@ntNet, level 2 is used to filter the species that can be observed in a giv
 In addition, users can specify to which flora -- either a level 2 subdivision or a Pl@ntNet project like "Useful plants" or "World Flora" -- they wish to associate their contribution.
 
 \subsection{What is a plant observation?}
+\label{sub:obs_plantnet_what}
 
 \begin{figure}[bth]
         \centering
@@ -328,8 +347,61 @@ XXX ask more details to JCf
 \section{Pl@ntNet's label aggregation strategy}
 \label{sec:aggregation_plantnet}
 
+As we discussed in \Cref{sec:introducing_plantnet}, plant species identification is a task that requires skills to recognize morphological traits (shapes, measurements, environments and specific characteristics).
+A large number of users with diverse skills have participated in gathering plant observations and helped improve the training dataset of our computer vision model.
+Their participation is based on votes that they can cast on others' observations, or by the initial species determination of their observation.
+The quality of each vote is then processed by the algorithm presented in \Cref{sub:algo_plantnet}.
+
+At the time of writing, this participatory approach has resulted in the collection of over 20 million observations, belonging to almost $\numprint{46000}$ species, by more than 6 million users worldwide. In total, more than $25$ million of images are shared in these observations.
+
+Other citizen science projects such as iNaturalist \citep{van2018inaturalist} or eBird \citep{sullivan2009ebird} use a similar approach to collect data, but differ in their label aggregation strategy.
+The iNaturalist project, with more than $2.5$ million users, records the votes at different taxonomic levels.
+The resulting label is the aggregation of at least two votes on a species-level identification (or coarser or finer taxonomic level).
+A taxon requires at least a two-thirds agreements among identifiers and all users have the same weight in the decision-making.
+Over time, a taxon can be further refined by the community, debated or revoked.
+eBird handles taxon quality control by using a checklist in each region for observers.
+Quality verifications on the checklist are performed and, combined with user knowledge -- number of species and checklist submitted, number of flagged observations, discussions among local experts -- the observation taxon is accepted.
+The eBird project also showed that monitoring species accumulation from observers can help to sort their skills \citep{kelling2015}. While they consider the species accumulation by hours spent on each collected observation, we present a strategy that takes into account the entire history of observations of the observer.
+
+
 \subsection{Presentation of the algorithm}
 \label{sub:algo_plantnet}
+
+\begin{algorithm}[tbh]
+        \caption{Pl@ntNet iterative weighted majority vote}
+        \label{alg:plantnet_algorithm}
+        \textbf{Input}: Votes as $(u, y_i^u)_{i\in [n_{\mathrm{SWE}}],u\in [n_\text{user}]}$ for each observation $i$ and user $u$ answering the voted species $y_i^u$, accuracy threshold $\theta_{\text{acc}}$, confidence threshold $\theta_{\text{conf}}$, weight function $f$, initial weight $\gamma>0$ \\
+        \textbf{Ouptput}: Estimated labels $\hat y_i$ and validity indicator $s_i$ for each observation $i$
+        \begin{algorithmic}[1]
+            \STATE $\text{Initialize } \hat y_i = \mathrm{MV}\left(\{y_i^u\}_u\right) \text{ for each observation } i \in [n_{\mathrm{SWE}}]$
+            \STATE $\text{Initialize user weights as } w_u = \gamma \text{ for each user } u \in [n_\text{user}]$
+            \WHILE{$\text{not converged}$}
+                \FOR{each observation $i\in [n_{\mathrm{SWE}}]$}
+                    \STATE Compute label confidence: $\mathrm{conf}_i(\hat y_i) = \sum_{u\in \mathcal{U}_i} w_u \mathds{1}(y_i^u=\hat y_i)$
+                    \STATE Compute label accuracy: $\mathrm{acc}_i(\hat y_i) = \mathrm{conf}_i(\hat y_i) / \sum_{k\in [K]} \mathrm{conf}_i(k)$
+                    \STATE Compute validity indicator: $s_i = \mathds{1}( \mathrm{acc}_i(\hat y_i) \geq \theta_{\text{acc}} \text{ and } \mathrm{conf}_i(\hat y_i) \geq \theta_{\text{conf}})$
+                \ENDFOR
+                \FOR{each user $u \in [n_\text{user}]$}
+                    \STATE Compute the number of valid identified species for authoring observations: \[n_u^\text{author} = |\{y_i^u\in [K] \,|\, y_i^u=\hat y_i, s_i=1, \mathrm{Author}(i)=u\}|\]
+                    \STATE Compute the number of identified species by voting on other's observations: \[n_u^\text{vote}=|\{y_i^u\in [K]\,|\, y_i^u=\hat y_i, \mathrm{Author}(i)\neq u\}|\]
+                    \STATE Compute the rounding number of identified species per user: \[n_u = \mathrm{Round}\left(n_u^\text{author} + \frac{1}{10}n_u^\text{vote}\right)\]
+                    \STATE Transform number of estimated species per user into trust score: $w_u = f(n_u)$
+                    \ENDFOR
+                \STATE Update estimated labels with a weighted majority vote $$ \forall i \in [n_{\mathrm{SWE}}],\ \hat y_i = \argmax_{k\in[K]} \sum_{u\in \mathcal{U}_i} w_u\mathds{1}(y_i^u=k)$$
+            \ENDWHILE
+        \end{algorithmic}
+    \end{algorithm}
+
+Pl@ntNet label aggregation strategy relies on estimating the number of correctly identified species for each user.
+Similar to other strategies, we rely on an EM-based iterative procedure \citep{Dempster_Laird_Rubin77} to estimate consecutively the users' skills and each observation's species. The detailed iterative algorithm is provided in \Cref{alg:plantnet_algorithm}.
+
+The label aggregation strategy generates a trust indicator ($s_i$) on the observation that can reveal whether an observation is valid or not.
+Notice that in \Cref{alg:plantnet_algorithm} we value $10$ times more authored observations than voting on other's observations -- if a user proposes a new observation with a label (species name) it is more useful than proposing a label by clicking.
+Indeed, being on the field leads to more information on the environment and a better determination of the species.
+Finally, note that an identified species is exclusively identified as author -- part of $n_u^\text{author}$ in \Cref{alg:plantnet_algorithm}) -- or as click -- part of $n_u^\text{vote}$ -- to avoid redundant skills.
+%species are unequivocally identified as authors ($n_u^\text{author}$ in \Cref{alg:plantnet_algorithm}) or as votes on other's observations ($n_u^\text{vote}$).
+The final number of species identified by users is the aggregation of these two terms: $n_u = \mathrm{Round}\left(n_u^\text{author} + \frac{1}{10}n_u^\text{vote}\right)$.
+
 
 \subsection{Introducing a subset of Pl@ntNet to evaluate the current strategy}
 

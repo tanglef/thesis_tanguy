@@ -37,6 +37,7 @@
 \usepackage{multirow}
 \usepackage{multicol}
 \usepackage{wrapfig}
+\usepackage{numprint}
 \usepackage{subcaption}
 \let\subcaption\relax
 \let\subfloat\relax
@@ -137,6 +138,11 @@ title={#1},
 
 \usepackage{algorithm,setspace}
 \usepackage[noend]{algorithmic}
+% \usepackage{algorithm}
+% % \usepackage{algpseudocode}
+% \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+% \renewcommand{\algorithmicensure}{\textbf{Output:}}
+
 % \usepackage[noend]{algpseudocode}
 % \algtext*{EndFor}% Remove "end while" text
 % \algtext*{EndWhile}% Remove "end while" text
@@ -157,6 +163,8 @@ title={#1},
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Chapter abstracts
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.75}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
 
 \usepackage{environ}
 
