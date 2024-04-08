@@ -198,7 +198,7 @@ Another setting where the mistakes are dependent on the task's difficulty level 
 
 \subsubsection{Simulated independent mistakes}
 
-The independent mistakes setting considers that each worker $w_j$ answers follows a multinomial distribution with weights given at the row $y_i^\star$​ of their confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$ Each confusion row in the confusion matrix is generated uniformly in the simplex. Then, we make the matrix diagonally dominant (to represent non-adversarial workers) by switching the diagonal term with the maximum value by row. Answers are independent of one another as each matrix is generated independently and each worker answers independently of other workers. In this setting, the DS model is expected to perform better with enough data as we are simulating data from its assumed noise model.
+The independent mistakes setting considers that each worker $w_j$ answers follows a multinomial distribution with weights given at the row $y_i^\star$ of their confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$. Each confusion row in the confusion matrix is generated uniformly in the simplex. Then, we make the matrix diagonally dominant (to represent non-adversarial workers) by switching the diagonal term with the maximum value by row. Answers are independent of one another as each matrix is generated independently and each worker answers independently of other workers. In this setting, the DS model is expected to perform better with enough data as we are simulating data from its assumed noise model.
 
 We simulate in \Cref{lst:indep_mistakes} $n_{\text{task}}=200$ tasks and $n_{\text{worker}}=30$ workers. The number of classes is $K=5$.
 Each task $x_i$ receives $|\mathcal{A}(x_i)|=10$ labels. With $200$ tasks and $30$ workers, asking for $10$ labels leads to around $\frac{200\times 10}{30}\simeq 67$ tasks per worker (with variations due to randomness in the assignations as seen in \Cref{fig:desc_independent}). Note that in practice achieving this result is not straightforward as workers can not label $67$ images without specific motivation (games, money rewards, \textit{etc.}).
@@ -830,7 +830,7 @@ def gd(grad, x0, lr, epsilon):
 
 \begin{itemize}
     \item iteration sampling: if the sampling strategy is set to \texttt{iteration}, the performance is computed for iterates of the solver following a geometrical growth sequence of parameter $\rho=1.5$. Starting from the first iterate, the next stopping iterate $\text{iter}_\text{stop}$ is computed as:
-    \[\text{iter}_\text{stop} = \max(\text{iter}_\text{stop} + 1 , \texttt{int}(\rho \star \text{iter}_\text{stop})) \enspace.\]
+    \[\text{iter}_\text{stop} = \max(\text{iter}_\text{stop} + 1 , \texttt{int}(\rho \text{iter}_\text{stop})) \enspace.\]
     \item tolerance sampling: if the sampling strategy is set to \texttt{tolerance}, the performance is computed for iterates of the solver reaching a tolerance threshold. This threshold sequence follows a geometrical sequence of parameter $\rho=1.5$. Starting from $1$, the next stopping threshold $\text{thresh}_\text{stop}$ is computed when:
     \[\text{thresh}_\text{stop} = \min\left(1, \max\left(\frac{\text{iter}_\text{stop}}{\rho}, 10^{-15}\right)\right) \enspace.\]
 \end{itemize}
