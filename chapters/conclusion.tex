@@ -1,1 +1,69 @@
 \chapter{Conclusion and perspectives}
+
+\section{Conclusion}
+In this thesis, we considered the problem of image classification via crowdsourced labels.
+First, we proposed a novel method -- the $\mathrm{WAUM}$ -- to identify possibly ambiguous images in a crowdsourced dataset.
+We showed qualitatively and quantitatively that the $\mathrm{WAUM}$ can help enhance computer vision model performances on crowdsourced datasets by identifying the tasks to remove.
+It is another step towards the automation of the data-cleaning process in crowdsourced datasets.
+
+Second, we introduced the \texttt{peerannot} library to handle crowdsourced datasets in image classification settings.
+Our open-source library is designed to be user-friendly and efficient, and it provides a set of tools to preprocess, analyze, and train computer vision models from crowdsourced datasets.
+We also created a benchmark in the \texttt{benchopt} library for label aggregation strategies so that the community can easily compare their methods on crowdsourced datasets.
+
+Finally, we considered the Pl@ntNet project framework and evaluated the performance of their label aggregation strategy on a newly released dataset.
+Very few label aggregation strategies can be run on a dataset with such a large number of tasks, workers and classes.
+Experimental results showed that the Pl@ntNet label aggregation strategy performs best in this setting.
+We also proposed different strategies to improve it, and the current solution found is to use the probability output of Pl@ntNet's model as prior knowledge in the label aggregation strategy -- with a threshold on the probability considered.
+
+\section{Perspectives}
+
+Each work presented in the chapters of this thesis has immediate and long-term perspectives that we detail below.
+
+\subsection{WAUM project.}
+
+The $\mathrm{WAUM}$ method is a weighted average.
+The weights are currently relying on the DS confusion matrices, which prevents them from being used in a setting with a large number of classes.
+A long-term perspective would be to consider other weights, that do not rely on DS strategies, to make the $\mathrm{WAUM}$ method usable in a large number of class settings.
+Preferably weights that can be theoretically evaluated to have performance guarantees.
+
+In the shorter term, the current way to use the $\mathrm{WAUM}$ method is to remove the tasks with the $\mathrm{WAUM}$ below a quantile $\alpha\in\mathbb{R}$.
+This is class-agnostic and, in highly imbalanced settings, could remove a class entirely from the tIn the longer term, \texttt{peerannot} has been created as an organization to provide multiple modules for other crowdsourced frameworks.
+Having a module to consider reinforcement learning for data collection strategies would be a great addition to the library.
+Indeed, in this thesis, we focused on how to handle collected data.
+However, the data collection process is also crucial in crowdsourced settings.
+Having a tool to evaluate the influence of actions and recommender systems for crowdsourced platforms would help researchers design better data collection strategies.
+raining set.
+A by-class quantile sequence $(\alpha_k)_{k\in [K]}$ could be introduced to only prune a few tasks per class and not globally.
+This would create a finer exploration of ambiguity in the training set.
+
+\subsection{Peerannot project.}
+
+We created the \texttt{peerannot} library to handle crowdsourced datasets in image classification settings.
+The current modules of \texttt{peerannot} allow users to identify poorly performing workers, and ambiguous tasks, to train computer vision models from aggregated labels, or to train a model that directly handles crowdsourced data.
+The library is designed to be user-friendly and efficient, and we hope that it will be used by the community to handle crowdsourced datasets.
+
+In the short term, we plan to add more functionalities and strategies to the library.
+For example, the more flexible the input data, the more users can use the library.
+
+In the longer term, \texttt{peerannot} has been created as an organization to provide multiple modules for other crowdsourced frameworks.
+Having a module to consider reinforcement learning for data collection strategies would be a great addition to the library.
+Indeed, in this thesis, we focused on how to handle collected data.
+However, the data collection process is also crucial in crowdsourced settings.
+Having a tool to evaluate the influence of actions and recommender systems for crowdsourced platforms would help researchers design better data collection strategies.
+This proactive approach would be a great addition to the library and could mitigate problems encountered later in the training pipeline.
+
+\subsection{Pl@ntNet project.}
+
+Finally, with the Pl@ntNet project, we evaluated the performance of their label aggregation strategy on a newly released dataset and proposed different strategies to improve it.
+The current solution found is to use the probability output of Pl@ntNet's model as prior knowledge in the label aggregation strategy -- with a threshold on the probability considered.
+While this solution could help in practice, before deploying it, we need to recalibrate the current model to have a better probability estimation.
+Indeed, if the strategy considers the probability output as the threshold, this probability should be well-calibrated to have a good performance.
+
+In a longer term, the Pl@ntNet project is a citizen science project with a large number of users.
+However, we saw in practice that a large number of users contribute very few times to the platform.
+Related to the former perspective, a recommender system could be used to recommend tasks to users and have them engage more in the annotation process.
+The main difficulty is to provide users with tasks that are not too difficult for them, and that could be interesting for them to annotate, with very little knowledge about most users.
+Furthermore, the recommender system should also consider the quality of the annotations provided by the users to recommend tasks to them.
+And, the recommender system should be run on the fly with very little computation time to provide users with tasks to annotate directly on the smartphone application.
+More engagement would also help the overall quality of the Pl@ntNet computer vision model if it is not noisy, thus the label aggregation strategy should in parallel be updated to consider the engagement of each user with the recommendations.
+And, of course it would be better if there could be theoretically guaranteed on the performance of the recommender system or at least simulations of such processes.

@@ -139,6 +139,25 @@ Contrary to classical datasets, Pl@ntNet observations are not a single image but
 A single image of a plant might not be enough to identify the species.
 More images of different parts of the plant -- leaves, flowers, fruits, \emph{etc.} -- are needed to correctly identify the species and mimic a botanist's behavior while it is surely not the same and we can not replace such expertise.
 
+\begin{figure}[tbh]
+    \centering
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/scabiosa.jpg}
+        \caption*{Observation of a \emph{Scabiosa columbaria} L. (\textcopyright Llandrich anna)}
+    %     \label{fig:image1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/knautia.jpg}
+        \caption*{Observation of a \emph{Knautia arvensis} (L.) Coult. (\textcopyright Francois Mansour)}
+    %     \label{fig:image3}
+    \end{minipage}
+    \caption{Two observations of different species known to be difficult to identify from one another: a \emph{Scabiosa columbaria} L. and a \emph{Knautia arvensis} (L.) Coult. The flowers are visually close, but the leaves from the bottom view on the \emph{Scabiosa} and the structural differences in the second photo allow a clear identification.}
+    \label{fig:scabiosa-knautia}
+\end{figure}
+
 In the field, some recommendations include\footnote{\url{https://ibis.geog.ubc.ca/biodiversity/eflora/identification.html}} but are not limited to:
 \begin{itemize}
         \item the type of plant: a shrub, an herb, a fern, \emph{etc.}
@@ -157,25 +176,6 @@ Once these criteria are gathered, the botanist can identify possible species.
 To filter out the possible species, the botanist will also consider the habitat -- sand, marshes, rocky fields -- the elevation -- sea level, mountain -- and the region to narrow the confusion.
 The use of a determination key can also help the identification.
 
-\begin{figure}[bth]
-        \centering
-        \begin{minipage}[b]{0.49\textwidth}
-            \centering
-            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/scabiosa.jpg}
-            \caption*{Observation of a \emph{Scabiosa columbaria} L. (\textcopyright Llandrich anna)}
-        %     \label{fig:image1}
-        \end{minipage}
-        \hfill
-        \begin{minipage}[b]{0.49\textwidth}
-            \centering
-            \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/knautia.jpg}
-            \caption*{Observation of a \emph{Knautia arvensis} (L.) Coult. (\textcopyright Francois Mansour)}
-        %     \label{fig:image3}
-        \end{minipage}
-        \caption{Two observations of different species known to be difficult to identify from one another: a \emph{Scabiosa columbaria} L. and a \emph{Knautia arvensis} (L.) Coult. The flowers are visually close, but the leaves from the bottom view on the \emph{Scabiosa} and the structural differences in the second photo allow a clear identification.}
-        \label{fig:scabiosa-knautia}
-    \end{figure}
-
 In practice, botanists use quadrats -- plots of ground of a specific size -- to count the number of species in a given area and estimate the abundance of each species. Such quadrats are shown in \Cref{fig:quadrats}.
 
 
@@ -187,26 +187,26 @@ We give an example in \Cref{fig:scabiosa-knautia} of two species that are visual
 
 \subsection{Presenting the voting interface}
 
-\subsubsection{Author contribution.}
-
-\begin{figure}[H]
+\begin{figure}[tbh]
+    \centering
+    \begin{minipage}[b]{0.38\textwidth}
         \centering
-        \begin{minipage}[b]{0.38\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{./images_plantnet/pothos_marble.png}
-            \caption*{Observation of a plant which necessitates identification (\textcopyright Tanguy Lefort). The image is sent to Pl@ntNet's computer vision model for identification. A similarity search is performed to present similar pictures for each proposed species.}
-        %     \label{fig:image1}
-        \end{minipage}
-        \hfill
-        \begin{minipage}[b]{0.55\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{./images_plantnet/pothos_marble_plantnet.png}
-            \caption*{Pl@ntNet identification results}
-        %     \label{fig:image3}
-        \end{minipage}
-        \caption{From an image query, Pl@ntNet outputs possible species. For visual aid, close-looking images are also shown for each proposed species. The user can then click on the \emph{compare picture} button to make their choice. Then, the user can vote on the species by clicking on \emph{It's the right species} button. Here the probability of \emph{Epipremnum aureum} (Linden \& André) G.S.Bunting to be the right species is $65\%$ -- also known as \emph{Pothos aureus} Linden \& André.}
-        \label{fig:pothos_id}
+        \includegraphics[width=\textwidth]{./images_plantnet/pothos_marble.png}
+        \caption*{Observation of a plant which necessitates identification (\textcopyright Tanguy Lefort). The image is sent to Pl@ntNet's computer vision model for identification. A similarity search is performed to present similar pictures for each proposed species.}
+    %     \label{fig:image1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.55\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./images_plantnet/pothos_marble_plantnet.png}
+        \caption*{Pl@ntNet identification results}
+    %     \label{fig:image3}
+    \end{minipage}
+    \caption{From an image query, Pl@ntNet outputs possible species. For visual aid, close-looking images are also shown for each proposed species. The user can then click on the \emph{compare picture} button to make their choice. Then, the user can vote on the species by clicking on the \emph{It's the right species} button. Here the probability of the \emph{Epipremnum aureum} (Linden \& André) G.S.Bunting to be the right species is $65\%$ -- also known as \emph{Pothos aureus} Linden \& André.}
+    \label{fig:pothos_id}
 \end{figure}
+
+\subsubsection{Author contribution.}
 
 In Pl@ntNet, an observation is a set of images taken by a user in the field.
 The author user can then upload these images to the platform.
@@ -224,7 +224,7 @@ The user input is guided by the name of possible species in the currently select
 % \begin{wrapfigure}[14]{l}{.55\textwidth}
         \begin{figure}[tbh]
         \centering
-        \includegraphics[width=.65\textwidth]{./images_plantnet/free_sharing_pothos.png}
+        \includegraphics[width=.55\textwidth]{./images_plantnet/free_sharing_pothos.png}
         \caption{The author can select one of the model's predicted species or input freely the name of a species. The user input is guided by the name of possible species in the currently selected flora (here World Flora). Note that by clicking on the gear icon, a user can change the flora.}
         \label{fig:pothos_sharing}
         \end{figure}
@@ -243,7 +243,7 @@ The view is as presented in \Cref{fig:others_plantnet}.
 
 \begin{figure}[tbh]
         \centering
-        \includegraphics[width=.95\textwidth]{./images_plantnet/plantnet_others.png}
+        \includegraphics[width=.85\textwidth]{./images_plantnet/plantnet_others.png}
         \caption{View of observations as a user (\textcopyright Pavlos). The current prediction is shown, with the initial species proposed. Suggestions from other users are on the right, with a field to propose your thoughts or accept someone else's. Anyone can vote for the organ shown in the image -- in this case, users agree on the flower. The quality is accepted by 2 users and there is no vote to reject the observation based on the fact there is no plant in the actual image.}
         \label{fig:others_plantnet}
 \end{figure}
@@ -356,7 +356,7 @@ At the time of writing, this participatory approach has resulted in the collecti
 Other citizen science projects such as iNaturalist \citep{van2018inaturalist} or eBird \citep{sullivan2009ebird} use a similar approach to collect data, but differ in their label aggregation strategy.
 The iNaturalist project, with more than $2.5$ million users, records the votes at different taxonomic levels.
 The resulting label is the aggregation of at least two votes on a species-level identification (or coarser or finer taxonomic level).
-A taxon requires at least a two-thirds agreements among identifiers and all users have the same weight in the decision-making.
+A taxon requires at least two-thirds agreements among identifiers and all users have the same weight in the decision-making.
 Over time, a taxon can be further refined by the community, debated or revoked.
 eBird handles taxon quality control by using a checklist in each region for observers.
 Quality verifications on the checklist are performed and, combined with user knowledge -- number of species and checklist submitted, number of flagged observations, discussions among local experts -- the observation taxon is accepted.
