@@ -298,7 +298,7 @@ So, let us show examples of what isn't an observation.
          \begin{minipage}[t]{0.47\textwidth}
                 \centering
                 \includegraphics[width=\textwidth,height=4cm]{./images_plantnet/PA0L0_D1_B3LL0_minecraft.png}
-                \caption*{A video game tree (minecraft version of a birch tree) is not a real plant. (\textcopyright PA0L0\_D1\_B3LL0)}
+                \caption*{A video game tree (Minecraft version of a birch tree) is not a real plant. (\textcopyright PA0L0\_D1\_B3LL0)}
             %     \label{fig:image3}
             \end{minipage}
         \caption{Three examples of images that are not plant observations.}
@@ -334,14 +334,124 @@ Users can cast their vote to indicate that the observation is malformed and shou
     \end{figure}
 
 The gathering and aggregation of votes is only a part of the Pl@ntNet pipeline.
-Schematized in \Cref{fig:plantnet-system}, the Pl@ntNet system is a loop between curating the data and training a computer vision model.
+Schematized in \Cref{fig:plantnet-system}, the Pl@ntNet system is a positive loop between curating the data and training a computer vision model.
 The label aggregation algorithm is presented in detail in \Cref{sec:aggregation_plantnet}.
 Let us briefly address the computer vision model part.
 
-At the time of writing, the model in use in Pl@ntNet is DINOv2 \citep{oquab2024dinov2} a transformer-based network.
+\subsubsection{Model training.}
 
-XXX ask more details to JCf
+At the time of writing, the model in use in Pl@ntNet is DINOv2 \citep{oquab2024dinov2} a transformer-based network, trained on Jean-Zay cluster generally every 2 to 3 months\footnote{or sooner if improvements are noticed by J-C Lombardo whom I'm most grateful for the details given about the Pl@ntNet training and testing pipeline.}.
+The training steps have evolved in the past years.
+In the next paragraphs, we present in a non-exhaustive way the pipeline (presented in \Cref{fig:training_plantnet}) for the current model training.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{./images_plantnet/training_network.pdf}
+    \caption{Pl@ntNet pipeline: from aggregated labels to in-the-wild usage, the steps to train the current network. }
+    \label{fig:training_plantnet}
+\end{figure}
+
+The first step is to gather the data from the Pl@ntNet platform and aggregate the labels as presented later in \Cref{sec:aggregation_plantnet}.
+Then, a first cleaning step is performed to remove the noisy labels -- species not in any botanical checklist such as WCVP -- and only keep \textbf{valid observations}. Roughly speaking, valid observations are observations that are considered reliable by the Pl@ntNet algorithm thanks to enough users' expertise and agreement in votes.
+In addition to species, the organ is also kept for training.
+
+The data is then cleaned by collected species.
+In each species let us consider there are $n_k\in\mathbb{N}$ observations, the valid observations with the most user weight are selected, and then they randomly select $\min(n_k, n)$ observations, with $n\in\mathbb{N}_*$.
+
+On the side, a neural network binary classifier is trained on another dataset to detect if the observation comes from a herbarium or not (binary classification). This classifier is then used to filter out the herbarium observations from the dataset. Herbarium observations are only used for rare species to populate classes with few observations. They are not used if there are \emph{enough} in-the-wild observations as they might.
+
+From the selected observations, the observations constitute a highly imbalanced dataset. This imbalance is necessary as plant species' presence is not balanced in the real world.
+Additional data is then collected from partners -- botanic gardens, GBIF, \emph{etc.} -- to get information on organs, species, diseases and other relevant information.
+The additional data is not used to balance the dataset, only to provide more information and populate some species -- but the imbalance is kept.
+All partner's observations are standardized (resize and compression).
+
+As users can freely upload observations, the observations might not be plant observations (as in \Cref{fig:not_an_observation}).
+There are $20$ rejection classes, including but not limited to \emph{homosapiens} (presence of a hand, foot or face), \emph{dogs}, \emph{cats}, \emph{fungi} (presence of a fungus), \emph{no plant} (no plant in the image), \emph{drawing} (presence of a drawing), \emph{screenshot} (the image is not a photo taken by the user), \emph{objects} (presence of an object), \emph{genitalia}, \emph{etc.}
+The rejection classes are used to filter out the observations that are not plant observations but also can provide feedback to the user.
+For example, if a face is present in the photo taken, the system will warn the user that they might want to retake the photo without the face.
+Note that not all rejections provide feedback to the user, some are used to filter out the observations (like the \emph{genitalia} class) and train the Pl@ntNet model to detect images that should not be classified as plants.
+
+The rejection classes are added to the species classes and so is the associated data.
+The data is then split into a training, validation and test set.
+The test set is about $1\%$ of the filtered data.
+The split is stratified by species and organ.
+Then the model is trained.
+
+Before the latest model version, the training was done in two steps.
+First, the model was trained on species recognition, then frozen, and then finetuned on organ recognition.
+Now, the current model is trained directly for multitask classification.
+In addition to species and organ recognition, diseases (on plants and crops), the genus, the family and some cultivars (sublevel of taxonomy) of interest for other Pl@ntNet projects are also predicted.
+Denoting $\mathcal{L}_{\bullet}$ the loss related to the classification task $\bullet$, the multitask loss $\mathcal{L}_{\text{multitask}}$ to minimize is of the form:
+\[
+\mathcal{L}_{\text{final}} = \lambda_1 \mathcal{L}_\text{species} + \lambda_2\mathcal{L}_\text{organ} + \lambda_3 \mathcal{L}_\text{genus} + \lambda_4 \mathcal{L}_\text{family} + \lambda_5 \mathcal{L}_\text{disease} + \lambda_5 \mathcal{L}_\text{cultivars} + \dots,
+\]
+with $(\lambda_p)_p$ the importance weights in the loss, and $\lambda_1 > \lambda_{p'}$ for $p'>1$ as the species determination is the main task for the model.
+Let us focus on the species determination as it is the main application of this thesis.
+To take into account the imbalance in the dataset, the species determination loss is weighted by the inverse of the class frequency. Note that other losses are also considered in recent work from the Pl@ntNet team \citep{Garcin_Servajean_Joly_Salmon22}.
+Transformation on images such as rotation, cropping and flipping are applied.
+Label smoothing is used as it is known to improve the uncertainty estimation of the model.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.65\textwidth]{./images_plantnet/cosine_annealing_restart.pdf}
+    \caption{Learning rate schedule with a cosine annealing strategy with warm restarts. The learning rate at epoch $t$ depends on the number of epochs in the initial cycle $T_0$ and the cycle length factor $T_{mult}$. The initial learning if $\eta_{\max}=0.1$ and the minimal learning rate is $\eta_{\min}=10^{-3}$.}
+    \label{fig:lrscheduler}
+\end{figure}
+
+The learning rate is scheduled with a cosine annealing strategy with warm restarts \citep{loshchilov2016sgdr}.
+Given an initial learning rate $\eta_0=\eta_{\max}>0$, a minimal learning rate $\eta_{\min}>0$, the number of epochs in a cycle $T_0$ and the current number of epochs in  the cycle $T_{curr}$, the learning rate is updated at each iteration $t$ as:
+\[
+\eta_t = \eta_{\min} + \frac{1}{2}(\eta_{\max} - \eta_{\min})\left(   1+ \cos\left\{ \frac{T_{curr}}{T_0}\pi \right\}\right)    \enspace.
+\]
+
+In practice, the cycle size is increased by a factor of $T_{mult}>0$ at each restart -- see \Cref{fig:lrscheduler} for a visualization of the learning rate scheduled with such a scheduler. Thus, denoting $N_{T_{curr}}$ the number of restarts before the current iteration $T_{curr}$, the scheduler becomes:
+\[
+\eta_t = \eta_{\min} + \frac{1}{2}(\eta_{\max} - \eta_{\min})\left(   1+ \cos\left\{ \frac{T_{curr}}{T_{mult}^{N_{T_{curr}}}T_0}\pi \right\}\right)    \enspace.
+\]
+
+This scheduler is known to help improve convergence and performance.
+Indeed, the smooth variation helps the optimization process to escape local minima and explore the parameter space more effectively.
+Moreover, thanks to the periodic restarts, the model is forced to explore different regions of the optimization landscape. This can prevent the model from getting stuck in suboptimal solutions and encourages better exploration of the parameter space.
+
+\subsubsection{Model evaluation.}
+
+The model is evaluated on multiple test sets.
+A first test set is inherited from the train-validation-test stratified split.
+It represents $1\%$ of the data and is used to check the performance on Pl@ntNet and partner's data.
+Other test sets are used to evaluate the model on specific tasks and species recognitions.
+Those safe sets contain unreleased and curated data that are only to be used for the evaluation of this model.
+
+\subsubsection{On the model characteristics.}
+
+The current Pl@ntNet model -- DINOv2 \citep{oquab2024dinov2} -- is a transformer-based network \citep{dosovitskiy2020image}.
+The former models used were a BEiT \citep{bao2021beit} -- also transformer-based -- and an InceptionV3 \citep{szegedy2015rethinking} -- a convolutional neural network.
+Hereafter, we briefly describe the DINOv2 model characteristics.
+
+In essence, the DINOv2 model is part of the DINO family: a family of models that combines self-supervised learning and knowledge distillation.
+More details about DINOv2 are available in the original paper \citep{oquab2024dinov2} and the work before \citep{caron2021emerging}.
+
+On one hand, knowledge distillation is performed by training a student model to mimic a teacher model. Given an input image, both networks predict a feature embedding vector and the KL divergence loss between the two predictions is minimized.
+On the other hand, the self-supervised aspect allows the training of a network without labels first and then finetuning it on a supervised dataset.
+To achieve this, contrastive learning is used: the goal is for the model to minimize the distance between similar pairs of data and maximize the distance for dissimilar ones.
+
+So how does DINOv2 combine both concepts? First, note that the contrastive learning step is hidden in the embedding representation of the images \citep{caron2020unsupervised}. Then, we can simplify DINOv2 into three main objectives:
+\begin{itemize}
+    \item Image-level objective: cropped images are fed to a ViT-H/16 transformer -- a vision transformer that divides images into $16$ patches ($4\times 4$ grid) that is pretrained here on the ImageNet-22K dataset -- to produce embeddings. The student network is trained on the embeddings to mimic the teacher network.
+    \item Patch-level objective: The DINO teacher network only sees the image-level embeddings. The student network is trained to predict the teacher's embeddings from both the image and the patches' embeddings. This forces the student to learn helpful parts of the image to predict the teacher's embeddings.
+    \item Additional objectives: several (non-exhaustively) other regularization terms are added to the objective such as KoLeo regularization of $\ell_2$ normed embeddings from the same batch to spread them uniformly in the feature space, Sinkhorn-Knopp batch normalization (used but not necessary considering their ablation study) \emph{etc}.
+\end{itemize}
+Note that, we consider embeddings, but a final softmax operator is used to consider distributions and compute cross-entropy loss between teacher and student predictions. However, as both networks do not have access to class labels yet, cross-entropy minimization is done to align the teacher and student embeddings.
+Note that additional tricks are performed to prevent the teacher and student networks from collapsing. There are four main tricks used:
+\begin{itemize}
+    \item Untying weights: as the model head is much smaller than the patch-level architecture, the head can overfit the image-level data while the patches are underfitted. Untying the weights of the head and the patch-level architecture helps to prevent this.
+    \item resolution adaptation during training to prevent the loss of small objects, this is especially important in Pl@ntNet as small details on plants can help differentiate species. Note that Pl@ntNet images use a $518\times 518$ resolution.
+    \item EMA (exponential moving average): to stabilize the teacher network and prevent collapsing predictions from the student, the teacher network is an exponentially weighted average of the student. Roughly, the update at epoch $t$ of DINOv2's teacher weights is $\theta_t \gets \lambda \theta_t + (1-\lambda)\theta_{s}$ with $\lambda>0$ exponential weight (that follows a cosine schedule from $0.996$ and $1$ during training), $\theta_t$ the teacher weights and $\theta_s$ the student's.
+    \item centering and sharpening: both tricks while with opposing meanings can help avoid collapsing to uniform or Dirac distributions in the feature space. Centering the teacher embeddings before the softmax operator helps to prevent one feature from dominating the others. Sharpening is done by scaling the teacher's embeddings in the softmax. Intuitively, the teacher has access to the full image and thus should be more confident than the student who mostly sees patches. Thus the teacher distribution should peak for the current (unknown) target class. By combining both, the teacher's distribution is non-trivial. This allows Pl@ntNet's network to keep some uncertainty in the predictions.
+\end{itemize}
+
+Finally, once this self-supervised learning is done, the model is finetuned on the Pl@ntNet dataset with aggregated labels and can identify plant species and more.
+Note that some patch-level operations were removed in Pl@ntNet in order not to classify an image based on a single patch -- \emph{e.g.} an image of a flower next to a genitalia should not be classified as a flower, but a rejection.
+The next step in this thesis is thus to detail the label aggregation strategy, compare it to existing and scaling ones, and propose ways to improve it.
 
 \section{Pl@ntNet's label aggregation strategy}
 \label{sec:aggregation_plantnet}
