@@ -381,7 +381,7 @@ Before the latest model version, the training was done in two steps.
 First, the model was trained on species recognition, then frozen, and then finetuned on organ recognition.
 Now, the current model is trained directly for multitask classification.
 In addition to species and organ recognition, diseases (on plants and crops), the genus, the family and some cultivars (sublevel of taxonomy) of interest for other Pl@ntNet projects are also predicted.
-Denoting $\mathcal{L}_{\bullet}$ the loss related to the classification task $\bullet$, the multitask loss $\mathcal{L}_{\text{multitask}}$ to minimize is of the form:
+Denoting $\mathcal{L}_{\bigcdot}$ the loss related to the classification task $\bigcdot$, the multitask loss $\mathcal{L}_{\text{multitask}}$ to minimize is of the form:
 \[
 \mathcal{L}_{\text{final}} = \lambda_1 \mathcal{L}_\text{species} + \lambda_2\mathcal{L}_\text{organ} + \lambda_3 \mathcal{L}_\text{genus} + \lambda_4 \mathcal{L}_\text{family} + \lambda_5 \mathcal{L}_\text{disease} + \lambda_5 \mathcal{L}_\text{cultivars} + \dots,
 \]
@@ -446,12 +446,12 @@ Note that additional tricks are performed to prevent the teacher and student net
     \item Untying weights: as the model head is much smaller than the patch-level architecture, the head can overfit the image-level data while the patches are underfitted. Untying the weights of the head and the patch-level architecture helps to prevent this.
     \item resolution adaptation during training to prevent the loss of small objects, this is especially important in Pl@ntNet as small details on plants can help differentiate species. Note that Pl@ntNet images use a $518\times 518$ resolution.
     \item EMA (exponential moving average): to stabilize the teacher network and prevent collapsing predictions from the student, the teacher network is an exponentially weighted average of the student. Roughly, the update at epoch $t$ of DINOv2's teacher weights is $\theta_t \gets \lambda \theta_t + (1-\lambda)\theta_{s}$ with $\lambda>0$ exponential weight (that follows a cosine schedule from $0.996$ and $1$ during training), $\theta_t$ the teacher weights and $\theta_s$ the student's.
-    \item centering and sharpening: both tricks while with opposing meanings can help avoid collapsing to uniform or Dirac distributions in the feature space. Centering the teacher embeddings before the softmax operator helps to prevent one feature from dominating the others. Sharpening is done by scaling the teacher's embeddings in the softmax. Intuitively, the teacher has access to the full image and thus should be more confident than the student who mostly sees patches. Thus the teacher distribution should peak for the current (unknown) target class. By combining both, the teacher's distribution is non-trivial. This allows Pl@ntNet's network to keep some uncertainty in the predictions.
+    \item centering and sharpening: both tricks -- while intuitively opposing -- can help avoid collapsing to uniform or Dirac distributions in the feature space. Centering the teacher embeddings before the softmax operator helps to prevent one feature from dominating the others. Sharpening is done by scaling the teacher's embeddings in the softmax. Intuitively, the teacher has access to the full image and thus should be more confident than the student who mostly sees patches. Thus the teacher distribution should peak for the current (unknown) target class. By combining both, the teacher's distribution is non-trivial. This allows Pl@ntNet's network to keep some uncertainty in the predictions.
 \end{itemize}
 
 Finally, once this self-supervised learning is done, the model is finetuned on the Pl@ntNet dataset with aggregated labels and can identify plant species and more.
 Note that some patch-level operations were removed in Pl@ntNet in order not to classify an image based on a single patch -- \emph{e.g.} an image of a flower next to a genitalia should not be classified as a flower, but a rejection.
-The next step in this thesis is thus to detail the label aggregation strategy, compare it to existing and scaling ones, and propose ways to improve it.
+The next step in this thesis is thus to detail the label aggregation strategy, compare it to existing (and scaling) ones, and propose ways to improve it.
 
 \section{Pl@ntNet's label aggregation strategy}
 \label{sec:aggregation_plantnet}
@@ -476,27 +476,27 @@ The eBird project also showed that monitoring species accumulation from observer
 \subsection{Presentation of the algorithm}
 \label{sub:algo_plantnet}
 
-\begin{algorithm}[tbh]
+\begin{algorithm}[h]
         \caption{Pl@ntNet iterative weighted majority vote}
         \label{alg:plantnet_algorithm}
-        \textbf{Input}: Votes as $(u, y_i^u)_{i\in [n_{\mathrm{SWE}}],u\in [n_\text{user}]}$ for each observation $i$ and user $u$ answering the voted species $y_i^u$, accuracy threshold $\theta_{\text{acc}}$, confidence threshold $\theta_{\text{conf}}$, weight function $f$, initial weight $\gamma>0$ \\
+        \textbf{Input}: Votes as $(j, y_i^{(j)})_{i\in [n_{\texttt{task}}],j\in [n_\text{user}]}$ for each observation $x_i\in\mathcal{X}$ and user $j$ answering the voted species $y_i^{(j)}$, accuracy threshold $\theta_{\text{acc}}$, confidence threshold $\theta_{\text{conf}}$, weight function $f$, initial weight $\gamma>0$ \\
         \textbf{Ouptput}: Estimated labels $\hat y_i$ and validity indicator $s_i$ for each observation $i$
         \begin{algorithmic}[1]
-            \STATE $\text{Initialize } \hat y_i = \mathrm{MV}\left(\{y_i^u\}_u\right) \text{ for each observation } i \in [n_{\mathrm{SWE}}]$
-            \STATE $\text{Initialize user weights as } w_u = \gamma \text{ for each user } u \in [n_\text{user}]$
+            \STATE $\text{Initialize } \hat y_i = \mathrm{MV}\left(\{y_i^{(j)}\}_j\right) \text{ for each observation } i \in [n_{\texttt{task}}]$
+            \STATE $\text{Initialize user weights as } w_j = \gamma \text{ for each user } j \in [n_\text{user}]$
             \WHILE{$\text{not converged}$}
-                \FOR{each observation $i\in [n_{\mathrm{SWE}}]$}
-                    \STATE Compute label confidence: $\mathrm{conf}_i(\hat y_i) = \sum_{u\in \mathcal{U}_i} w_u \mathds{1}(y_i^u=\hat y_i)$
+                \FOR{each observation $i\in [n_{\texttt{task}}]$}
+                    \STATE Compute label confidence: $\mathrm{conf}_i(\hat y_i) = \sum_{j\in \mathcal{A}(x_i)} w_j \mathds{1}(y_i^{(j)}=\hat y_i)$
                     \STATE Compute label accuracy: $\mathrm{acc}_i(\hat y_i) = \mathrm{conf}_i(\hat y_i) / \sum_{k\in [K]} \mathrm{conf}_i(k)$
                     \STATE Compute validity indicator: $s_i = \mathds{1}( \mathrm{acc}_i(\hat y_i) \geq \theta_{\text{acc}} \text{ and } \mathrm{conf}_i(\hat y_i) \geq \theta_{\text{conf}})$
                 \ENDFOR
-                \FOR{each user $u \in [n_\text{user}]$}
-                    \STATE Compute the number of valid identified species for authoring observations: \[n_u^\text{author} = |\{y_i^u\in [K] \,|\, y_i^u=\hat y_i, s_i=1, \mathrm{Author}(i)=u\}|\]
-                    \STATE Compute the number of identified species by voting on other's observations: \[n_u^\text{vote}=|\{y_i^u\in [K]\,|\, y_i^u=\hat y_i, \mathrm{Author}(i)\neq u\}|\]
-                    \STATE Compute the rounding number of identified species per user: \[n_u = \mathrm{Round}\left(n_u^\text{author} + \frac{1}{10}n_u^\text{vote}\right)\]
-                    \STATE Transform number of estimated species per user into trust score: $w_u = f(n_u)$
+                \FOR{each user $j \in [n_\text{user}]$}
+                    \STATE Compute the number of valid identified species for authoring observations: \[n_j^\text{author} = |\{y_i^{(j)}\in [K] \,|\, y_i^{(j)}=\hat y_i, s_i=1, \mathrm{Author}(i)=j\}|\]
+                    \STATE Compute the number of identified species by voting on other's observations: \[n_j^\text{vote}=|\{y_i^{(j)}\in [K]\,|\, y_i^{(j)}=\hat y_i, \mathrm{Author}(i)\neq j\}|\]
+                    \STATE Compute the rounding number of identified species per user: \[n_j = \mathrm{Round}\left(n_j^\text{author} + \frac{1}{10}n_j^\text{vote}\right)\]
+                    \STATE Transform number of estimated species per user into trust score: $w_j = f(n_j)$
                     \ENDFOR
-                \STATE Update estimated labels with a weighted majority vote $$ \forall i \in [n_{\mathrm{SWE}}],\ \hat y_i = \argmax_{k\in[K]} \sum_{u\in \mathcal{U}_i} w_u\mathds{1}(y_i^u=k)$$
+                \STATE Update estimated labels with a weighted majority vote $$ \forall i \in [n_{\texttt{task}}],\ \hat y_i = \argmax_{k\in[K]} \sum_{u\in \mathcal{A}(x_i)} w_j\mathds{1}(y_i^{(j)}=k)$$
             \ENDWHILE
         \end{algorithmic}
     \end{algorithm}
@@ -507,12 +507,59 @@ Similar to other strategies, we rely on an EM-based iterative procedure \citep{D
 The label aggregation strategy generates a trust indicator ($s_i$) on the observation that can reveal whether an observation is valid or not.
 Notice that in \Cref{alg:plantnet_algorithm} we value $10$ times more authored observations than voting on other's observations -- if a user proposes a new observation with a label (species name) it is more useful than proposing a label by clicking.
 Indeed, being on the field leads to more information on the environment and a better determination of the species.
-Finally, note that an identified species is exclusively identified as author -- part of $n_u^\text{author}$ in \Cref{alg:plantnet_algorithm}) -- or as click -- part of $n_u^\text{vote}$ -- to avoid redundant skills.
+Finally, note that an identified species is exclusively identified as an author -- part of $n_j^\text{author}$ in \Cref{alg:plantnet_algorithm} -- or as click -- part of $n_j^\text{vote}$ -- to avoid redundant skills.
 %species are unequivocally identified as authors ($n_u^\text{author}$ in \Cref{alg:plantnet_algorithm}) or as votes on other's observations ($n_u^\text{vote}$).
-The final number of species identified by users is the aggregation of these two terms: $n_u = \mathrm{Round}\left(n_u^\text{author} + \frac{1}{10}n_u^\text{vote}\right)$.
+The final number of species identified by users is the aggregation of these two terms: $n_j = \mathrm{Round}\left(n_j^\text{author} + \frac{1}{10}n_j^\text{vote}\right)$.
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.75\textwidth]{./images_plantnet/weight_function.pdf}
+    \caption{Weight function in \Cref{eq:weight_func} used to map the number of identified species to a trust score in the Pl@ntNet label aggregation strategy.  A new user starts with a weight of $f(0)=f(1)=\gamma\simeq 0.74$. The user confidence threshold $\theta_{\text{conf}}=2$ requires a user to have identified at least $n_u=8$ species to become \textbf{self-validating}. The parameters $\alpha=0.5$, $\beta=0.2$ and $\gamma\simeq 0.74$ are used in practice.}
+    \label{fig:weight_function}
+\end{figure}
+
+The weight function $f$ shown in \Cref{fig:weight_function} is a non-decreasing function that maps the number of identified species $n_j$ to a trust score in the form of:
+\begin{equation}\label{eq:weight_func}
+    w_j = f(n_j) = n_j^\alpha - n_j^\beta + \gamma \enspace,
+    \end{equation}
+where $\alpha,\beta\in\mathbb{R_+^\star}$ are hyperparameters that were calibrated internally to fit prior knowledge and $\gamma>0$ is the constant representing the initial weight of each user. In practice, we use $\alpha=0.5$, $\beta=0.2$ and $\gamma=\log(2.1)\simeq 0.74$ in the weight function.
+This function is sub-linear ($\mathcal{O}(\sqrt{n_j}))$ but with two regimes.
+The goal of \Cref{eq:weight_func} is to separate new users from experts and then help sort multiple experts.
+This is modeled by the two regimes of the weight function.
+In the first regime which corresponds to new users with low $n_j$, the term in the power of $\beta$ decreases the weight. We chose an initial weight $w_j=\gamma$ such that a user has a weight equal to $1$ (rounding to two decimals) with two different identifications. This separates the users who only come once to test the application from others.
+In the second regime with a higher number of identified species, the term to the power of $\beta$ becomes negligible and we tend to the square root function.
+The sub-linear scale allows for reducing discrepancies between people who have identified a comparable number of species (and thus have presumably comparable expertise).
+As for the two thresholds that control the level of uncertainty accepted for a given label, they are set to $\theta_{\text{conf}}=2$ to control the total weight on an observation and $\theta_{\text{acc}}=0.7$ to control the agreement between users given their expertise.
+
+Users are said \textbf{self-validating} when they are trusted enough so that their proposed label single-handedly makes an observation valid $(s_i=1)$.
+From \Cref{alg:plantnet_algorithm}, we see that this is verified when their weight $w_j$ is greater than the level $\theta_{\text{conf}}$.
+Indeed, with a single label we obtain $\mathrm{conf}_i(\hat y_i) = w_j > \theta_{\text{conf}}$ and $\mathrm{acc}_i(\hat y_i) = 1 > \theta_{\text{acc}}$.
+In practice, this means that an experienced user who has collected enough weight can validate any observation without any other user's vote.
+Note that this identification can later be invalidated by other users with enough weight thanks to the accuracy threshold $\theta_{\text{conf}}$.
 
 \subsection{Introducing a subset of Pl@ntNet to evaluate the current strategy}
+
+
+To compare the different label aggregation strategies on large-scale datasets, we introduce a subset of the Pl@ntNet database focused on Southwestern European flora observations -- Baleares, Corsica, France, Portugal, Sardegna and Spain -- from $2017$ to October $2023$.
+In total, $\numprint{9005108}$ votes are cast by $n_\text{user}=\numprint{823251}$ users on $\numprint{6699593}$ observations after two cleaning steps on the voted species.
+The first one is a filtering step. We only keep the votes with plant species belonging to the World Checklist of Vascular Plants (WCVP) \citep{govaerts2023world}.
+For the second step, we removed synonyms according to Kew's Royal Botanical Garden checklist.
+We restrict synonyms to be part of the \emph{k-southwestern-europe} from the Plants of the World Online \citep{powo2024} (POWO) system.
+Note that there are plant species listed in \emph{k-southwestern-europe} WCVP that are not in the POWO checklist.
+As there is a possible taxon ambiguity in this case -- multiple species possible for a given synonym depending on the referential  -- we leave the proposed label untouched.
+The dataset is available at \url{https://zenodo.org/records/10782465}.
+
+In the following, denote $K$ the number of species within the dataset.
+We will consider multiple subsets of one large released dataset.
+We index the observations by $i\in [n_{\bigcdot}]=\{1,\dots,n_{\bigcdot}\}$ where $\mathcal{D}_{\bigcdot}$ is the considered dataset composed of $n_{\bigcdot}$ observations and their associated votes.
+For a given subset we do not address the number of observations (previously called tasks) as  $n_\texttt{task}$ but as $n_{\bigcdot}$.
+For example, the full south-western European flora dataset from Pl@ntNet of $n_{\mathrm{SWE}}=\numprint{6699593}$ observations is denoted $\mathcal{D}_{\mathrm{SWE}}$.
+Other subsets are presented in \Cref{subsec:existing_label_aggreagation_strategies}.
+Each user $j$ has a unique identifier used as an index, and we denote $\mathcal{A}(x_i)$ the set of users that have voted on observation $x_i$.
+The vote of user $j$ on observation $i$ is denoted $y_i^{(j)}\in [K]$ is a free text field.
+Estimated labels are denoted $\hat y_i \in [K]$ -- we only consider hard labels.
+Each observation $i$ is created by an author $j$ stored in $\mathrm{Author}(i)$.
+
 
 \section{Integrating model predictions in the aggregation}
 
