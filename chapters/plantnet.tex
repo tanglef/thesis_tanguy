@@ -848,6 +848,15 @@ Therefore, even if the confident AI strategy leads to the best performance in \C
 In future work, more study is needed to investigate the confidence gap of the model and the observations' ambiguity from users' labels.
 The current large-scale and interpretable aggregation strategy from Pl@ntNet already outperforms others without the AI votes.
 
+\section{On the choice of the weight function}
+
+The current weight determination function in Pl@ntNet is based on the number of species identified by the user:
+\begin{equation}
+    w_j = f(n_j) = n_j^{0.5} - n_j^{0.2} + \gamma \enspace.
+\end{equation}
+And the confidence threshold is set such that with $n_j=8$ a user becomes \textbf{self-validating}.
+
+
 \section{Conclusion}
 
 We demonstrated that collaborative identification of plant species can effectively be used to obtain expert-level labels.
