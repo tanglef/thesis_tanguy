@@ -32,7 +32,7 @@ People voting are called users.
 The tasks are observations of plants (detailed in \Cref{sub:obs_plantnet_what}) for which we wish to identify the species.
 % To reflect this change, we write $\mathcal{U}$ the set of all users. Each user $u$ has a unique identifier used as an index, and we denote $\mathcal{U}_i$ the set of users that have voted on observation $i$.
 % We thus have $\mathcal{U} = \bigcup_{i\in [n_\texttt{task}]} \mathcal{U}_i$.
-% The vote of user $u$ on observation $i$ is denoted $y_i^u\in [K]$.
+% The vote of user $u$ on observation $i$ is denoted $y_i^{(j)}\in [K]$.
 
 \section{Crowdsourcing for plant species identification}
 \label{sec:introducing_plantnet}
@@ -328,7 +328,7 @@ Users can cast their vote to indicate that the observation is malformed and shou
 
 \begin{figure}[thb]
         \centering
-        \includegraphics[width=.65\linewidth]{images/plantnet_schema_global_green.pdf}
+        \includegraphics[width=.65\linewidth]{./images_plantnet/plantnet_schema_global_green.pdf}
         \caption{Pl@ntNet system of human-AI interaction for plant species recognition. Users take their plant observations in the Pl@ntNet application. A prediction is output by the AI model. Users can validate the prediction or propose another species. The whole votes collection is used to evaluate user expertise and actively revise observations identifications.}
         \label{fig:plantnet-system}
     \end{figure}
@@ -347,7 +347,7 @@ In the next paragraphs, we present in a non-exhaustive way the pipeline (present
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{./images_plantnet/training_network.pdf}
-    \caption{Pl@ntNet pipeline: from aggregated labels to in-the-wild usage, the steps to train the current network. }
+    \caption{Pl@ntNet pipeline: the steps to train a neural network from the collaboratively annotated data. The algorithm presented in \Cref{sec:aggregation_plantnet} is used to get labels and a validity indicator. Subsampling and data from partners are then combined to get a labeled dataset to train the current DINOv2 model. Evaluation is performed on the generated test set and additional private test sets.}
     \label{fig:training_plantnet}
 \end{figure}
 
@@ -383,7 +383,7 @@ Now, the current model is trained directly for multitask classification.
 In addition to species and organ recognition, diseases (on plants and crops), the genus, the family and some cultivars (sublevel of taxonomy) of interest for other Pl@ntNet projects are also predicted.
 Denoting $\mathcal{L}_{\bigcdot}$ the loss related to the classification task $\bigcdot$, the multitask loss $\mathcal{L}_{\text{multitask}}$ to minimize is of the form:
 \[
-\mathcal{L}_{\text{final}} = \lambda_1 \mathcal{L}_\text{species} + \lambda_2\mathcal{L}_\text{organ} + \lambda_3 \mathcal{L}_\text{genus} + \lambda_4 \mathcal{L}_\text{family} + \lambda_5 \mathcal{L}_\text{disease} + \lambda_5 \mathcal{L}_\text{cultivars} + \dots,
+\mathcal{L}_{\text{multitask}} = \lambda_1 \mathcal{L}_\text{species} + \lambda_2\mathcal{L}_\text{organ} + \lambda_3 \mathcal{L}_\text{genus} + \lambda_4 \mathcal{L}_\text{family} + \lambda_5 \mathcal{L}_\text{disease} + \lambda_5 \mathcal{L}_\text{cultivars} + \dots,
 \]
 with $(\lambda_p)_p$ the importance weights in the loss, and $\lambda_1 > \lambda_{p'}$ for $p'>1$ as the species determination is the main task for the model.
 Let us focus on the species determination as it is the main application of this thesis.
@@ -417,7 +417,7 @@ Moreover, thanks to the periodic restarts, the model is forced to explore differ
 
 The model is evaluated on multiple test sets.
 A first test set is inherited from the train-validation-test stratified split.
-It represents $1\%$ of the data and is used to check the performance on Pl@ntNet and partner's data.
+It represents $1\%$ of the data and is used to check the performance on Pl@ntNet and the partner's data.
 Other test sets are used to evaluate the model on specific tasks and species recognitions.
 Those safe sets contain unreleased and curated data that are only to be used for the evaluation of this model.
 
@@ -539,7 +539,6 @@ Note that this identification can later be invalidated by other users with enoug
 
 \subsection{Introducing a subset of Pl@ntNet to evaluate the current strategy}
 
-
 To compare the different label aggregation strategies on large-scale datasets, we introduce a subset of the Pl@ntNet database focused on Southwestern European flora observations -- Baleares, Corsica, France, Portugal, Sardegna and Spain -- from $2017$ to October $2023$.
 In total, $\numprint{9005108}$ votes are cast by $n_\text{user}=\numprint{823251}$ users on $\numprint{6699593}$ observations after two cleaning steps on the voted species.
 The first one is a filtering step. We only keep the votes with plant species belonging to the World Checklist of Vascular Plants (WCVP) \citep{govaerts2023world}.
@@ -554,17 +553,310 @@ We will consider multiple subsets of one large released dataset.
 We index the observations by $i\in [n_{\bigcdot}]=\{1,\dots,n_{\bigcdot}\}$ where $\mathcal{D}_{\bigcdot}$ is the considered dataset composed of $n_{\bigcdot}$ observations and their associated votes.
 For a given subset we do not address the number of observations (previously called tasks) as  $n_\texttt{task}$ but as $n_{\bigcdot}$.
 For example, the full south-western European flora dataset from Pl@ntNet of $n_{\mathrm{SWE}}=\numprint{6699593}$ observations is denoted $\mathcal{D}_{\mathrm{SWE}}$.
-Other subsets are presented in \Cref{subsec:existing_label_aggreagation_strategies}.
+Other subsets are presented in \Cref{fig:sankey}.
 Each user $j$ has a unique identifier used as an index, and we denote $\mathcal{A}(x_i)$ the set of users that have voted on observation $x_i$.
 The vote of user $j$ on observation $i$ is denoted $y_i^{(j)}\in [K]$ is a free text field.
 Estimated labels are denoted $\hat y_i \in [K]$ -- we only consider hard labels.
 Each observation $i$ is created by an author $j$ stored in $\mathrm{Author}(i)$.
 
+\begin{figure}[tbh]
+    \begin{center}
+        \includegraphics[width=\textwidth]{./images_plantnet/sankey_v2.pdf}
+    \end{center}
+    \caption{Log-scales distribution of the observations in the South-West European Flora subset from the Pl@ntNet database. Note that the (sub-)datasets introduced are nested: $\mathcal{D}_{\mathrm{SWE}} \supset \mathcal{D}_\text{expert} \supset \mathcal{D}_{\text{mulitple votes}} \supset \mathcal{D}_{\text{disagreement}}$. $\mathcal{D}_{\text{expert}}$ and the following subsets contain observations that received at least one vote from one of the experts.}
+    \label{fig:sankey}
+\end{figure}
+
+\subsubsection*{Creation of an evaluation set in a crowdsourcing setting.}
+
+To evaluate the performance of a label aggregation strategy, it is necessary to know the ground truth on a subset of the data.
+However, in the context of crowdsourced data, there is no known truth for the observations.
+The sheer volume of data makes it impossible to ask botanical experts to create such ground truth for the whole database.
+Moreover, identifying species from images is much less accurate than identifying them in the field, due to the partial information contained in the image \citep{experts2018plant}.
+
+Instead of asking experts to label a subset of the data, we rather identify botanical experts in the Pl@ntNet user database and consider their determinations as ground truth.
+We asked botanical-known experts to reference other experts who could have a Pl@ntNet account to create a list of expert users.
+To these we have added TelaBotanica \citep{heaton2010tela} users with registered confirmed botanical experience from their account and that are also Pl@ntNet users that participated in the South-Western Europe flora subset.
+In total, $98$ Pl@ntNet users were identified as botanical experts.
+Observation with at least one vote from one of these experts constitute our test set denoted $\mathcal{D}_\text{expert}$.
+The answers of these experts are considered ground truth labels and used to evaluate strategies' performance.
+Despite our selection process of supposedly `indisputable' experts, a few observations in the test set still end up with contradictory labels ($4$ observations in total). As they represent a very small percentage, we simply removed them from $\mathcal{D}_\text{expert}$.
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[t]{.52\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./images_plantnet/obs_species_per_user.pdf}
+        \caption{Relationship between the number of observations per user and the variety of species proposed per user. Each point represents a concentration of users in the SWE flora subset. $\numprint{310,564}$ users proposed a single vote.}
+        \label{fig:users_obs_species}
+    \end{subfigure}%
+    \hfill
+    \begin{subfigure}[t]{.40\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./images_plantnet/lorenz_curves.pdf}
+        \caption{Lorenz curves representing the imbalance distribution of the number of votes in the South-West European Flora subset from the Pl@ntNet database. This imbalance is mitigated but kept in the created test set.}
+        \label{fig:lorenz}
+    \end{subfigure}
+    \caption{Pl@ntNet activity summary in the SWE flora subset. (A): The majority of users have proposed a small number of observations and species. However, some users have proposed a large number of observations and species. (B): In a perfectly balanced dataset, the Lorenz curve would be the diagonal -- $50\%$ of the votes would be for $50\%$ of the observations. In practice, there is a high imbalance of the distribution of votes between observations -- $80\%$ of the observations are represented by $10\%$ of votes.}
+    \label{fig:summary_subset}
+\end{figure}
+
+Our evaluation set $\mathcal{D}_{\text{expert}}$ is finally composed of $\numprint{26811}$ observations which received at least one vote from one of the experts.
+Despite the large number of users, not all observations obtain multiple annotations.
+Indeed, $\numprint{310564}$ users were single-time voters (meaning they interacted with the system only once).
+The lack of votes is a large component of difficulty in the Pl@ntNet database, as there is a high imbalance of the distribution of votes between observations as represented in \Cref{fig:lorenz}.
+There is a high concentration of votes for a small percentage of the observations as shown in \Cref{fig:users_obs_species}.
+Of these evaluation data, $\numprint{17125}$ received more than two identifications and are stored in $\mathcal{D}_{\text{multiple votes}}$.
+Then, $\numprint{1263}$ have more than two votes with at least one disagreement between users and are stored in $\mathcal{D}_{\text{disagreement}}$.
+\Cref{fig:sankey} shows the distribution of observations from $\mathcal{D}_{\mathrm{SWE}}$ to the finer and more ambiguous $\mathcal{D}_{\text{disagreement}}$.
+
+\subsubsection*{Evaluated aggregation strategies.}
+
+Plant species label aggregation is a challenging task due to the large number of species $K=\numprint{11425}$.
+Hence, many classical strategies in the label aggregation literature such as Dawid and Skene's \citep{dawid_maximum_1979} and other variations \citep{passonneau-carpenter-2014-benefits, sinha2018fast} are not applicable as they require estimating a $K\times K$ confusion matrix for each user.
+For the considered dataset $\mathcal{D}_\text{SWE}$, this would result in $\numprint{11425}^2\times \numprint{823251}\approx 10^{14}$ parameters to estimate.
+Similar issues occur for other label aggregation strategies \citep{whitehill_whose_2009,hovy2013learning,ma2020adversarial}.
+We do not consider deep-learning-based crowdsourcing strategies as \citet{rodrigues2018deep,chu2021learning} or \citet{lefort2022improve} as they require training a neural network from crowdsourced labels, but do not output aggregated labels on the training set.
+In the Pl@ntNet application, we need to propose one or multiple species for each observation to users.
+To overcome these issues, we consider the following label aggregation strategies that can scale with $K$ and the number of users:
+\begin{itemize}
+    \item \textbf{Majority Vote (MV)}: it selects the most answered label and is the most common aggregation strategy. More formally, given an observation $i$:
+    \[\mathrm{MV}(i, \{y_i^{(j)}\}_j) = \argmax_{k\in [K]} \sum_{j\in\mathcal{A}(x_i)} \mathds{1}(y_i^{(j)} = k) \enspace.\]
+    \item \textbf{Worker agreement with aggregate (WAWA)}: this strategy, also known as the inter-rater agreement, weights each user by how much they agree with the MV labels on average. More formally, given an observation $i$:
+    \begin{align*}
+        \mathrm{WAWA}(i, \mathcal{D}_{\mathrm{SWE}}) &= \argmax_{k\in [K]} \sum_{j\in\mathcal{A}(x_i)} w_j\mathds{1}(y_i^{(j)} = k) \\
+        \text{with } w_j &= \frac{1}{|\{y_{i'}^{(j)}\}_{i'}|} \sum_{i'=1}^{n_{\mathrm{SWE}}} \mathds{1}\left(y_{i'}^{(j)} = \mathrm{MV}(i',\{y_{i'}^{(j)}\}_j)\right)\enspace.
+        \end{align*}
+    As there is no observation filter for the $\mathrm{MV}$ and $\mathrm{WAWA}$, we consider that for all observation $i$, $s_i=1$ for these two strategies.
+
+    \item \textbf{TwoThird}: The TwoThird aggregation generates a label for observations with at least two votes. The estimated label represents the one with at least two-thirds of the majority in agreement. Every user has the same weight in the aggregation. It is part of the iNaturalist's label aggregation system \citep{van2018inaturalist}. More formally:
+    \begin{align*}
+        \mathrm{TwoThird}(i, \{y_i^{(j)}\}_j) &= \begin{cases}
+            \mathrm{MV}(i, \{y_i^{(j)}\}_j) & \text{if } s_i=1  \\
+            \text{undefined} & \text{otherwise} \end{cases}
+            \\ \text{ with } s_i &= \mathds{1}\left(\displaystyle\max_{k\in[K]}\frac{1}{|\mathcal{A}(x_i)|}\sum_{j\in\mathcal{A}(x_i)} \mathds{1}(y_i^{(j)}=k) \geq \frac{2}{3}\right) \enspace.
+    \end{align*}
+\end{itemize}
+
+\subsubsection{Evaluation metrics.}
+
+To evaluate the label aggregation strategies, we use the following label recovery accuracy computed on the evaluation datasets:
+\begin{equation*}
+    \mathrm{Acc}(\hat y, y; \mathcal{D}_{\bigcdot}) = \frac{1}{n_{\bigcdot}} \sum_{i=1}^{n_{\bigcdot}} \mathds{1}(\hat{y}_i = y_i)\mathds{1}(s_i=1) \enspace,
+\end{equation*}
+with $\hat y=(\hat{y}_i)_i$ the estimated labels on $\mathcal{D}_{\bigcdot} \in \{\mathcal{D}_\text{expert}, \mathcal{D}_{\text{mulitple votes}}, \mathcal{D}_{\text{disagreement}}\}$, $y=(y_i)_i$ the associated experts labels, considered as ground truth.
+When the aggregation strategy indicates the observation as invalid ($s_i=0$ for Pl@ntNet and TwoThird), this metric considers the sample as wrongly classified.
+Precision and recall scores are also computed to respectively measure the correctness of the observations indicated as valid and the ability to recover the ground truth observations in the valid set.
+We take into account the species imbalance by using a macro-average for these metrics. This treats rare species as equally important to common ones. Denoting respectively $\mathrm{TP}_k$, $\mathrm{FP}_k$ and $\mathrm{FN}_k$ the true positives, false positives and false negatives related to the species $k$, the macro averaged precision and recall write
+\[
+\mathrm{Precision}_{\mathrm{macro}}=\frac{1}{K}\sum_{k=1}^K \frac{\mathrm{TP}_k}{\mathrm{TP}_k + \mathrm{FP}_k} \quad \text{and} \quad \mathrm{Recall}_{\mathrm{macro}}=\frac{1}{K}\sum_{k=1}^K \frac{\mathrm{TP}_k}{\mathrm{TP}_k + \mathrm{FN}_k} \enspace.
+\]
+
+As both the Pl@ntNet and the TwoThird strategies can invalidate some of the observations, we also compute the proportion of observations removed from the whole dataset (whereas previous metrics are computed on the evaluation dataset). This complementary metric allows measuring the proportion of samples "lost" for the training of the AI model after the aggregation step.
+In practice, filtering data might remove some noisy samples from the dataset. Yet, in general, the more samples are filtered, the fewer ones to train the neural network training.
+While filtering samples can improve the quality of the data, it is important to note that the more samples that are filtered out, the fewer samples remain for training the network.
+Finally, we also consider the proportion of species retrieved by the aggregation strategies on $\mathcal{D}_\text{expert}, \mathcal{D}_{\text{mulitple votes}}$ and $\mathcal{D}_{\text{disagreement}}$. This is a critical consideration because if a species identified by experts is absent from the aggregated data, the neural network trained on this data will be unable to make predictions for that very species.
+
+We evaluate the label recovery $\mathrm{Acc}$ of each strategy on $\mathcal{D}_\text{expert}, \mathcal{D}_{\text{mulitple votes}}$ and $\mathcal{D}_{\text{disagreement}}$ (see also \Cref{fig:sankey}): the test set where experts have provided at least one vote ($\mathcal{D}_\text{expert}$), its subset of observations with at least $2$ votes and one from an expert ($\mathcal{D}_\text{multiple votes}$) and its subset of observations with at least $2$ votes, one from an expert, and one disagreement ($\mathcal{D}_\text{disagreement}$).
+The latter is the most challenging as it contains the observations with the most ambiguity.
+We selected these subsets to investigate the label aggregation strategies' performance depending on the ambiguity level.
+
+\subsection{Results on label aggregations}
+\label{sub:plantnet_res_aggregations}
+
+
+\begin{figure}[tbh]
+    \centering
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, height=5cm]{./images_plantnet/accuracy_by_vol_class_kept_two_votes__micro.pdf}
+        \caption{Accuracy on $\mathcal{D}_{\text{multiple votes}}$ w.r.t. to the proportion of classes recovered}
+        \label{fig:accuracy_vol_class_multiple}
+    \end{subfigure}%
+    \hfill
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, height=5cm]{./images_plantnet/accuracy_by_vol_class_kept_one_disagreeement__micro.pdf}
+        \caption{Accuracy on $\mathcal{D}_{\text{disagreement}}$ w.r.t. the proportion of classes recovered}
+        \label{fig:accuracy_vol_class_disagreeing}
+    \end{subfigure}
+    \caption{Accuracy of the aggregation strategies w.r.t. the proportion of classes (species) retrieved on subsets with at least two votes -- either agreeing (A) or with at least one disagreeing vote (B). The Pl@ntNet aggregation is more accurate, especially in a highly ambiguous setting (B). The TwoThird data filter highly impacts how many classes are kept in the dataset and the overall accuracy in both settings. WAWA and MV perform similarly with a benefit for WAWA when skill evaluation is needed.}
+    \label{fig:accuracy_volume}
+\end{figure}
+
+\subsubsection{Accuracy of the aggregation strategies.}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+    \includegraphics[width=\textwidth]{./images_plantnet/precision_and_recall_one_disagreeement__macro.pdf}
+    \caption{Precision and recall of label aggregation strategies on $\mathcal{D}_\text{disagreement}$. }
+        \label{fig:precision-recall}
+    \end{subfigure}%
+    \hfill
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+    \includegraphics[width=\textwidth]{./images_plantnet/volume_train_data.pdf}
+    \caption{Number of observations in $\mathcal{D}_{\mathrm{SWE}}$ indicated as valid for training ($s_i=1$). }
+    \label{fig:vol_train_data}    \end{subfigure}
+    \caption{(A): TwoThird strategy has better precision than MV and WAWA strategies, with lower recall because of the heavy filter on the validity of observations. Pl@ntNet aggregation strategy obtains the best precision and recall and outperforms other strategies. (B): TwoThird performance drop can be explained in part by the high proportion of data considered invalid. Note that MV and WAWA strategies do not invalidate any observation, hence keeping potentially mislabeled or low-quality observations. Pl@ntNet achieves a balance between filtering out observations and achieving high performance.}
+    \label{fig:precision-volume}
+\end{figure}
+
+We begin by evaluating the accuracy of the label aggregation strategies on the set of observations labeled by experts, $\mathcal{D}_\text{expert}$. \Cref{fig:accuracy_volume} shows how many predicted labels match the experts answers on $\mathcal{D}_{\text{multiple votes}}$ and $\mathcal{D}_{\text{disagreement}}$.
+More importantly, we compare this quantity with the proportion of species retrieved by the aggregation strategy.
+We observe that the data filtering from the TwoThird strategy -- requiring at least two third of agreements -- highly degrades performance with respect to other strategies.
+On $\mathcal{D}_{\text{expert}}$, MV reaches $97\%$ of accuracy, WAWA $98\%$, TwoThird $60\%$ and Pl@ntNet $99\%$.
+To differentiate between the best-performing strategies, we need to look at more ambiguous observations like those in $\mathcal{D}_{\text{multiple votes}}$ and $\mathcal{D}_{\text{disagreement}}$.
+In highly ambiguous frameworks, the WAWA strategy outperforms the MV one.
+However, overall the Pl@ntNet aggregation is more often in adequation with the experts and retrieves almost $90\%$ of plant species identified by experts in highly ambiguous datasets against $73\%$ for WAWA, $71\%$ for MV and only $41\%$ for TwoThird.
+
+\subsubsection{Precision and recall.}
+
+To better evaluate each aggregation strategy, we compute the macro precision and recall metrics for each species. Results are shown in \Cref{fig:precision-recall}. The observations filter ($s_i=0$) for the TwoThird strategy highly impacts its ability to identify most of the positive observations for a given species. While this agreement threshold filter is created to keep as few noisy samples as possible in research-graded (data quality indicator for research database usage in TwoThird) observations, TwoThird obtains better precision than MV and WAWA but Pl@ntNet's precision shows significant improvement. WAWA strategy outperforms a naive MV aggregation showing that, indeed, weighing users can lead to better performance. Pl@ntNet strategy outperforms all others by several orders of magnitude. Weighing users based on their number of identified species is both interpretable and effective. The observation filter does not negatively impact the recall.
+
+\subsubsection{Volume of valid data.}
+
+The community labels are aggregated to generate training data for the AI model.
+The more data the better, however, we need to filter out observations with low quality or potentially mislabeled.
+This is the reason for the validity indicator $s_i$ in the TwoThird and Pl@ntNet strategies.
+On $\mathcal{D}_{\mathrm{SWE}}$, \Cref{fig:vol_train_data} shows how much data is kept for later training.
+$\mathrm{MV}$ and $\mathrm{WAWA}$ keep all proposed observation for training -- including potential noisy ones.
+TwoThird filters out most observations to keep nearly $1.5$ million (representing $23.43\%$ of the total observations). Pl@ntNet finds an improved balance between filtering invalid observations and keeping enough data for training.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.85\textwidth]{./images_plantnet/valid_and_invalid.pdf}
+    \caption{Examples of invalid $(s_i=0)$ and valid ($s_i=1$) observations using the Pl@ntNet strategy described in \Cref{alg:plantnet_algorithm}.}
+    \label{fig:valid-invalid-plantnet}
+\end{figure}
+
+\subsubsection{Qualitative results on Pl@ntNet observation filter}
+
+In this section, we show some examples of observations invalidated by the Pl@ntNet strategy (see \Cref{fig:valid-invalid-plantnet}).
+Invalid observations often come from the lack of user participation with other's observations.
+Causes of disagreements from users can occur from a multitude of factors -- blurriness, multiple species in the same observation, the distance from the plant does not allow precise identification, \emph{etc.}
+Valid observations, as shown in the second row of \Cref{fig:valid-invalid-plantnet} are zoomed in on the plant's flower, leaf or organ to help the identification process.
 
 \section{Integrating model predictions in the aggregation}
 
+While we restricted ourselves to the SWE subset, Pl@ntNet's data is collected internationally and used to train a computer vision model.
+The more correctly identified observations are added to the training set, the better the prediction of the trained model for end-users.
+This classifier is trained from valid observations and aggregated labels (see \Cref{fig:plantnet-system} and \Cref{sub:pipeline_plantnet}).
+At the time of writing, the model in use in Pl@ntNet is DINOv2 \citep{oquab2024dinov2} a transformer-based network.
+However, note that some observations from $\mathcal{D}_{\text{SWE}}$ have been processed by an earlier version of Pl@ntNet's AI: either an InceptionV3 \citep{szegedy2015rethinking} or a BEIT \citep{bao2021beit} classifier.
+We can use the classifiers to generate votes.
+For an observation $i$, the AI vote is denoted $y_i^{\text{AI}}\in[K]$. The probability output in the classifier's predicted species is denoted $\mathbb{P}(y_i^{\text{AI}})$.
+
 \subsection{Possible strategies}
+\label{sub:strats_ai}
+
+If we consider the trained model as any other user, denoted as \textbf{AI as user}, the previously presented label aggregations are available.
+However, with the Pl@ntNet aggregation algorithm, the AI weight increases drastically and overpowers human users.
+This would mean the next Pl@ntNet model is mostly trained on the predictions of the previous one.
+This defeats the purpose of a cooperative active learning system and the human-AI interaction. It would result in a dangerous feedback loop, and possible mode collapse.
+Thus, we explore alternative ways of integrating the AI votes in the aggregation algorithm:
+\begin{itemize}
+    \item \textbf{AI as user}: This is the naive approach we just described. The AI is considered as any other user in the database. The total number of users is thus raised to $n_{\text{user}}+1$.
+    \item \textbf{Fixed weight AI}: Give a fixed weight $w_{\text{AI}}=1.7>0$ to the \text{AI}. The weight is below the threshold $\theta_{\text{conf}}$ so that it can not self-validate its predictions. The confidence writes
+    \begin{equation}\label{eq:confweight}\mathrm{conf}_i(\hat y_i) = \sum_{j\in\mathcal{A}(x_i)} w_j\mathds{1}(y_i^{(j)}=\hat y_i)+ w_{\text{AI}}\mathds{1}(y_i^{\text{AI}}=k)\enspace.
+    \end{equation} The final estimated label becomes
+    \begin{equation}\label{eq:wmvAI}\hat y_i = \argmax_{k\in [K]} \sum_{j\in \mathcal{A}(x_i)} w_j \mathds{1}(y_i^{(j)}=k) + w_{\text{AI}}\mathds{1}(y_i^{\text{AI}}=k)\enspace.
+    \end{equation}
+    \item \textbf{Invalidating AI}: The \text{AI} is considered as a user with a fixed weight and can only participate in invalidating identifications \emph{i.e.} have $s_i=0$. This translates as the confidence updated as in \Cref{eq:confweight} but the final Weighted MV remains unchanged from \Cref{alg:plantnet_algorithm}.
+    \item \textbf{Confident AI}: The \text{AI} is considered a user with a fixed weight and can only participate if the confidence in its prediction $\mathbb{P}(y_i^{\text{AI}})$ is over a threshold $\theta_{\text{score}}\in [0,1]$.
+    The confidence writes
+    \begin{equation}\mathrm{conf}_i(\hat y_i) = \sum_{j\in\mathcal{A}(x_i)} w_j\mathds{1}(y_i^{(j)}=\hat y_i) + w_{\text{AI}}\mathds{1}(y_i^{(j)}=\hat y_i,\,\mathbb{P}(y_i^{\text{AI}})\geq\theta_{\text{score}})\enspace. \end{equation} The final estimated label becomes
+\begin{equation}\hat y_i = \argmax_{k\in [K]} \sum_{j\in \mathcal{A}(x_i)} w_j \mathds{1}(y_i^{(j)}=k) + w_{\text{AI}}\mathds{1}(y_i^{\text{AI}}=k,\,\mathbb{P}(y_i^{\text{AI}})\geq\theta_{\text{score}})\enspace.\end{equation}
+\end{itemize}
+
+\subsection{On the choice of the AI weight.}
+The AI has a fixed weight $w_\text{AI}>0$ for the \textbf{Fixed weight AI}, the \textbf{Invalidating AI} and the \textbf{Confident AI} strategies.
+The choice of this weight must meet several constraints.
+First, we would like to avoid the \text{AI} votes to be \textbf{self-validating} as it would validate all the \text{AI} predictions on a large part of the database, thus we must have $w_\text{AI}<\theta_\mathrm{conf}$ in \Cref{alg:plantnet_algorithm}.
+We also want the \text{AI} votes to help clean the database by invalidating some observations from low-weight users (with weight 0< $w_\text{low} \leq \theta_\mathrm{conf}$). Thus $w_\text{low} / (w_\text{low} + w_\text{AI}) < \theta_\mathrm{acc}$.
+Hence, our constraints read:
+\begin{equation}\label{eq:constraint_weight}
+\begin{cases} w_\text{AI} &< \theta_\mathrm{conf} \\ \frac{w_\text{low}}{w_\text{low} + w_\text{AI}} &< \theta_\mathrm{acc} \end{cases} \enspace.
+\end{equation}
+Taking the extreme case where a user becomes self-validating: $w_\text{low}=\theta_\mathrm{conf}$, we obtain that $w_\text{AI} > \theta_\mathrm{conf} \left(\frac{1-\theta_\mathrm{acc}}{\theta_\mathrm{acc}}\right)$. And using the first condition in \Cref{eq:constraint_weight}, we obtain the bounds
+\begin{equation}\label{eq:constraint_numerical}
+\theta_\mathrm{conf} \left(\frac{1-\theta_\mathrm{acc}}{\theta_\mathrm{acc}}\right) < w_\mathrm{AI} < \theta_\mathrm{conf} \left(\Longleftrightarrow 0.85 < w_\mathrm{AI} < 2 \right)\enspace.
+\end{equation}
+As more than a million observations from our dataset only have two votes, one way to choose the \text{AI} weight is to consider that the \text{AI} can invalidate two erroneous non-experts that would both have just enough weights to make the observation valid: $1.95=w_\text{low} < 2$.
+Then, the AI weight should be greater than their cumulated confidence: $w_\mathrm{AI}>2w_\text{low}\left(\frac{1-\theta_\mathrm{acc}}{\theta_\mathrm{acc}}\right)$. We finally take the upper rounded value $w_\mathrm{AI}=1.70$ (which satisfies \Cref{eq:constraint_numerical}).
+
+\subsection{Results on integrating the AI in the aggregation}
+
+The current trained neural network model in Pl@ntNet's system can make predictions based on its training on the Pl@ntNet database (across different floras).
+We compare the four following strategies -- \textbf{AI as user}, \textbf{fixed weight AI}, \textbf{invalidating AI} and \textbf{confident AI}, presented in \Cref{sub:strats_ai} to integrate the AI vote into the Pl@ntNet label aggregation strategy.
+For the confident AI strategy, we evaluate multiple thresholds $\theta_\text{score}$.
+Note that if $\theta_{\mathrm{score}}=0$ the AI votes for all observations and if $\theta_{\mathrm{score}}=1$ the AI does not vote and we recover the performance of the current Pl@ntNet aggregation strategy presented in \Cref{alg:plantnet_algorithm}.
+We see in \Cref{fig:accuracy_vote_strategy} that the confident AI strategy with $\theta_\mathrm{score}=0.7$ seems to perform best and keep the most data in both $\mathcal{D}_\mathrm{SWE}$ and $\mathcal{D}_\mathrm{expert}$.
+
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=\textwidth]{./images_plantnet/ai_strategy_votes.pdf}
+    \caption{Performance in label recovery and number of observations marked as valid depending on how the AI vote is integrated. MV, WAWA and Pl@ntNet strategy without AI vote are used as reference. The best-performing strategy overall is \textbf{confident AI} with $\theta_\text{score}=0.7$. We also see that when $\theta_\text{score}$ tends to $1$, we recover the vanilla Pl@ntNet aggregation strategy.}
+\label{fig:accuracy_vote_strategy}
+\end{figure}
+
 
 \subsection{Can we trust our current predicted probabilities?}
 
+As for the inclusion of the AI vote, some concerns should be raised.
+First, as the AI model is trained from the aggregated labels and observations, integrating its vote should not make the AI predictions run out of control.
+If we consider the AI as a user, as we are in iterative training, the system fails to learn from the human labels.
+However, using the AI vote to invalidate the data with a fixed weight can help clean the database, and with enough weight other users can switch its validity back. However, this would not help in switching the wrong label.
+To do so, we investigate in \Cref{sub:strats_ai} to only consider a fixed weight label with enough confidence from the AI model.
+We observe that this strategy leads to better performance.
+As we use the output probabilities we should discuss the calibration of our network too.
+
+\begin{figure}[tbh]
+    \centering
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+    \includegraphics[width=\textwidth]{./images_plantnet/reliability_diagram_all.pdf}
+    \caption{Reliability diagram of Pl@ntNet AI on $\mathcal{D}_{\mathrm{expert}}$ }
+        \label{fig:reliability-all}
+    \end{subfigure}%
+    \hfill
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+    \includegraphics[width=\textwidth]{./images_plantnet/reliability_diagram_disagreement.pdf}
+    \caption{Reliability diagram of Pl@ntNet AI on $\mathcal{D}_{\mathrm{disagreement}}$ }
+    \label{fig:reliability-disagreement}    \end{subfigure}
+    \caption{Reliability diagrams for the Pl@ntNet AI on the expert dataset and on the more ambiguous $\mathcal{D}_\mathrm{disagreement}$ subset. The AI is overall underconfident (A). However, on more ambiguous observations it is overconfident for observations leading to high predicted probabilities (B).}
+    \label{fig:reliability}
+\end{figure}
+
+Calibration is the measure of how close the output confidence is to the true probability \citep{niculescu2005predicting}. Currently, the Pl@ntNet AI is not calibrated using post-processing methods \citep{platt1999probabilistic, guo_calibration_2017}.
+We discuss hereafter the calibration of the current AI model and possible guidelines for further integration of AI votes.
+
+From \Cref{fig:reliability-all}, we see that currently, Pl@ntNet AI is underconfident. Meaning that it consistently underestimates its confidence and outputs to users more uncertainty than it should.
+One factor that can influence the results is that the calibration is computed on the test set where experts either authored or voted on observations.
+Botanical experts have more experience with taking pictures of plants and better equipment than the average citizen.
+Thus, the observation quality -- and subsequently the probability distribution output by the AI -- can be biased.
+Another factor known for leading to such suboptimal predictions is the data augmentation \citep{kapoor2022uncertainty}. As the model trains on multiple versions of each original sample with multiple distortions, these variations can become unrepresentative of the underlying sample distribution and cause unnecessary prediction difficulties.
+The data augmentation is used to mitigate the species imbalance of the database.
+
+However, this imbalance is also known to lead to miscalibrations in predictions \citep{ao2023two}.
+On \Cref{fig:reliability-disagreement}, we see that for ambiguous observations (where users disagree), the AI is overconfident in its highest predictions -- which represents half of the dataset -- and underconfident in the other half.
+These different calibration behaviors inform us that, if a given strategy should incorporate the AI votes in the label aggregation based on the output probabilities, we need to be able to rely on such probabilities.
+Therefore, even if the confident AI strategy leads to the best performance in \Cref{sub:strats_ai}, it should not be used directly without recalibration of the model -- using for example temperature scaling \citep{guo_calibration_2017}.
+In future work, more study is needed to investigate the confidence gap of the model and the observations' ambiguity from users' labels.
+The current large-scale and interpretable aggregation strategy from Pl@ntNet already outperforms others without the AI votes.
+
 \section{Conclusion}
+
+We demonstrated that collaborative identification of plant species can effectively be used to obtain expert-level labels.
+Releasing a large subset of millions of observations and thousands of users from the Pl@ntNet organization, we investigate a label aggregation strategy that weighs user answers based on their estimated number of species correctly identified without using prior expert knowledge.
+Many strategies used previously either do not scale to the magnitude of the current databases -- either Pl@ntNet, iNaturalist or eBird -- or are outperformed by our aggregation.
+
+Our strategy weighs users based on the number of correctly identified species. This weight is interpretable and shows the diversity of the user's skillset.
+It can be directly applied to other crowdsourced frameworks with a high number of classes like TwoThird or eBird.
+The values for both hyperparameters $\theta_\mathrm{conf}$ and $\theta_\mathrm{acc}$ which respectively handle the cumulated weight on observation and the agreement level for the given label can be applied as is.
+
+We also investigated the integration of the AI votes in the aggregation strategy.
+We concluded that a strategy involving a threshold on the prediction could be integrated, on the condition that the predicted probabilities are calibrated beforehand.
