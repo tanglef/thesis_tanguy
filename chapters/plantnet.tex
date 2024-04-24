@@ -739,6 +739,86 @@ Invalid observations often come from the lack of user participation with other's
 Causes of disagreements from users can occur from a multitude of factors -- blurriness, multiple species in the same observation, the distance from the plant does not allow precise identification, \emph{etc.}
 Valid observations, as shown in the second row of \Cref{fig:valid-invalid-plantnet} are zoomed in on the plant's flower, leaf or organ to help the identification process.
 
+\section{On the choice of the weight function}
+
+The current weight determination function in Pl@ntNet is based on the number of species identified by the user:
+\begin{equation}
+    w_j = f(n_j) = n_j^{0.5} - n_j^{0.2} + \gamma \enspace.
+\end{equation}
+The confidence threshold is set such that with $n_j=8$ a user becomes \textbf{self-validating}.
+One can argue that a simplification could be made of such a function to simplify both the computation and the interpretability.
+We propose to explore simple monotonous functions of the number of identified species.
+And for each weight function $f$, we adapt the $\theta_\mathrm{conf}$ such that $\theta_\mathrm{conf} \simeq f(8)$.
+
+\begin{table}[htbp]
+    \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
+    \label{tab:weight_functions}
+    \centering
+    \resizebox{\textwidth}{!}{
+        \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c|c|c|c|c|c|c}
+        \hline
+        Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
+        % \hline
+        $\theta_\mathrm{conf}$ & $2$ & $8.75$ & $3.6$ & $5.5$ & $64.75$ & $2.82$ \\
+        \hline
+    \end{tabular}
+    }
+\end{table}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.7\textwidth]{./images_plantnet/weight_functions.pdf}
+    \caption{Visualisation of the different functions tested for the weight determination.}
+    \label{fig:weight_functions}
+\end{figure}
+
+The first conclusion when running the label aggregation with the weight functions from \Cref{tab:weight_functions} is that except for the $\log$ transformation, all weight functions lead to similar performance.
+For example, the label recovery accuracy $\mathrm{Acc}$ on $\mathcal{D}_\text{disagreement}$ is given in \Cref{tab:res_disagreement_weights}.
+
+\begin{table}[htbp]
+    \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
+    \label{tab:res_disagreement_weights}
+    \centering
+    \resizebox{\textwidth}{!}{
+        \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c|c|c|c|c|c|c}
+        \hline
+        Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
+        % \hline
+        $\mathrm{Acc}(\hat y, y, \mathcal{D}_\text{disagreement})$ & $0.781$ & $0.779$ & $0.782$ & $0.779$ & $0.777$ & $0.721$ \\
+        \hline
+    \end{tabular}
+    }
+\end{table}
+
+As performance are similar between the different weight functions -- similar conclusions are observed for the other evaluation subsets -- let us look at how the weight functions spread users' weights.
+To do so, we plot the empirical cumulative distributive function (CDF) of the weights per function tested.
+As the scales vary between the obtained weights, we use a minmax scaling to compare the CDFs with weights in $[0,1]$. More formally, for each vector of weight obtained, we compute:
+\begin{align*}
+\mathrm{CDF}_w(t)&=\frac{1}{n_\texttt{user}}\sum_{j=1}^{n_\texttt{user}} \mathds{1}\left( \tilde{w}_j \leq t  \right),\ \forall t\in [0,1] \\
+& \text{with, } \tilde{w} = \frac{w - \min_j(w_j)}{\max_j(w_j) - \min_j(w_j)}  \enspace.
+\end{align*}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.75\textwidth]{./images_plantnet/cdf_weights.pdf}
+    \caption{Zoomed empirical CDF of the weights obtained after running Pl@ntNet's label aggregation strategy with the weight functions tested in \Cref{tab:weight_functions}. The $\log$ transformation results is represented for the sake of completeness.}
+    \label{fig:cdf_plantnet}
+\end{figure}
+
+From \Cref{fig:cdf_plantnet}, we observe the following:
+\begin{itemize}
+    \item The high concentration of low-weighted users creates the visible steps, then in the second phase there are a lot of users spread with weights close to each other leading to the smooth portion of the CDF.
+    \item To mimic the current weight function distribution of weights, the most appropriate functions are $f(n_j)=n_j^{0.75}+\gamma$ for low weighted users and $f(n_j)=n_j^{0.5}+\gamma$ for the high weighted users. The asymptotic behavior is expected as $n_j^{0.5} - n_j^{0.2}+\gamma  \underset{+\infty}{\sim} n_j^{0.5}$.
+    \item The square transformation spreads users the most, however, it might not be appropriate in practice as the superlinear behavior means that it is easy to become a high-weighted user and difficult for users to correct mistakes.
+\end{itemize}
+
+In conclusion, the current weight function could be simplified as $f(n_j)=n_j^{0.5}+\gamma$ or $f(n_j)=n_j^{0.75}+\gamma$.
+Both yield similar results and spread of user weights.
+To keep the asymptotic behavior, the square root transformation is the most suited.
+Test deployments on the full database could help in practice differentiate between the two candidates.
+
 \section{Integrating model predictions in the aggregation}
 
 While we restricted ourselves to the SWE subset, Pl@ntNet's data is collected internationally and used to train a computer vision model.
@@ -848,60 +928,6 @@ Therefore, even if the confident AI strategy leads to the best performance in \C
 In future work, more study is needed to investigate the confidence gap of the model and the observations' ambiguity from users' labels.
 The current large-scale and interpretable aggregation strategy from Pl@ntNet already outperforms others without the AI votes.
 
-\section{On the choice of the weight function}
-
-The current weight determination function in Pl@ntNet is based on the number of species identified by the user:
-\begin{equation}
-    w_j = f(n_j) = n_j^{0.5} - n_j^{0.2} + \gamma \enspace.
-\end{equation}
-The confidence threshold is set such that with $n_j=8$ a user becomes \textbf{self-validating}.
-One can argue that a simplification could be made of such a function to simplify both the computation and the interpretability.
-We propose to explore simple monotonous functions of the number of identified species.
-And for each weight function $f$, we adapt the $\theta_\mathrm{conf}$ such that $\theta_\mathrm{conf} \simeq f(8)$.
-
-\begin{table}[htbp]
-    \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
-    \label{tab:weight_functions}
-    \centering
-    \resizebox{\textwidth}{!}{
-        \renewcommand{\arraystretch}{1.2}
-    \begin{tabular}{c|c|c|c|c|c|c}
-        \hline
-        Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
-        % \hline
-        $\theta_\mathrm{conf}$ & $2$ & $8.75$ & $3.6$ & $5.5$ & $64.75$ & $2.82$ \\
-        \hline
-    \end{tabular}
-    }
-\end{table}
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=.7\textwidth]{./images_plantnet/weight_functions.pdf}
-    \caption{Visualisation of the different functions tested for the weight determination.}
-    \label{fig:weight_functions}
-\end{figure}
-
-The first conclusion when running the label aggregation with the weight functions from \Cref{tab:weight_functions} is that except for the $\log$ transformation, all weight functions lead to similar performance.
-For example, the label recovery accuracy $\mathrm{Acc}$ on $\mathcal{D}_\text{disagreement}$ is given in \Cref{tab:res_disagreement_weights}.
-
-\begin{table}[htbp]
-    \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
-    \label{tab:res_disagreement_weights}
-    \centering
-    \resizebox{\textwidth}{!}{
-        \renewcommand{\arraystretch}{1.2}
-    \begin{tabular}{c|c|c|c|c|c|c}
-        \hline
-        Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
-        % \hline
-        $\mathrm{Acc}(\hat y, y, \mathcal{D}_\text{disagreement})$ & $0.781$ & $0.779$ & $0.782$ & $0.779$ & $0.777$ & $0.721$ \\
-        \hline
-    \end{tabular}
-    }
-\end{table}
-
-As performance are similar between the different weight functions -- similar conclusions are observed for the other evaluation subsets -- let us look at how the weight functions spread users weights.
 
 \section{Conclusion}
 
