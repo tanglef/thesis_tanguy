@@ -803,7 +803,7 @@ As the scales vary between the obtained weights, we use a minmax scaling to comp
 \begin{figure}[htb]
     \centering
     \includegraphics[width=.75\textwidth]{./images_plantnet/cdf_weights.pdf}
-    \caption{Zoomed empirical CDF of the weights obtained after running Pl@ntNet's label aggregation strategy with the weight functions tested in \Cref{tab:weight_functions}. The $\log$ transformation results is represented for the sake of completeness.}
+    \caption{Zoomed empirical CDF of the weights obtained after running Pl@ntNet's label aggregation strategy with the weight functions tested in \Cref{tab:weight_functions}. The $\log$ transformation result is represented for the sake of completeness.}
     \label{fig:cdf_plantnet}
 \end{figure}
 
@@ -812,6 +812,7 @@ From \Cref{fig:cdf_plantnet}, we observe the following:
     \item The high concentration of low-weighted users creates the visible steps, then in the second phase there are a lot of users spread with weights close to each other leading to the smooth portion of the CDF.
     \item To mimic the current weight function distribution of weights, the most appropriate functions are $f(n_j)=n_j^{0.75}+\gamma$ for low weighted users and $f(n_j)=n_j^{0.5}+\gamma$ for the high weighted users. The asymptotic behavior is expected as $n_j^{0.5} - n_j^{0.2}+\gamma  \underset{+\infty}{\sim} n_j^{0.5}$.
     \item The square transformation spreads users the most, however, it might not be appropriate in practice as the superlinear behavior means that it is easy to become a high-weighted user and difficult for users to correct mistakes.
+    \item On a side note, we can observe a reason why the $\log$ transformation is not suited. Users are close to one another -- the weights are not spread -- meaning that an expert with a high number of identified species is easily contradicted by a few users with few identified species.
 \end{itemize}
 
 In conclusion, the current weight function could be simplified as $f(n_j)=n_j^{0.5}+\gamma$ or $f(n_j)=n_j^{0.75}+\gamma$.
