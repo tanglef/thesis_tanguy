@@ -38,17 +38,18 @@ The tasks are observations of plants (detailed in \Cref{sub:obs_plantnet_what}) 
 \label{sec:introducing_plantnet}
 
 Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,borowiec2022}.
-However, to train them we need large annotated datasets.
-These datasets are often created thanks to citizen science approaches, collecting both reliable and useful information \citep{brown2019potential,wright2021pixelwise}.
+However, to train them one needs large annotated datasets.
+These datasets are usually created thanks to crowdsourcing, but  citizen science approaches, collecting both reliable and useful information \citep{brown2019potential,wright2021pixelwise}, tend to be more and more popular.
 Among existing plant recognition applications, the Pl@ntNet citizen science platform \citep{affouard2017pl} enables global data collection by allowing users to upload and annotate plant observations.
 
-We first introduce the problem of labeling a plant observation and the complexity of plant taxonomy. Then, we present the Pl@ntNet platform and its voting interface.
+We first introduce the problem of labeling a plant observation and the complexity of plant taxonomy.
+Then, we present the Pl@ntNet platform and its voting interface.
 Finally, we discuss the current label aggregation strategy and propose ways to improve it.
 
 \subsection{Plant taxonomy generalities}
 First, we need to understand the complexity of plant taxonomy.
-Our goal here is to briefly present the taxonomy of plants.
-Plants are divided following a hierarchy, from the most general to the most specific ranks of taxa: kingdom, division, class, order, family, genus, and species according to the International Code of Nomenclature for algae, fungi and plants (ICN) \citep{turland2018international}.
+Our goal here is to briefly present this taxonomy.
+Plants are divided following a hierarchy, from the most general to the most specific ranks of taxa: kingdom, division, class, order, family, genus, and species according to the International Code of Nomenclature for algae, fungi, and plants (ICN) \citep{turland2018international}.
 Each of these units of biological classification is called a taxon (taxa in plural).
 Further secondary ranks also exist (tribe, subspecies, variety, form) but we will focus on the main ones.
 
@@ -64,7 +65,7 @@ Roughly, an example of taxonomy levels is:
 \end{itemize}
 
 In the case a plant is a hybrid -- a cross between two species -- it is written with an x as in \emph{Begonia} x \emph{semperflorens}. The position of the x indicates if it is the hybridization between two genera or species.
-For example, the × \emph{Agroelymus hajastanica} is the hybridization of the \emph{Agropyron cristatum} and the \emph{Elymus repens} -- note that the genera are aggregating into a resulting genus.
+For example, the x \emph{Agroelymus hajastanica} is the hybridization of the \emph{Agropyron cristatum} and the \emph{Elymus repens} -- note that the genera are aggregating into a resulting genus.
 Similarly to the x, a + is used to indicate a transplant chimera between two plants.
 For example, the + \emph{Laburnocytisus adamii} results of the transplant of two individuals with different genera: the \emph{Laburnum anagyroides} and the \emph{Cytisus purpureus}.
 
@@ -79,7 +80,7 @@ One of the largest is the International Plant Names Index (IPNI) \citep{IPNI2024
 The IPNI is a database of the published names and indicates which names are validly published.
 It does not take into account the taxonomic status of the names -- the chronological changes and synonymity.
 The World Checklist of Vascular Plants (WCVP) \citep{govaerts2021world} is an international collaborative database of taxa that provides the latest nomenclatural and taxonomic information on vascular plants -- \emph{clubmosses}, \emph{horsetails}, \emph{ferns}, \emph{gymnosperms} (including conifers), and \emph{angiosperms} (flowering plants).
-The data from WCVP is the backbone for Plants Of the World Online (POWO) \footnote{\url{https://powo.science.kew.org}} which is an interface to access more information on individual species as their distribution for example.
+The data from WCVP is the backbone for Plants Of the World Online (POWO)\footnote{\url{https://powo.science.kew.org}} which is an interface to access more information on individual species as their distribution for example.
 
 There are multiple other checklists and databases such as The Plant List (TPL) \citep{PlantList2013}, the Catalogue of Life (CoL) \citep{cachuela2006towards}, Leipzig Catalogue of Vascular Plants (LCVP) \citep{freiberg2020leipzig} \emph{etc.} For a more exhaustive comparison of these databases we refer the reader to \citet{schellenberger2023big}.
 The Global Biodiversity Information Facility (GBIF) \citep{telenius2011biodiversity} is an openly accessible network of shared knowledge about biodiversity on Earth.
@@ -87,7 +88,7 @@ They currently regroup $105$ different sources of taxonomy\footnote{\url{https:/
 
 These checklists are the backbone of any botanical project as they provide a reference for the species names, their taxonomic status, and synonymic contributions.
 Synonyms are not rare in plant taxonomy and can be due to different reasons such as the same species being described by different botanists, at different times, in different regions of the world.
-As an example, in WCVP there are $357347$ plant species and $565200$ synonyms for those species.
+As an example, in WCVP there are $\num{357347}$ plant species and $\num{565200}$ synonyms for those species.
 
 Moreover, note that checklists might not always cover all the species and synonyms from one another.
 For example, the \emph{Pilosella officinarum} Vaill. is listed in POWO with $161$ possible synonyms  -- $141$ accepted synonyms and $20$ illegitimate -- while in the GBIF it is listed with $241$ possible synonyms.
