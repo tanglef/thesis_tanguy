@@ -751,8 +751,17 @@ One can argue that a simplification could be made of such a function to simplify
 We propose to explore simple monotonous functions of the number of identified species.
 And for each weight function $f$, we adapt the $\theta_\mathrm{conf}$ such that $\theta_\mathrm{conf} \simeq f(8)$.
 
+
+The simplification constraints are:
+\begin{itemize}
+    \item \emph{interpretability}: we need to understand easily the link between the weight and the number of identified species
+    \item \emph{closeness to the current weights}: the new weight functions should not modify the current general behavior in order not to impact the platform
+    \item \emph{performance}: the new weight functions should not degrade the performance of the label aggregation strategy
+    \item \emph{collaborative correction}: the new weight function should allow an expert to correct erroneous answers from multiple low-weight users. Similarly, multiple low-weight users' votes should be able to correct votes from a non-expert user.
+\end{itemize}
+
 \begin{table}[htbp]
-    \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
+    \caption{Weight functions tested, the associated confidence threshold $\theta_\mathrm{conf}$ and the accuracy performance on $\mathcal{D}_\text{disagreement}$.}
     \label{tab:weight_functions}
     \centering
     \resizebox{\textwidth}{!}{
@@ -762,6 +771,7 @@ And for each weight function $f$, we adapt the $\theta_\mathrm{conf}$ such that 
         Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
         % \hline
         $\theta_\mathrm{conf}$ & $2$ & $8.75$ & $3.6$ & $5.5$ & $64.75$ & $2.82$ \\
+        $\mathrm{Acc}(\hat y, y, \mathcal{D}_\text{disagreement})$ & $0.781$ & $0.779$ & $0.782$ & $0.779$ & $0.777$ & $0.721$ \\
         \hline
     \end{tabular}
     }
@@ -775,25 +785,24 @@ And for each weight function $f$, we adapt the $\theta_\mathrm{conf}$ such that 
 \end{figure}
 
 The first conclusion when running the label aggregation with the weight functions from \Cref{tab:weight_functions} is that except for the $\log$ transformation, all weight functions lead to similar performance.
-For example, the label recovery accuracy $\mathrm{Acc}$ on $\mathcal{D}_\text{disagreement}$ is given in \Cref{tab:res_disagreement_weights}.
+For example, the label recovery accuracy $\mathrm{Acc}$ on $\mathcal{D}_\text{disagreement}$ is given in \Cref{tab:weight_functions}.
 
-\begin{table}[htbp]
-    \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
-    \label{tab:res_disagreement_weights}
-    \centering
-    \resizebox{\textwidth}{!}{
-        \renewcommand{\arraystretch}{1.2}
-    \begin{tabular}{c|c|c|c|c|c|c}
-        \hline
-        Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
-        % \hline
-        $\mathrm{Acc}(\hat y, y, \mathcal{D}_\text{disagreement})$ & $0.781$ & $0.779$ & $0.782$ & $0.779$ & $0.777$ & $0.721$ \\
-        \hline
-    \end{tabular}
-    }
-\end{table}
+% \begin{table}[htbp]
+%     \caption{Weight functions tested and the associated confidence threshold $\theta_\mathrm{conf}$.}
+%     \label{tab:res_disagreement_weights}
+%     \centering
+%     \resizebox{\textwidth}{!}{
+%         \renewcommand{\arraystretch}{1.2}
+%     \begin{tabular}{c|c|c|c|c|c|c}
+%         \hline
+%         Function $f(n_j)$ & $n_j^{0.5} - n_j^{0.2}+\gamma$ (current) & $n_j + \gamma$ & $n_j^{0.5}+\gamma$ & $n_j^{0.75}+\gamma$ & $n_j^{2}+\gamma$ & $\log(n_j)+\gamma$ \\
+%         % \hline
+%         \hline
+%     \end{tabular}
+%     }
+% \end{table}
 
-As performance are similar between the different weight functions -- similar conclusions are observed for the other evaluation subsets -- let us look at how the weight functions spread users' weights.
+As performance are similar between the different weight functions other than the logarithmic one -- similar conclusions are observed for the other evaluation subsets -- let us look at how the weight functions spread users' weights.
 To do so, we plot the empirical cumulative distributive function (CDF) of the weights per function tested.
 As the scales vary between the obtained weights, we use a minmax scaling to compare the CDFs with weights in $[0,1]$. More formally, for each vector of weight obtained, we compute:
 \begin{align*}
@@ -811,10 +820,35 @@ As the scales vary between the obtained weights, we use a minmax scaling to comp
 From \Cref{fig:cdf_plantnet}, we observe the following:
 \begin{itemize}
     \item The high concentration of low-weighted users creates the visible steps, then in the second phase there are a lot of users spread with weights close to each other leading to the smooth portion of the CDF.
-    \item To mimic the current weight function distribution of weights, the most appropriate functions are $f(n_j)=n_j^{0.75}+\gamma$ for low weighted users and $f(n_j)=n_j^{0.5}+\gamma$ for the high weighted users. The asymptotic behavior is expected as $n_j^{0.5} - n_j^{0.2}+\gamma  \underset{+\infty}{\sim} n_j^{0.5}$.
+    \item To mimic the current weight function, the most appropriate functions are $f(n_j)=n_j^{0.75}+\gamma$ for low weighted users and $f(n_j)=n_j^{0.5}+\gamma$ for the high weighted users. The asymptotic behavior is expected: $n_j^{0.5} - n_j^{0.2}+\gamma  \underset{n_j\rightarrow +\infty}{\sim} n_j^{0.5}$.
     \item The square transformation spreads users the most, however, it might not be appropriate in practice as the superlinear behavior means that it is easy to become a high-weighted user and difficult for users to correct mistakes.
     \item On a side note, we can observe a reason why the $\log$ transformation is not suited. Users are close to one another -- the weights are not spread -- meaning that an expert with a high number of identified species is easily contradicted by a few users with few identified species.
 \end{itemize}
+
+\begin{constructionbox}[Why log and square are not suited for collaborative correction?]
+    Let us ignore the $\gamma$ term for simplicity in the following examples.
+    \begin{itemize}
+        \item \textbf{Log transformation}: expert knowledge is not represented correctly as low-weight users can easily overweight an expert.
+
+        Consider an expert with $n_{\text{expert}}=80$ identified species and $3$ users $u_1$, $u_2$ and $u_3$ with $n_1=3$, $n_2=5$ and $n_3=6$ identified species. Then:
+        \begin{align*}
+            w_{\text{expert}} &= \log(80) = \log(8) + \log(10) \simeq 4.38 \\
+            & < 4.50 \simeq \log(3) + \log(5) + \log(6) \\
+            &< w_{u_1} + w_{u_2} + w_{u_3}.
+        \end{align*}
+        \item \textbf{Square transformation}: An expert aided by multiple self-validating users might not correct another expert with similar knowledge.
+
+        Take two experts $e_1$ and $e_2$ such that $n_{e_1}=102$ and $n_{e_2}=100$. Those experts should have close weights are their number of identified species is close. If expert $e_2$ wants to correct $e_1$, they can not do so with $5$ other users $u_{1},\dots, u_{5}$ that are self-validating (\emph{i.e.} with at least $8$ identified species):
+
+        \begin{equation*}
+            w_{e_{1}} = 102^2 = 10404 > 10320 = 100^2 + 5\times 8^2 = w_{e_{2}} + \sum_{j=1}^5 w_{u_{j}}.
+        \end{equation*}
+
+    \end{itemize}
+
+    Hence, the square and log transformation should not be considered for such a task.
+\end{constructionbox}
+
 
 In conclusion, the current weight function could be simplified as $f(n_j)=n_j^{0.5}+\gamma$ or $f(n_j)=n_j^{0.75}+\gamma$.
 Both yield similar results and spread of user weights.
