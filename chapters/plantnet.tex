@@ -398,7 +398,7 @@ Label smoothing is used as it is known to improve the uncertainty estimation of 
     \label{fig:lrscheduler}
 \end{figure}
 
-The learning rate is scheduled with a cosine annealing strategy with warm restarts \citep{loshchilov2016sgdr}.
+Unlike in \Cref{chap:waum}, the learning rate is scheduled with a cosine annealing strategy with warm restarts \citep{loshchilov2016sgdr} and not a multistep strategy.
 Given an initial learning rate $\eta_0=\eta_{\max}>0$, a minimal learning rate $\eta_{\min}>0$, the number of epochs in a cycle $T_0$ and the current number of epochs in  the cycle $T_{curr}$, the learning rate is updated at each iteration $t$ as:
 \[
 \eta_t = \eta_{\min} + \frac{1}{2}(\eta_{\max} - \eta_{\min})\left(   1+ \cos\left\{ \frac{T_{curr}}{T_0}\pi \right\}\right)    \enspace.
