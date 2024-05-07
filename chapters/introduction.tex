@@ -293,7 +293,7 @@ In the case of a draw, a random choice in the most answered choices is applied.
 More formally:
 
 \begin{equation}\label{eq:mv}
-    \forall i\in [n_\text{task}],\ \hat y_i^{\mathrm{MV}} = \mathrm{argmax} \left(\sum_{j\in\mathcal{A}(x_i)} \mathds{1}(y_i^{(j)}=k)\right)_{k\in[K]} \enspace.
+    \forall i\in [n_\text{task}],\ \hat y_i^{\mathrm{MV}} = \underset{k\in[K]}{\mathrm{argmax}}\left(\sum_{j\in\mathcal{A}(x_i)} \mathds{1}(y_i^{(j)}=k)\right)_{k\in[K]} \enspace.
 \end{equation}
 
 The main drawback of the majority vote is the lack of consideration of workers' abilities.
