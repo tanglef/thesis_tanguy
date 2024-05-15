@@ -37,10 +37,10 @@ The tasks are observations of plants (detailed in \Cref{sub:obs_plantnet_what}) 
 \section{Crowdsourcing for plant species identification}
 \label{sec:introducing_plantnet}
 
-Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,borowiec2022}.
+Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,borowiec2022,mader2021flora}.
 However, to train them one needs large annotated datasets.
-These datasets are usually created thanks to crowdsourcing, but  citizen science approaches, collecting both reliable and useful information \citep{brown2019potential,wright2021pixelwise}, tend to be more and more popular.
-Among existing plant recognition applications, the Pl@ntNet citizen science platform \citep{affouard2017pl} enables global data collection by allowing users to upload and annotate plant observations.
+These datasets are usually created thanks to crowdsourcing, but citizen science approaches, collecting both reliable and useful information \citep{brown2019potential,wright2021pixelwise}, tend to be more and more popular.
+Among existing plant recognition applications, the Pl@ntNet citizen science platform \citep{affouard2017pl} enables global data collection by allowing users to upload and annotate plant observations \citep{bonnet2020citizen}.
 
 We first introduce the problem of labeling a plant observation and the complexity of plant taxonomy.
 Then, we present the Pl@ntNet platform and its voting interface.
@@ -477,7 +477,7 @@ The resulting label is the aggregation of at least two votes on a species-level 
 A taxon requires at least two-thirds agreements among identifiers and all users have the same weight in the decision-making.
 Over time, a taxon can be further refined by the community, debated or revoked.
 eBird handles taxon quality control by using a checklist in each region for observers.
-Quality verifications on the checklist are performed and, combined with user knowledge -- number of species and checklist submitted, number of flagged observations, discussions among local experts -- the observation taxon is accepted.
+Quality control on the checklist is performed and, combined with user knowledge -- number of species and checklist submitted, number of flagged observations, discussions among local experts -- the species observation is accepted.
 The eBird project also showed that monitoring species accumulation from observers can help to sort their skills \citep{kelling2015}. While they consider the species accumulation by hours spent on each collected observation, we present a strategy that takes into account the entire history of observations of the observer.
 
 
@@ -522,7 +522,7 @@ The final number of species identified by users is the aggregation of these two 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=.75\textwidth]{./images_plantnet/weight_function.pdf}
-    \caption{Weight function in \Cref{eq:weight_func} used to map the number of identified species to a trust score in the Pl@ntNet label aggregation strategy.  A new user starts with a weight of $f(0)=f(1)=\gamma\simeq 0.74$. The user confidence threshold $\theta_{\text{conf}}=2$ requires a user to have identified at least $n_j=8$ species to become \textbf{self-validating}. The parameters $\alpha=0.5$, $\beta=0.2$ and $\gamma\simeq 0.74$ are used in practice.}
+    \caption{Weight function in \Cref{eq:weight_func} used to map the number of identified species to a trust score in the Pl@ntNet label aggregation strategy. A new user starts with a weight of $f(0)=f(1)=\gamma\simeq 0.74$. The user confidence threshold $\theta_{\text{conf}}=2$ requires a user to have identified at least $n_j=8$ species to become \textbf{self-validating}. The parameters $\alpha=0.5$, $\beta=0.2$ and $\gamma\simeq 0.74$ are used in practice.}
     \label{fig:weight_function}
 \end{figure}
 
@@ -550,9 +550,9 @@ Note that this identification can later be invalidated by other users with enoug
 To compare the different label aggregation strategies on large-scale datasets, we introduce a subset of the Pl@ntNet database focused on Southwestern European flora observations -- Baleares, Corsica, France, Portugal, Sardegna and Spain -- from $2017$ to October $2023$.
 In total, $\numprint{9005108}$ votes are cast by $n_\text{user}=\numprint{823251}$ users on $\numprint{6699593}$ observations after two cleaning steps on the voted species.
 The first one is a filtering step. We only keep the votes with plant species belonging to the World Checklist of Vascular Plants (WCVP) \citep{govaerts2023world}.
-For the second step, we removed synonyms according to Kew's Royal Botanical Garden checklist.
-We restrict synonyms to be part of the \emph{k-southwestern-europe} from the Plants of the World Online \citep{powo2024} (POWO) system.
-Note that there are plant species listed in \emph{k-southwestern-europe} WCVP that are not in the POWO checklist.
+For the second step, according to Kew's Royal Botanical Garden, we matched synonyms to their backbone species if the species is part of the \emph{k-southwestern-europe} checklist from Plants of the World Online \citep{powo2024} (POWO) system.
+% We restrict synonyms to be part of the \emph{k-southwestern-europe} from Plants of the World Online \citep{powo2024} (POWO) system.
+Note that there are plant species listed in the accepted species from WCVP that are not in the \emph{k-southwestern-europe} POWO checklist.
 As there is a possible taxon ambiguity in this case -- multiple species possible for a given synonym depending on the referential  -- we leave the proposed label untouched.
 The dataset is available at \url{https://zenodo.org/records/10782465}.
 
@@ -571,7 +571,7 @@ Each observation $i$ is created by an author $j$ stored in $\mathrm{Author}(i)$.
     \begin{center}
         \includegraphics[width=\textwidth]{./images_plantnet/sankey_v2.pdf}
     \end{center}
-    \caption{Log-scales distribution of the observations in the South-West European Flora subset from the Pl@ntNet database. Note that the (sub-)datasets introduced are nested: $\mathcal{D}_{\mathrm{SWE}} \supset \mathcal{D}_\text{expert} \supset \mathcal{D}_{\text{mulitple votes}} \supset \mathcal{D}_{\text{disagreement}}$. $\mathcal{D}_{\text{expert}}$ and the following subsets contain observations that received at least one vote from one of the experts.}
+    \caption{Log-scales distribution of the observations in the South-West European Flora subset from the Pl@ntNet database. Note that the (sub-)datasets introduced are nested: $\mathcal{D}_{\mathrm{SWE}} \supset \mathcal{D}_\text{expert} \supset \mathcal{D}_{\text{multiple votes}} \supset \mathcal{D}_{\text{disagreement}}$. $\mathcal{D}_{\text{expert}}$ and the following subsets contain observations that received at least one vote from one of the experts.}
     \label{fig:sankey}
 \end{figure}
 
@@ -605,7 +605,7 @@ Despite our selection process of supposedly `indisputable' experts, a few observ
         \caption{Lorenz curves representing the imbalance distribution of the number of votes in the South-West European Flora subset from the Pl@ntNet database. This imbalance is mitigated but kept in the created test set.}
         \label{fig:lorenz}
     \end{subfigure}
-    \caption{Pl@ntNet activity summary in the SWE flora subset. (A): The majority of users have proposed a small number of observations and species. However, some users have proposed a large number of observations and species. (B): In a perfectly balanced dataset, the Lorenz curve would be the diagonal -- $50\%$ of the votes would be for $50\%$ of the observations. In practice, there is a high imbalance of the distribution of votes between observations -- $80\%$ of the observations are represented by $10\%$ of votes.}
+    \caption{Pl@ntNet activity summary in the SWE flora subset. (A): The majority of users have proposed a small number of observations and species. However, some users have proposed a large number of observations and species. (B): In a perfectly balanced dataset, the Lorenz curve would be the diagonal -- $50\%$ of the votes would be for $50\%$ of the observations. In practice, there is a high imbalance of the distribution of votes between observations -- $80\%$ of the observations are represented by $10\%$ of votes. In total, $5.90\%$ of the users are \textbf{self-validating}($\numprint{50446} users in SWE flora subset$).}
     \label{fig:summary_subset}
 \end{figure}
 
@@ -630,7 +630,7 @@ To overcome these issues, we consider the following label aggregation strategies
 \begin{itemize}
     \item \textbf{Majority Vote (MV)}: it selects the most answered label and is the most common aggregation strategy. More formally, given an observation $i$:
     \[\mathrm{MV}(i, \{y_i^{(j)}\}_j) = \argmax_{k\in [K]} \sum_{j\in\mathcal{A}(x_i)} \mathds{1}(y_i^{(j)} = k) \enspace.\]
-    \item \textbf{Worker agreement with aggregate (WAWA)}: this strategy, also known as the inter-rater agreement, weights each user by how much they agree with the MV labels on average. More formally, given an observation $i$:
+    \item \textbf{Worker Agreement With Aggregate (WAWA)}: this strategy, also known as the inter-rater agreement, weights each user by how much they agree with the MV labels on average. More formally, given an observation $i$:
     \begin{align*}
         \mathrm{WAWA}(i, \mathcal{D}_{\mathrm{SWE}}) &= \argmax_{k\in [K]} \sum_{j\in\mathcal{A}(x_i)} w_j\mathds{1}(y_i^{(j)} = k) \\
         \text{with } w_j &= \frac{1}{|\{y_{i'}^{(j)}\}_{i'}|} \sum_{i'=1}^{n_{\mathrm{SWE}}} \mathds{1}\left(y_{i'}^{(j)} = \mathrm{MV}(i',\{y_{i'}^{(j)}\}_j)\right)\enspace.
@@ -652,7 +652,7 @@ To evaluate the label aggregation strategies, we use the following label recover
 \begin{equation*}
     \mathrm{Acc}(\hat y, y; \mathcal{D}_{\bigcdot}) = \frac{1}{n_{\bigcdot}} \sum_{i=1}^{n_{\bigcdot}} \mathds{1}(\hat{y}_i = y_i)\mathds{1}(s_i=1) \enspace,
 \end{equation*}
-with $\hat y=(\hat{y}_i)_i$ the estimated labels on $\mathcal{D}_{\bigcdot} \in \{\mathcal{D}_\text{expert}, \mathcal{D}_{\text{mulitple votes}}, \mathcal{D}_{\text{disagreement}}\}$, $y=(y_i)_i$ the associated experts labels, considered as ground truth.
+with $\hat y=(\hat{y}_i)_i$ the estimated labels on $\mathcal{D}_{\bigcdot} \in \{\mathcal{D}_\text{expert}, \mathcal{D}_{\text{multiple votes}}, \mathcal{D}_{\text{disagreement}}\}$, $y=(y_i)_i$ the associated experts labels, considered as ground truth.
 When the aggregation strategy indicates the observation as invalid ($s_i=0$ for Pl@ntNet and TwoThird), this metric considers the sample as wrongly classified.
 Precision and recall scores are also computed to respectively measure the correctness of the observations indicated as valid and the ability to recover the ground truth observations in the valid set.
 We take into account the species imbalance by using a macro-average for these metrics. This treats rare species as equally important to common ones. Denoting respectively $\mathrm{TP}_k$, $\mathrm{FP}_k$ and $\mathrm{FN}_k$ the true positives, false positives and false negatives related to the species $k$, the macro averaged precision and recall write
@@ -662,10 +662,9 @@ We take into account the species imbalance by using a macro-average for these me
 
 As both the Pl@ntNet and the TwoThird strategies can invalidate some of the observations, we also compute the proportion of observations removed from the whole dataset (whereas previous metrics are computed on the evaluation dataset). This complementary metric allows measuring the proportion of samples "lost" for the training of the AI model after the aggregation step.
 In practice, filtering data might remove some noisy samples from the dataset. Yet, in general, the more samples are filtered, the fewer ones to train the neural network training.
-While filtering samples can improve the quality of the data, it is important to note that the more samples that are filtered out, the fewer samples remain for training the network.
-Finally, we also consider the proportion of species retrieved by the aggregation strategies on $\mathcal{D}_\text{expert}, \mathcal{D}_{\text{mulitple votes}}$ and $\mathcal{D}_{\text{disagreement}}$. This is a critical consideration because if a species identified by experts is absent from the aggregated data, the neural network trained on this data will be unable to make predictions for that very species.
+Finally, we also consider the proportion of species retrieved by the aggregation strategies on $\mathcal{D}_\text{expert}, \mathcal{D}_{\text{multiple votes}}$ and $\mathcal{D}_{\text{disagreement}}$. This is a critical consideration because if a species identified by experts is absent from the aggregated data, the neural network trained on this data will be unable to make predictions for that very species.
 
-We evaluate the label recovery $\mathrm{Acc}$ of each strategy on $\mathcal{D}_\text{expert}, \mathcal{D}_{\text{mulitple votes}}$ and $\mathcal{D}_{\text{disagreement}}$ (see also \Cref{fig:sankey}): the test set where experts have provided at least one vote ($\mathcal{D}_\text{expert}$), its subset of observations with at least $2$ votes and one from an expert ($\mathcal{D}_\text{multiple votes}$) and its subset of observations with at least $2$ votes, one from an expert, and one disagreement ($\mathcal{D}_\text{disagreement}$).
+We evaluate the label recovery $\mathrm{Acc}$ of each strategy on $\mathcal{D}_\text{expert}, \mathcal{D}_{\text{multiple votes}}$ and $\mathcal{D}_{\text{disagreement}}$ (see also \Cref{fig:sankey}): the test set where experts have provided at least one vote ($\mathcal{D}_\text{expert}$), its subset of observations with at least $2$ votes and one from an expert ($\mathcal{D}_\text{multiple votes}$) and its subset of observations with at least $2$ votes, one from an expert, and one disagreement ($\mathcal{D}_\text{disagreement}$).
 The latter is the most challenging as it contains the observations with the most ambiguity.
 We selected these subsets to investigate the label aggregation strategies' performance depending on the ambiguity level.
 
@@ -727,7 +726,7 @@ To better evaluate each aggregation strategy, we compute the macro precision and
 \subsubsection{Volume of valid data.}
 
 The community labels are aggregated to generate training data for the AI model.
-The more data the better, however, we need to filter out observations with low quality or potentially mislabeled.
+The more data the better, however, we need to filter out observations with low visual quality or potentially mislabeled.
 This is the reason for the validity indicator $s_i$ in the TwoThird and Pl@ntNet strategies.
 On $\mathcal{D}_{\mathrm{SWE}}$, \Cref{fig:vol_train_data} shows how much data is kept for later training.
 $\mathrm{MV}$ and $\mathrm{WAWA}$ keep all proposed observation for training -- including potential noisy ones.
@@ -809,20 +808,20 @@ For example, the label recovery accuracy $\mathrm{Acc}$ on $\mathcal{D}_\text{di
 %     }
 % \end{table}
 
-As performance are similar between the different weight functions other than the logarithmic one -- similar conclusions are observed for the other evaluation subsets -- let us look at how the weight functions spread users' weights.
-To do so, we plot the empirical cumulative distributive function (CDF) of the weights per function tested.
-As the scales vary between the obtained weights, we use a minmax scaling to compare the CDFs with weights in $[0,1]$. More formally, for each vector of weight obtained, we compute:
-\begin{align*}
-\mathrm{CDF}_w(t)&=\frac{1}{n_\texttt{user}}\sum_{j=1}^{n_\texttt{user}} \mathds{1}\left( \tilde{w}_j \leq t  \right),\ \forall t\in [0,1] \\
-& \text{with, } \tilde{w} = \frac{w - \min_j(w_j)}{\max_j(w_j) - \min_j(w_j)}  \enspace.
-\end{align*}
-
 \begin{figure}[htb]
     \centering
     \includegraphics[width=.75\textwidth]{./images_plantnet/cdf_weights.pdf}
     \caption{Zoomed empirical CDF of the weights obtained after running Pl@ntNet's label aggregation strategy with the weight functions tested in \Cref{tab:weight_functions}. The $\log$ transformation result is represented for the sake of completeness.}
     \label{fig:cdf_plantnet}
 \end{figure}
+
+As performance is similar between the different weight functions other than the logarithmic one -- similar conclusions are observed for the other evaluation subsets -- let us look at how the weight functions spread users' weights.
+To do so, we plot the empirical cumulative distributive function (CDF) of the weights per function tested.
+As the scales vary between the obtained weights, we use a minmax scaling to compare the CDFs with weights in $[0,1]$. More formally, for each vector of weight obtained, we compute:
+\begin{align*}
+\mathrm{CDF}_w(t)&=\frac{1}{n_\texttt{user}}\sum_{j=1}^{n_\texttt{user}} \mathds{1}\left( \tilde{w}_j \leq t  \right),\ \forall t\in [0,1] \\
+& \text{with, } \tilde{w} = \frac{w - \min_j(w_j)}{\max_j(w_j) - \min_j(w_j)}  \enspace.
+\end{align*}
 
 From \Cref{fig:cdf_plantnet}, we observe the following:
 \begin{itemize}
@@ -831,6 +830,11 @@ From \Cref{fig:cdf_plantnet}, we observe the following:
     \item The square transformation spreads users the most, however, it might not be appropriate in practice as the superlinear behavior means that it is easy to become a high-weighted user and difficult for users to correct mistakes.
     \item On a side note, we can observe a reason why the $\log$ transformation is not suited. Users are close to one another -- the weights are not spread -- meaning that an expert with a high number of identified species is easily contradicted by a few users with few identified species.
 \end{itemize}
+
+In conclusion, the current weight function could be simplified as $f(n_j)=n_j^{0.5}+\gamma$ or $f(n_j)=n_j^{0.75}+\gamma$.
+Both yield similar results and spread of user weights.
+To keep the asymptotic behavior, the square root transformation is the most suited.
+Test deployments on the full database could help in practice differentiate between the two candidates.
 
 \begin{constructionbox}[An example of why log and square are not suited for collaborative correction?]
     Let us ignore the $\gamma$ term for simplicity in the following examples.
@@ -856,15 +860,23 @@ From \Cref{fig:cdf_plantnet}, we observe the following:
     Hence, the square and log transformation should not be considered for such a task.
 \end{constructionbox}
 
+\subsection{On the choice of the weight in the weight function}
 
-In conclusion, the current weight function could be simplified as $f(n_j)=n_j^{0.5}+\gamma$ or $f(n_j)=n_j^{0.75}+\gamma$.
-Both yield similar results and spread of user weights.
-To keep the asymptotic behavior, the square root transformation is the most suited.
-Test deployments on the full database could help in practice differentiate between the two candidates.
+Currently, the weight of user $j$, denoted by $w_j$ is computed from the estimated number of identified species $n_j$.
+This choice does not penalize users who
+\begin{itemize}
+\item might have correctly identified a species a one point and now have lost this ability,
+\item are \textbf{self-validating} -- more than $8$ identified species -- and produce new wrong identifications.
+\end{itemize}
+
+This is a common issue in crowdsourcing systems where users can have a high reputation but still make mistakes.
+To mitigate this issue, classically in crowdsourcing, the votes of other users can be used to correct the mistakes and a time-dependency can be introduced to the weights.
+However, as presented before, the sparsity of the votes is very high in Pl@ntNet's database.
+
 
 \section{Integrating model predictions in the aggregation}
 
-While we restricted ourselves to the SWE subset, Pl@ntNet's data is collected internationally and used to train a computer vision model.
+While we restricted ourselves to the SWE subset, Pl@ntNet's data is collected internationally.
 The more correctly identified observations are added to the training set, the better the prediction of the trained model for end-users.
 This classifier is trained from valid observations and aggregated labels (see \Cref{fig:plantnet-system} and \Cref{sub:pipeline_plantnet}).
 At the time of writing, the model in use in Pl@ntNet is DINOv2 \citep{oquab2024dinov2} a transformer-based network.
@@ -978,7 +990,7 @@ We demonstrated that collaborative identification of plant species can effective
 Releasing a large subset of millions of observations and thousands of users from the Pl@ntNet organization, we investigate a label aggregation strategy that weighs user answers based on their estimated number of species correctly identified without using prior expert knowledge.
 Many strategies used previously either do not scale to the magnitude of the current databases -- either Pl@ntNet, iNaturalist or eBird -- or are outperformed by our aggregation.
 
-Our strategy weighs users based on the number of correctly identified species. This weight is interpretable and shows the diversity of the user's skillset.
+Our strategy weighs users based on the number of correctly identified species. This weight is interpretable and shows the diversity of the user's skill set.
 It can be directly applied to other crowdsourced frameworks with a high number of classes like TwoThird or eBird.
 The values for both hyperparameters $\theta_\mathrm{conf}$ and $\theta_\mathrm{acc}$ which respectively handle the cumulated weight on observation and the agreement level for the given label can be applied as is.
 
