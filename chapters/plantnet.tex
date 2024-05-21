@@ -859,20 +859,107 @@ Test deployments on the full database could help in practice differentiate betwe
 
     Hence, the square and log transformation should not be considered for such a task.
 \end{constructionbox}
-
 \subsection{On the choice of the weight in the weight function}
 
-Currently, the weight of user $j$, denoted by $w_j$ is computed from the estimated number of identified species $n_j$.
-This choice does not penalize users who
+Currently, the weight of user $j$, denoted by $w_j>0$ is computed from the estimated number of identified species $n_j$.
+This choice does not penalize users who either/both:
 \begin{itemize}
 \item might have correctly identified a species a one point and now have lost this ability,
 \item are \textbf{self-validating} -- more than $8$ identified species -- and produce new wrong identifications.
 \end{itemize}
-
 This is a common issue in crowdsourcing systems where users can have a high reputation but still make mistakes.
-To mitigate this issue, classically in crowdsourcing, the votes of other users can be used to correct the mistakes and a time-dependency can be introduced to the weights.
-However, as presented before, the sparsity of the votes is very high in Pl@ntNet's database.
+To mitigate this issue, classically in crowdsourcing, the votes of other users are used to correct the mistakes and a time-dependency can be introduced to the weights.
 
+\subsubsection{Penalize the mistakes}
+
+As we do not have a skill evolution metric to create a time dependency in the votes, let us consider ways to penalize the mistakes of users.
+We compare the following strategies:
+\begin{itemize}
+    \item \textbf{Vanilla}: the number of identified species is not penalized.
+    \item \textbf{Difference}: the number of identified species is penalized by the number of wrongly identified species. The weight writes:
+    \[w_j = f(\tilde{n}_j) = f(\min(n_j - n_{j, \text{invalid}}, 0))\]
+    with $n_{j, \text{invalid}} =\mathrm{Round}\left( n_{j, \text{invalid}}^{\text{author}} + \frac{1}{10}n_{j, \text{invalid}}^{\text{vote}}\right)$ the number of wrongly identified species by user $j$ either by vote or new observation. The quantity $n_{j, \text{invalid}}^{\text{author}}=|\{y_i^{(j)}\in [K]\,|\, y_i^{(j)}\neq \hat y_i, s_1=1, \mathrm{Author}(i)=j\}$ represents wrong identifications on authored valid observations. The same applies for $n_{j, \text{invalid}}^{\text{vote}}$ for votes on all observations.
+    Conceptually, one's weight is great if they have more correct identifications than wrong ones.
+    \item \textbf{Ratio}: the number of identified species is penalized by the number of different proposed species. The weight writes:
+    \[w_j=f(\tilde{n}_j)=f\left(\frac{n_j}{n_{\text{proposed}}} n_j\right),\]with $n_{\text{proposed}}=|\{y_i^{(j)}\in [K]\}|$ the number of different proposed species by user $j$. Morally, the ratio $\frac{n_j}{n_{\text{proposed}}}\in [0,1]$ represents the proportion of identified species among the proposed ones.
+    If a user proposes a lot of different species, they should be correct otherwise this diversity could be seen as spam votes.
+    \item \textbf{Accuracy}: similar to the $\mathrm{WAWA}$ strategy, we also consider weighting $n_j$ by the accuracy of worker $j$:
+    \[w_j=f(\tilde{n}_j)=f\left( \left[\frac{1}{|\{y_{i'}^{(j)}\}_{i'}|} \sum_{i'=1}^{n_{\mathrm{SWE}}} \mathds{1}\left(y_{i'}^{(j)} = \mathrm{MV}(i',\{y_{i'}^{(j)}\}_j)\right)\right]n_j\right).\]
+    Morally, a user-identified species can not be trusted if other users need to correct them too often.
+\end{itemize}
+
+\begin{figure}[tbh]
+    \centering
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, height=4cm]{./images_plantnet/accuracy_by_vol_class_kept_one_disagreeement_weights_micro.pdf}
+        \caption{Accuracy on $\mathcal{D}_{\text{disagreement}}$ w.r.t. to the proportion of classes retrieved}
+        \label{fig:accuracy_changing_weights}
+    \end{subfigure}%
+    \hfill
+    \begin{subfigure}[t]{.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, height=4cm]{./images_plantnet/precision_and_recall_one_disagreeement_weights_macro.pdf}
+        \caption{Macro recall w.r.t the macro precision on $\mathcal{D}_{\text{disagreement}}$.}
+        \label{fig:pr_changing_weights}
+    \end{subfigure}
+    \caption{Accuracy, proportion of classes retrieved, precision and recall on $\mathcal{D}_\text{disagreement}$ depending on the new computation of the weights. The \textbf{Accuracy} reweighting is the closest to the \textbf{Vanilla} performance. Note that, no newly proposed method outperforms the \textbf{Vanilla} strategy.}
+    \label{fig:changin_weights_1}
+\end{figure}
+
+In \Cref{fig:changin_weights_1}, we observe that the new weight functions do not outperform the current system.
+The \textbf{Accuracy} reweighting is the closest to the \textbf{Vanilla} strategy.
+Hereafter, we discuss the reasons why the new weight functions do not outperform the current system and possible perspectives.
+
+\subsubsection*{Discussion.}
+
+First, consider that from a user perspective modifying the weights comes at a high cost: one might feel that their contributions are not valued if we penalize mistakes and participate less.
+But the goal of Pl@ntNet is also to get quality labels to output reliable predictions.
+
+Several issues can be considered and possibly mitigated in the previously proposed methodology to modify the user's weight:
+\begin{itemize}
+    \item \textbf{Data sparsity.} A user that is \textbf{self-validating} can validate their observation. If they propose a new species, their identification becomes valid and increases their weight even though there is no feedback on their knowledge of these new species. And if a \textbf{self-validating} user proposes multiple identification incorrect, only other votes can invalidate them. This is both a strength and weakness of crowdsourcing: we need to trust the users to some extent and interactions between users on the same observation to estimate their reliability. Observations with a single label are more likely to be mislabeled.
+    In the SWE subset, $24.08\%$ of the observations have only one label ($\numprint{1613354}$ observations). These votes are not reviewed by the community and can only be trusted to some extent. And $62.28\%$ of the users only voted once ($\numprint{512687}$ users). These users have a weight close to zero and their observations are not valid in a vast majority.
+    \item \textbf{Corrections and penalizations.} First, mistakes from users that are not \textbf{self-validating} are less impactful in the system as they are easily fixed. Until someone agrees with the vote there is not enough weight to validate the observation (thanks to the $\theta_\text{conf}$ threshold). However, for \textbf{self-validating} users, the mistakes are more impactful as they can validate their observations and gain weight more easily. If we penalize their participation by weights like WAWA's based on their accuracy we can think of at least three possibilities:
+    \begin{itemize}
+        \item \emph{Classical accuracy}: but as most of their observation has only their vote (and are not corrected) they have a small penalty that does not influence performance (see \Cref{fig:changin_weights_1}). And also they are not incentivized to vote on others' observations as they might decrease in weight with these interactions.
+        \item \emph{Accuracy on reviewed valid observations}: we could consider the accuracy of the user on observations currently valid ($s_i=1$) and with at least two votes. Given a user $j$, denote their set of observations with at least two votes $\mathcal{D}_{\text{reviewed,valid}}^{(j)} = \{i'\,;\, |\{y_i^{(j)}\}_{i'}| \geq 2 \text{ and } s_i=1\}$.
+
+        The main issue is that if an observation is corrected with a disagreeing vote, for it to be valid the $\theta_\text{acc}$ threshold needs to be reached. This is hard to meet. For example, consider a vote by a user with $n_1=30$ identified species. If another user answers a contradicting vote, they should have at least $141$ identified species to validate the observation with the $\theta_\text{acc}$ threshold.
+        For two contradicting users, we can plot the minimal number of identified species for the users to validate the observation with the $\theta_\text{acc}$ threshold in \Cref{fig:validate_again}.
+        Each user must have at least $n_2=n_3=40$ identified species to validate their correction if $n_1=30$. This requirement is hardly met in practice.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.75\textwidth]{./images_plantnet/make_an_observation_valid_again.pdf}
+            \caption{Minimal number of identified species $n_2$ and $n_3$ for two users to validate an observation with a common disagreeing vote if the author has $n_1=30$ identified species. The $\theta_\text{acc}$ threshold is $\frac{f(n_2) + f(n_3)}{f(n_1)+f(n_2)+f(n_3)}$ and must be greater than $0.7$.}
+            \label{fig:validate_again}
+        \end{figure}
+
+        In a more general setting, this can be seen as an optimization problem with constraints:
+        \[\begin{aligned}
+            \argmin_{n\in\mathbb{R}^{d+1}_+} \|n\|_2^2 \quad\text{s.t.}\quad \frac{\sum_{j\geq 1} n_j}{\sum_{j\geq 0} n_j} - \theta_{\text{acc}} \geq 0 \enspace,
+        \end{aligned}\]
+        where $n\in\mathbb{R}^{d+1}_+$ is the vector of the number of identified species for $d+1$ users: $n_0$ for the author of the vote to correct and $(n_j)_{j\geq 1}$ for the $d$ others trying to correct it. This problem can be solved numerically using \texttt{scipy.optimize} library for example for any dimension.
+
+        % plot the 3D function
+        \item \emph{Accuracy on reviewed observations}: we can relax the latter condition and consider all observations and no condition on the validity. Given a user $j$, denote their set of observations with at least two votes $\mathcal{D}_{\text{reviewed}}^{(j)} = \{i'\,;\, |\{y_i^{(j)}\}_{i'}| \geq 2\}$.
+        The reviewed accuracy of user $j$ writes:
+        \[
+            \mathrm{Acc}_{\text{reviewed}}(\{y_i^{(j)}\}_j, y;\mathcal{D}_{\text{SWE}}) = \frac{1}{|\mathcal{D}_{\text{reviewed}}^{(j)}|}\sum_{i\in \mathcal{D}_\text{reviewed}^{(j)}} \mathds{1}(y_i^{(j)}=y_i) \enspace.
+        \]
+        However, in practice, this still does not outperform the Vanilla weight. This can be explained as there are few observations with multiple votes and a disagreement in $\mathcal{D}_\text{SWE}$ ($\numprint{67962}$ observations, representing $1.01\%$ of the dataset). Fewer of these observations have a ground truth label ($\mathcal{D}_\text{disagreement}$) so we might not see the impact of such weight even on a such large subset dataset of Pl@ntNet.
+    \end{itemize}
+\end{itemize}
+
+To conclude this discussion on the penalization of the mistakes, we can say that the current weight function is a good compromise between the number of identified species and the quality of the identifications.
+Penalizing the mistakes is not straightforward and the current system is already quite efficient.
+The main issue is the lack of interactions between users on the same observation.
+With more interactions in the future, we could reconsider these penalizations to improve the quality of the data -- and the code will be able to do so.
+
+So, if the issue is the lack of votes, we need to incentivize users to vote on others' observations.
+This could be done using a recommendation system for users.
+This recommendation system should take into account both \emph{some sense of skills} (the currently identified species, or at least their family), the \emph{current weight} (a vote from a new user is not very useful against an expert), and an \emph{exploration} part to help users discover new species.
+In the meantime, the lack of votes can be mitigated by the current Pl@ntNet computer vision predictions'.
 
 \section{Integrating model predictions in the aggregation}
 
@@ -993,6 +1080,13 @@ Many strategies used previously either do not scale to the magnitude of the curr
 Our strategy weighs users based on the number of correctly identified species. This weight is interpretable and shows the diversity of the user's skill set.
 It can be directly applied to other crowdsourced frameworks with a high number of classes like TwoThird or eBird.
 The values for both hyperparameters $\theta_\mathrm{conf}$ and $\theta_\mathrm{acc}$ which respectively handle the cumulated weight on observation and the agreement level for the given label can be applied as is.
+
+Note that Pl@ntNet's label control system heavily rests on visual analysis of the observations and inter-user agreements.
+Additional metadata such as geolocation, date, phenological stage or visual description can be registered in Pl@ntNet and help identify the plant's species but are currently not directly taken into account for user evaluation.
+Such information -- in particular spatial information -- could also be used to generate more interaction between users and collect more votes through possible common interests.
+In addition, users are helped by the system with images similar to the identification proposed in a given checklist.
+The additional information could guide users in their vote -- for example by notifying a possible incoherence between the current botanical knowledge on a species and the metadata entered (such as the altitude, the distance to the sea, a species not known to survive in a given botanical area).
+
 
 We also investigated the integration of the AI votes in the aggregation strategy.
 We concluded that a strategy involving a threshold on the prediction could be integrated, on the condition that the predicted probabilities are calibrated beforehand.
