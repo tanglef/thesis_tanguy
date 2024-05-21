@@ -923,7 +923,7 @@ Several issues can be considered and possibly mitigated in the previously propos
     \item \textbf{Corrections and penalizations.} First, mistakes from users that are not \textbf{self-validating} are less impactful in the system as they are easily fixed. Until someone agrees with the vote there is not enough weight to validate the observation (thanks to the $\theta_\text{conf}$ threshold). However, for \textbf{self-validating} users, the mistakes are more impactful as they can validate their observations and gain weight more easily. If we penalize their participation by weights like WAWA's based on their accuracy we can think of at least three possibilities:
     \begin{itemize}
         \item \emph{Classical accuracy}: but as most of their observation has only their vote (and are not corrected) they have a small penalty that does not influence performance (see \Cref{fig:changin_weights_1}). And also they are not incentivized to vote on others' observations as they might decrease in weight with these interactions.
-        \item \emph{Accuracy on reviewed valid observations}: we could consider the accuracy of the user on observations currently valid ($s_i=1$) and with at least two votes. Given a user $j$, denote their set of observations with at least two votes $\mathcal{D}_{\text{reviewed,valid}}^{(j)} = \{i'\,;\, |\{y_i^{(j)}\}_{i'}| \geq 2 \text{ and } s_i=1\}$.
+        \item \emph{Accuracy on reviewed valid observations}: we could consider the accuracy of the user on observations currently valid ($s_i=1$) and with at least two votes. Given a user $j$, denote their set of observations with at least two votes $\mathcal{D}_{\text{reviewed,valid}}^{(j)} = \{i\,;\, |\{y_i^{(j)}\}_{i}| \geq 2 \text{ and } s_i=1\}$.
 
         The main issue is that if an observation is corrected with a disagreeing vote, for it to be valid the $\theta_\text{acc}$ threshold needs to be reached. This is hard to meet. For example, consider a vote by a user with $n_1=30$ identified species. If another user answers a contradicting vote, they should have at least $141$ identified species to validate the observation with the $\theta_\text{acc}$ threshold.
         For two contradicting users, we can plot the minimal number of identified species for the users to validate the observation with the $\theta_\text{acc}$ threshold in \Cref{fig:validate_again}.
@@ -931,7 +931,7 @@ Several issues can be considered and possibly mitigated in the previously propos
         \begin{figure}[H]
             \centering
             \includegraphics[width=.75\textwidth]{./images_plantnet/make_an_observation_valid_again.pdf}
-            \caption{Minimal number of identified species $n_2$ and $n_3$ for two users to validate an observation with a common disagreeing vote if the author has $n_1=30$ identified species. The $\theta_\text{acc}$ threshold is $\frac{f(n_2) + f(n_3)}{f(n_1)+f(n_2)+f(n_3)}$ and must be greater than $0.7$.}
+            \caption{Minimal number of identified species $n_2$ and $n_3$ for two users to validate an observation with a common disagreeing vote if the author has $n_1=30$ identified species. The $\theta_\text{acc}$ threshold is $\frac{f(n_2) + f(n_3)}{f(n_1)+f(n_2)+f(n_3)}$ and must be greater than $\theta_{\text{acc}}=0.7$.}
             \label{fig:validate_again}
         \end{figure}
 
@@ -942,7 +942,7 @@ Several issues can be considered and possibly mitigated in the previously propos
         where $n\in\mathbb{R}^{d+1}_+$ is the vector of the number of identified species for $d+1$ users: $n_0$ for the author of the vote to correct and $(n_j)_{j\geq 1}$ for the $d$ others trying to correct it. This problem can be solved numerically using \texttt{scipy.optimize} library for example for any dimension.
 
         % plot the 3D function
-        \item \emph{Accuracy on reviewed observations}: we can relax the latter condition and consider all observations and no condition on the validity. Given a user $j$, denote their set of observations with at least two votes $\mathcal{D}_{\text{reviewed}}^{(j)} = \{i'\,;\, |\{y_i^{(j)}\}_{i'}| \geq 2\}$.
+        \item \emph{Accuracy on reviewed observations}: we can relax the latter condition and consider all observations and no condition on the validity. Given a user $j$, denote their set of observations with at least two votes $\mathcal{D}_{\text{reviewed}}^{(j)} = \{i\,;\, |\{y_i^{(j)}\}_{i}| \geq 2\}$.
         The reviewed accuracy of user $j$ writes:
         \[
             \mathrm{Acc}_{\text{reviewed}}(\{y_i^{(j)}\}_j, y;\mathcal{D}_{\text{SWE}}) = \frac{1}{|\mathcal{D}_{\text{reviewed}}^{(j)}|}\sum_{i\in \mathcal{D}_\text{reviewed}^{(j)}} \mathds{1}(y_i^{(j)}=y_i) \enspace.
