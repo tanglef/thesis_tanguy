@@ -585,8 +585,8 @@ Aggregation strategies that rely on these data collection models are not conside
 \subsection{Integrating crowdsourcing in the neural network's architecture}
 In the era of deep learning, it is only expected to find new ways to introduce crowdsourcing into neural network architectures.
 Incorporating layers taking into account the crowd/tasks pairing in the architecture leads to a neural network able to be trained on crowdsourced data.
-The newly obtained classifier denoted $\mathcal{C}$ in the future, is used to predict labels of unseen images.
-However, contrary to models seen in \Cref{sub:aggregating_votes}, these strategies are only used for prediction and not for creating a new label for each task.
+The newly obtained classifier function denoted $f$ in this part, is used to predict labels of unseen images.
+However, contrary to models seen in \Cref{sub:aggregating_votes}, these strategies are only used for prediction and not for aggregating labels for each task.
 We thus not only need the crowdsourced labels but also the associated tasks and a set of unseen data to validate/test the model on.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -594,7 +594,7 @@ We thus not only need the crowdsourced labels but also the associated tasks and 
 \label{subsec:crowdlayer}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-From \citep{rodrigues2018deep}, CrowdLayer is an end-to-end strategy in the crowdsourcing setting.
+From \citet{rodrigues2018deep}, CrowdLayer is an end-to-end strategy in the crowdsourcing setting.
 From the output of a neural network, a new layer called \emph{crowd layer} is added to take into account worker specificities.
 The main classifier thus becomes globally shared, and the new layer is the only worker-aware layer.
 As multiple variants of CrowdLayer can exist, we only considered in this paper the matrix weights (MW) strategy that is akin to the DS model.
@@ -611,13 +611,13 @@ Also note that in practice, other CrowdLayer strategies are available (using a s
 
 CrowdLayer takes into account worker-specific confusion matrices.
 CoNAL \citep{chu2021learning} generalizes this setting by creating a global confusion matrix $W^g\in\mathbb{R}^{K\times K}$ in addition to the local ones $W^j\in\mathbb{R}^{K\times K}$ for $j\in[n_{\texttt{worker}}]$ working all together with the classifier $f$.
-Given a worker $w_j$, the confusion is global with weight $\omega_i^j$ and local with weight $1-\omega_i^j$.
+Given a worker $w_j$, the confusion is global with weight $\omega_i^j\in [0,1]$ and local with weight $1-\omega_i^j$.
 The final distribution output used to compute the loss is given by:
 \begin{align*}
     p_{\text{out}}(x_i, w_j) = \omega _i^j W^g f(x_i) + (1-\omega_i^j)W^j f(x_i) \enspace.
 \end{align*}
 As is, CoNAL local matrices tend to aggregate themselves onto the global matrix.
-To avoid this phenomenon, a regularization term in the loss can be added as leading to the final loss:
+To avoid this phenomenon, a regularization term in the loss can be added, leading to the final loss:
 \begin{align*}
     \mathcal{L}(W^g, \{W^j\}_{j\in [n_\texttt{worker}]}) = \frac{1}{n_\texttt{task}} &\sum_{i\in [n_\texttt{task}]}\sum_{j\in [n_\texttt{worker}]} \mathrm{H}\Big(y_i^{(j)}, p_{\text{out}}(x_i, w_j)\Big) \\ &- \lambda \sum_{j\in [n_\texttt{worker}]} \| W^g - W^j\|_2 \enspace,
 \end{align*}
@@ -637,7 +637,7 @@ Throughout this thesis, we evaluate our results using different metrics dependin
     \end{equation}
     The expected calibration error is a metric introduced in \citet{naeini2015obtaining} that addresses the reliability of the predicted probabilities by a model.
     It is known that many machine learning models \citep{guo_calibration_2017} are not well calibrated.
-    For example in a binary classification problem with smiling and not smiling faces, out of all the tasks smiling that have an estimated probability $\hat p\in [0,1]$ to be classified as smiling, there should be a portion $\hat p$ that are smiling.
+    A model is said calibrated if, for example in a binary classification problem with smiling and not smiling faces, out of all the tasks smiling that have an estimated probability $\hat p\in [0,1]$ to be classified as smiling, there is indeed a portion $\hat p$ that are smiling.
     More formally, let us partition the $[0,1]$ interval into $M$ equally spaced bins $I_1,\dots,I_M$.
     Let $B_m$ be the set of tasks $x_i$ with predicted probability falling in bin $I_m$ for $m\in [M]$.
     Then, in each bin we can look at the accuracy of the model:
@@ -671,7 +671,7 @@ The \texttt{LabelMe} and \texttt{Music} datasets \citep{rodrigues2014gaussian, r
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Introduced by \citet{peterson_human_2019}, the crowdsourced dataset \texttt{CIFAR-10H} attempts to recapture the human labeling noise present when creating the dataset.
 We have transformed this dataset, mainly by creating a validation set.
-Hence, the training set for our version of \texttt{CIFAR-10H} consists of the first $9500$ test images from CIFAR-10, hence
+The training set for our version of \texttt{CIFAR-10H} consists of the first $9500$ test images from CIFAR-10, hence
 $|\mathcal{D}_{\text{train}}| = 9500$.
 The validation set is then composed of the last $500$ images from the training set of \texttt{CIFAR-10} meaning  $|\mathcal{D}_{\text{test}}| = 500 $.
 The test set consists of the whole training set from CIFAR-10, so  $|\mathcal{D}_{\text{test}}| = 50000$.
@@ -680,7 +680,7 @@ Workers had to choose one label for each presented image among the $K=10$ labels
 Each worker labeled $200$ tasks (and was paid $\$1.50$ for that): $20$ for each original category.
 Answering time was also measured for each worker\footnote{Note that attention checks occurred every $20$ trial for each worker, for tasks whose labels were known.
 They have been removed from the dataset since the corresponding images are not available.}.
-The \texttt{CIFAR-10H} annotating effort is balanced: each task has been labeled by $50$ workers on average.
+The \texttt{CIFAR-10H} released annotating effort is balanced: each task has been labeled by $50$ workers on average.
 \begin{figure}[thb]
     \centering
     \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_CIFAR-10H}\label{subfig:cifar10h_feedback_effort}} \hfill
@@ -691,7 +691,7 @@ The \texttt{CIFAR-10H} annotating effort is balanced: each task has been labeled
 \end{figure}
 
 From \Cref{fig:CIFAR-10H_dataset_visualization}, we can see that the creation of a validation set leads to some (small) imbalances in the load per worker and feedback effort distribution.
-The entropy distribution peaks around $0$, meaning that the votes are not very ambiguous -- most tasks are easy to classify and workers agree.
+The entropy distribution peaks around $0$, meaning that the tasks are not very ambiguous -- most tasks are easy to classify and workers agree.
 
 \subsubsection{The \texttt{LabelMe} dataset}
 \label{subsubsec:labelme}
@@ -738,7 +738,7 @@ There is also a vast consensus on tasks with a high peak for the entropy distrib
 
 \citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
 The goal of this classification task was to decide the genre of $ 30$-second musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
-The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop} and \texttt{reggae}.
+The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop}, \texttt{reggae} and \texttt{rock}.
 Each audio file was labeled by between $1$ and $7$ workers.
 To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
 Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
