@@ -91,7 +91,7 @@ Moreover, we consider the margin introduced by \citet{yang2020consistency} since
 \label{fig:mnist_aum}
 \end{figure}
 
-This early dynamic, and by association with the hyperparameter $T>0$, is necessary as it is well known that modern neural networks classifiers can memorize the data and even classify correctly random tasks because of the hyperparametrization \citep{maennel2020neural}.
+This early dynamic, and by association the hyperparameter $T>0$, is necessary as it is well known that modern neural networks classifiers can memorize the data and even classify correctly random tasks because of the hyperparametrization \citep{maennel2020neural}.
 Memorization is a necessary phenomenon for training a neural network: we need the classifier to memorize patterns.
 But what we wish to consider the least in the $\AUM$ is the unintended memorization \citep{maennel2020neural} that can happen early and is difficult to temper -- even with strategies like dropout or weight decay.
 And in \citet{zhang2021understanding}, they show -- among other results -- that true labels are learned faster than random labels by neural networks classifier.
@@ -190,8 +190,8 @@ We consider with the $\AUM$, and the $\WAUM$, the task difficulty in the trainin
 \label{sub:def_waum}
 % Explain weights choice and variations
 
-We combine task difficulty scores with worker abilities scores, but we measure the task difficulty by incorporating feature information.
-We thus introduce the Weighted Area Under the Margin ($\mathrm{WAUM}$), a generalization to the crowdsourcing setting of the Area Under the Margin ($\mathrm{AUM}$) by \citep{pleiss_identifying_2020}.
+We thus introduce the Weighted Area Under the Margin ($\mathrm{WAUM}$), a generalization to the crowdsourcing setting of the Area Under the Margin ($\mathrm{AUM}$) by \citet{pleiss_identifying_2020}.
+We essentially combine task difficulty scores with worker abilities scores, but we measure the task difficulty by incorporating feature information.
 The $\mathrm{AUM}$ is a confidence indicator in an assigned label defined for each training task.
 It is computed as an average of margins over scores obtained along the learning steps.
 The $\mathrm{AUM}$ reflects how a learning procedure struggles to classify a task to an assigned label.
@@ -354,7 +354,7 @@ Source codes are available at \url{https://github.com/peerannot/peerannot}. The 
 \subsection{Results on simulated datasets}
 \label{subsec:Synthetic_dataset}
 
-To explore the behavior of the $\mathrm{WAUM}$, we first two sets of simulated datasets.
+To explore the behavior of the $\mathrm{WAUM}$, we first consider two sets of simulated datasets.
 The first set represents a scenario where there is some ambiguity in the tasks and one worker performs poorly and adds more ambiguity. The $\mathrm{WAUM}$ is used to mitigate the impact of the poor worker and remove some tasks too ambiguous.
 The second set represents a scenario where the task's ambiguity is inherent to the data structure, and pruning should be avoided.
 
