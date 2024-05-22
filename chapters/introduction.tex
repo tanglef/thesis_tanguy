@@ -566,9 +566,9 @@ The posterior probability for the ground truth labels can be computed directly u
 \textbf{Output}:$\alpha=\{\alpha_j\}_{j\in [n_\texttt{worker}]}$: worker abilities, $\beta=\{\beta_i\}_{i\in [n_\texttt{task}]}$: task difficulties, aggregated labels
 \begin{algorithmic}[1]
 \WHILE{Likelihood not converged}
-    \STATE Estimate probability of $y_i^\star$:
+    \STATE //Estimate probability of $y_i^\star$:
     \STATE $\forall i \in [n_{\texttt{task}}],\ \mathbb{P}(y_i^\star|\{y_i^{(j)}\}_{i},\alpha,\beta_i)\propto \mathbb{P}(y_i^\star)\prod_j \mathbb{P}(y_i^{(j)}|y_i^\star,\alpha_j,\beta_i)$
-    \STATE Maximization step:
+    \STATE //Maximization step:
     \STATE Maximize auxiliary function $Q(\alpha,\beta)$ in \Cref{eq:auxi_glad} w.r.t $\alpha$ and $\beta$
 \ENDWHILE
 \end{algorithmic}
