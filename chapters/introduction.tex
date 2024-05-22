@@ -219,7 +219,7 @@ The possible labels are encoded as numbers, thus in a classification problem wit
 The cardinal of the set $\mathcal{Y}$ is written as $|\mathcal{Y}|=K$.
 To classify images, we need a classifier denoted $\mathcal{C}$.
 Then, given a task $x_i\in\mathcal{X}$, $\mathcal{C}(x_i)\in\mathbb{R}^K$ represents the vector of scores.
-To transform these scores into probabilities, we use the softmax function $\sigma(\cdot)$ defined as:
+To transform these scores into probabilities, we use the softmax function $\sigma(\bigcdot)$ defined as:
 $$
 \sigma(z) = \left(\frac{e^{z_k}}{\sum_{\ell\in [K]} e^{z_\ell}}\right)_{k\in [K]} \enspace.
 $$
@@ -228,7 +228,7 @@ $$
 \sigma(\mathcal{C}(x_i))_{[1]} \geq \sigma(\mathcal{C}(x_i))_{[2]}\geq \dots\geq \sigma(\mathcal{C}(x_i))_{[K]} \enspace,
 $$
 where $\sigma(\mathcal{C}(x_i))_{[1]}$ represents the predicted class for the task by the classifier.
-The indicator function is denoted $\mathds{1}(\cdot)$. The simplex of dimension $K-1$ is written as $\Delta_K=\{p \in\mathbb{R}^K_+ | \sum_{k=1}^K p_k = 1\}$.
+The indicator function is denoted $\mathds{1}(\bigcdot)$. The simplex of dimension $K-1$ is written as $\Delta_K=\{p \in\mathbb{R}^K_+ | \sum_{k=1}^K p_k = 1\}$.
 And finally, given a vector $z\in\mathbb{R}^K$, we denote the normalization operator $\mathbf{N}$ such that $\mathbf{N}(z) = z / \sum_{k\in[K]}z_k$.
 
 \begin{figure}[thb]
@@ -338,7 +338,7 @@ However, this strategy still considers every worker equal in front of the tasks 
 \subsubsection{Dawid and Skene (DS)}
 \label{subsub:ds}
 
-The Dawid and Skene's (DS) strategy \citep{dawid_maximum_1979} introduced a framework where each worker is represented by its confusion.
+The Dawid and Skene's (DS) strategy \citep{dawid_maximum_1979} introduced a framework where each worker is represented by its confusions.
 This way, it is the first strategy to take into account worker abilities for each possible class.
 Through their model, they estimate simultaneously the worker confusion and the tasks' soft label.
 With its theoretical guarantees \citep{gao2013minimax} and its flexibility in the sense that it is easy to modify it to take into account data specificities \citep{passonneau-carpenter-2014-benefits, servajean2017crowdsourcing,sinha2018fast}, the DS strategy remains a strong competitor in many cases.
@@ -350,12 +350,12 @@ With its theoretical guarantees \citep{gao2013minimax} and its flexibility in th
     \label{fig:plaque_ds}
 \end{figure}
 
-The model keystone of the DS model is the modeling of the workers' answers.
+The keystone of DS is the modeling of the workers' answers.
 Each worker is associated to its confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$ such that the $(k,\ell)$-entry represents the probability for worker $w_j$ to answer $\ell\in[K]$ when the ground truth is $k\in[K]$.
 Then, we assume that each worker's answer is drawn from a multinomial distribution over the $k^{th}$ row of its confusion matrix.
 More formally:
 \begin{equation}\label{eq:ds_multinomial}
-    (y_i^{(j)}\ | y_i^\star = k) \sim \mathcal{M}\left(\pi^{(j)}_{k,\cdot}\right)
+    (y_i^{(j)}\ | y_i^\star = k) \sim \mathcal{M}\left(\pi^{(j)}_{k,\bigcdot}\right)
 \end{equation}
 
 Given the probabilistic model, we wish to maximize the likelihood concerning the confusion matrices, the prevalence of each class in the dataset and the underlying true labels.
@@ -385,7 +385,7 @@ Finally, as all tasks are independent, we obtain \Cref{eq:ds_likelihood} by mult
 \end{constructionbox}
 
 Note that the likelihood in \Cref{eq:ds_likelihood} can not be maximized directly.
-Using the expectation-maximization (EM) algorithm \citep{Dempster_Laird_Rubin77}, we can define a recursive procedure to estimate $\rho,\pi=\{\pi^{(j)}\}_j$ and $T=\{T_{i,k}\}_{i,k}$.
+Using the expectation-maximization (EM) algorithm \citep{Dempster_Laird_Rubin77}, we can define a recursive procedure to estimate $\rho,\pi=\{\pi^{(j)}\}_j$ and $T=\{T_{i,k}\}_{i,k}$:
 \begin{itemize}
     \item Assuming that $T$ is known, compute $\rho$ and $\pi$.
     \item Assuming that $\rho$ and $\pi$ are known, compute $T$.
@@ -453,7 +453,7 @@ Using our updates rules, we can now write the full EM optimization for the DS mo
         \STATE Update $\rho_k$ using \Cref{eq:em_rho}
     \ENDFOR
 
-    \STATE Normalize $P(T_{i,\cdot} = 1 | Y, \pi, \rho)$
+    \STATE Normalize $P(T_{i,\bigcdot} = 1 | Y, \pi, \rho)$
     \STATE // E-step: Expectation step
     \FOR{$i = 1$ to $n_{\text{task}}$}
         \FOR{$k = 1$ to $K$}
@@ -474,8 +474,8 @@ Other criteria could be applied, like relative error instead of absolute, but of
 \subsubsection{Weighted with Dawid and Skene (WDS)}
 \label{subsub:wds}
 
-The DS model, by design, often leads to soft labels $(T_{i,\cdot})_i$ with very low entropy distribution.
-Indeed, this variable represents the indicator function of belonging to a given class.
+The DS model, by design, often leads to soft labels $(T_{i,\bigcdot})_i$ with very low entropy distribution -- \emph{i.e.} close to Dirac distributions.
+Indeed, the $T$ variable represents indicator functions for belonging to a given class.
 To keep more uncertainty, one possibility is to shift our focus to only consider the diagonal of the confusion matrices estimated in the DS model.
 Each term on the diagonal represents the ability of the worker to answer correctly the underlying label.
 Using this DS diagonal, we obtain a weighted majority vote denoted WDS:
