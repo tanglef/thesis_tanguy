@@ -68,7 +68,7 @@ In this thesis, we mainly focus on the image classification setting.
 
 \subsection{The Pl@ntNet project}
 Created by Alexis Joly and Pierre Bonnet, Pl@ntNet \citep{plantet} is the meeting of two communities -- botanists and computer science -- to identify plant species from photos taken on the spot.
-The project's birth began in 2008, released its first web application in 2011, mobile application in 2013 and received in 2020 the price \emph{Prix de l’innovation Inria – Académie des sciences – Dassault Systèmes}.
+The project's birth began in 2008, released its first web application in 2011, mobile application in 2013 and received in 2020 the prize \emph{Prix de l’innovation Inria – Académie des sciences – Dassault Systèmes}.
 \begin{figure}[tbh]
     \centering
     \includegraphics[width=.8\textwidth, clip, trim={0cm 0cm 0cm 2.5cm}]{chapters/images/Pl@ntNet-overview-Janv-2022.pdf}
@@ -113,7 +113,7 @@ On the platform, users can vote for a malformed label, if the picture is about a
 
 When voting, users are shown the current computer vision prediction on the observation -- as shown in \Cref{fig:interface-ai}. This prediction influences users' votes, but also contains information.
 At the time of writing, Pl@ntNet's computer vision model is a DINOv2 \citep{oquab2024dinov2} transformer-based network.
-Using contrastive learning \citep{waida2023understanding} \emph{i.e.} representing similar images as close embedding to learn similar features for similar observations and then using supervised learning to finetune the model.
+It uses contrastive learning \citep{waida2023understanding} \emph{i.e.} representing similar images as close embedding to learn similar features for similar observations and then is finetuned in a classical supervised learning fashion.
 
 In \Cref{chap:plantnet}, we present the Pl@ntNet label aggregation strategy, but also how we can incorporate model predictions into the label aggregation.
 Taking into account the network's vote is a delicate matter, as we don't want the AI to become overconfident in its prediction by relying mostly on its predictions and discarding human votes.
