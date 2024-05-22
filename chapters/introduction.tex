@@ -185,11 +185,11 @@ The Pl@ntNet data collection process -- explained in \Cref{chap:plantnet} -- is 
 In this thesis, we deal with image classification problems in crowdsourcing.
 The main setting we consider is: \emph{How to learn from crowdsourced labels?}
 As this is a large problem we want to focus on the data quality we learn our classifiers from, especially in a context with few labels given per task.
-The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, sinha2018fast,rodrigues2018deep,raykar_ranking_2011}, but very few models incorporate the tasks' difficulty \citep{whitehill_whose_2009, chu2021learning}.
+The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, raykar_ranking_2011, sinha2018fast,rodrigues2018dee}, but very few models incorporate the tasks' difficulty \citep{whitehill_whose_2009, chu2021learning}.
 Moreover, when this difficulty is taken into account, it is often done without considering the actual images, only the answered labels \citep{whitehill_whose_2009}.
-In this work, we first propose to identify ambiguous tasks in training datasets from the crowdsourced labels and the actual image with a metric called the $\mathrm{WAUM}$ introduced by \citet{lefort2022improve}.
+In this work, we first propose in \Cref{chap:waum} to identify ambiguous tasks in training datasets from the crowdsourced labels and the actual image with a metric called the $\mathrm{WAUM}$ (Waighted Areas Under the Margin) introduced in \citet{lefort2022improve}.
 Defining what is a difficult task proves to be a challenge in itself.
-An informal definition of a difficult task is given by \citet{angelova2004data}:
+An informal definition of a difficult task is given in \citet{angelova2004data}:
 \begin{center}
 \begin{minipage}{.75\textwidth}
 \emph{
@@ -199,16 +199,16 @@ Difficult examples are those which obstruct the learning process or mislead the 
 \end{center}
 
 In this work, we focus on the tempering of the learning process.
-Our $\mathrm{WAUM}$ heavily relies on how easy it is for a model to learn the given task.
+Our $\mathrm{WAUM}$ heavily relies on how easy it is for current models to learn a given task.
 Furthermore, identifying possible ambiguous tasks lets us better explore large crowdsourced datasets and consider strategies to improve learning performance.
 In addition, the work of \citet{merler2004bias} and more recently \citet{pleiss_identifying_2020} show significant learning performance of models after pruning most unreliable tasks from the datasets.
 We show that similar improvements can be made in the crowdsourcing setting.
 In \cref{chap:peerannot}, we present our open-source \texttt{python} library \texttt{peerannot} to ease and help standardize how to deal with crowdsourced datasets in image classification.
 We handle label aggregation strategies, learning strategies and identification processes of ambiguous tasks and/or poorly performing workers.
-We also propose a framework to evaluate multiple datasets and aggregation strategies with the \texttt{Benchopt} framework.
+We also propose a framework to evaluate multiple datasets and aggregation strategies with the \texttt{Benchopt} library.
 Finally, in \cref{chap:plantnet} we compare label aggregation strategies on a large subset of Pl@ntNet's south-western European database we released.
-This subset is challenging as it contains more than $6$ million tasks and over $800$ thousand workers with a large number of classes.
-We investigate Pl@ntNet's current label aggregation strategy performance and how we could improve it using the current computer vision model predictions.
+This subset is challenging as it contains more than $6$ million tasks and over $800$ thousand workers with a large number of classes ($>10^4$).
+We investigate Pl@ntNet's current label aggregation strategy performance and how we can improve it using the currently running computer vision model predictions.
 
 \subsection{Notation}
 
