@@ -446,7 +446,7 @@ We simulate $n_\texttt{task}=500$ points, a noise $\varepsilon=0.2$ and use a te
     \label{fig:twomoons_predictions_soft}
 \end{figure}
 
-\begin{table}[thb]
+\begin{table}[H]
     \centering
     \caption{Training and test accuracy depending on the aggregation method used for the \texttt{two\_moons}'s dataset with $n_\texttt{task}=500$ points used for training a three dense layers' artificial neural network $(30, 20, 20)$. For reference, the best worker is $w_3$ with a training accuracy of $0.923$ and a test accuracy of $0.900$. }
         \begin{tabular}{lccc}
@@ -530,6 +530,19 @@ We refer to the \emph{"labeler instruction sheet"} of \citet[Appendix C]{krizhev
     \caption{\texttt{CIFAR-10H}: performance of a \texttt{ResNet-18} by label-aggregation crowdsourcing strategy ($\alpha=0.01$). Errors represented are standard deviations.}
 \end{table}
 
+
+% Source: tanguy_phd/reproducible_paper/labelme/extract_results.py
+\begin{figure}[htb]
+    \label{fig:labelme_worstWAUM}%
+    \centering
+    \hfill
+    \subfloat[Label \texttt{street}.]{\includegraphics[width=0.49583\textwidth]{images/street_and_distrib}}
+    \hfill
+    \subfloat[Label \texttt{tallbuilding}.]{\includegraphics[width=0.49583\textwidth]{images/tallbuilding_and_distrib}}
+    \caption{\texttt{LabelMe} dataset: Worst $\mathrm{WAUM}$ for classes (top) and the associated voting distribution for each image (bottom). (a) Label \texttt{street} (b)  Label \texttt{tallbuilding}.
+        Even if the two tasks are very similar, because the workers are different the associated proposed labels can differ and add noise during training.}
+\end{figure}
+
 \begin{figure}[th]
     \centering
     \begin{minipage}{0.45\textwidth}
@@ -545,18 +558,6 @@ We refer to the \emph{"labeler instruction sheet"} of \citet[Appendix C]{krizhev
     \end{minipage}
     \caption{Ablation study on \texttt{LabelMe} using the VGG backbone: $\alpha=0.01$. Errors are Gaussian confidence intervals at $95\%$.}
     \label{fig:forest_labelme}
-\end{figure}
-
-% Source: tanguy_phd/reproducible_paper/labelme/extract_results.py
-\begin{figure}[t]
-    \label{fig:labelme_worstWAUM}%
-    \centering
-    \hfill
-    \subfloat[Label \texttt{street}.]{\includegraphics[width=0.49583\textwidth]{images/street_and_distrib}}
-    \hfill
-    \subfloat[Label \texttt{tallbuilding}.]{\includegraphics[width=0.49583\textwidth]{images/tallbuilding_and_distrib}}
-    \caption{\texttt{LabelMe} dataset: Worst $\mathrm{WAUM}$ for classes (top) and the associated voting distribution for each image (bottom). (a) Label \texttt{street} (b)  Label \texttt{tallbuilding}.
-        Even if the two tasks are very similar, because the workers are different the associated proposed labels can differ and add noise during training.}
 \end{figure}
 
 \subsubsection{\texttt{LabelMe} dataset.} This dataset consists in classifying $1000$ images in $K=8$ categories.
