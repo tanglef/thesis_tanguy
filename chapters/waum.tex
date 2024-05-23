@@ -289,7 +289,7 @@ By default, we rely on the \texttt{Est}$=$DS algorithm to get workers' confusion
 \STATE Get confusion matrix $\{\hat{\pi}^{(j)}\}_{j\in[n_\texttt{worker}]}$ from \texttt{Est}
 \STATE Train a classifier for $T$ epochs on $\left(x_i, y_i^{(j)}\right)_{i,j}$
 \FOR{$j\in[n_\textrm{worker}]$}
-\STATE Get $\mathrm{AUM}(x_i, y_i^{(j)}; \mathcal{D}_{\texttt{train}})$ using \Cref{eq:Margin_WAUM} for $i\in\mathcal{T}(w_j)$
+\STATE Get $\mathrm{AUM}(x_i, y_i^{(j)}; \mathcal{D}_{\texttt{train}})$ using \Cref{eq:aum} for $i\in\mathcal{T}(w_j)$
 \STATE Get \textbf{trust scores} $s^{(j)}(x_i)$ using \Cref{eq:trust_factor} for $i\in\mathcal{T}(w_j)$
 \ENDFOR
 \FOR{each task $x\in\mathcal{X}_\texttt{train}$}
