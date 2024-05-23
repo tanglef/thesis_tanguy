@@ -221,7 +221,7 @@ The author user can then upload these images to the platform.
 The platform will then propose a list of possible species for the observation with the associated predicted probabilities and other images that are close-looking to the picture taken.
 The author can then vote on the species they think are present in the observation as illustrated in \Cref{fig:pothos_id}.
 
-The vote is guided by the computer vision model predictions (see \Cref{sub:pipeline_plantnet}) and other pictures selected via a similarity search algorithm.
+The vote is guided by the computer vision model predictions (see \Cref{sub:pipeline_plantnet}) and other pictures are selected via a similarity search algorithm.
 This similarity search is important as the same species can have different visual presentations at multiple stages of its life cycle.
 The similarity search is based on the features from the last layer of Pl@ntNet's network.
 These features are hashed using the Random Maximum Margin Hashing algorithm \citep{joly2011random} and then an approximate $k$-nearest neighbors is applied \citep{joly2008posteriori}.
@@ -366,7 +366,7 @@ In addition to species, the organ is also kept for training.
 The data is then cleaned by collected species.
 In each species let us consider there are $n_k\in\mathbb{N}$ observations, the valid observations with the most user weight are selected, and then they randomly select $\min(n_k, n)$ observations, with $n\in\mathbb{N}_*$.
 
-On the side, a neural network binary classifier is trained on another dataset to detect if the observation comes from a herbarium or not (binary classification). This classifier is then used to filter out the herbarium observations from the dataset. Herbarium observations are only used for rare species to populate classes with few observations. They are not used if there are \emph{enough} in-the-wild observations as they might.
+On the side, a neural network binary classifier is trained on another dataset to detect if the observation comes from a herbarium or not (binary classification). This classifier is then used to filter out the herbarium observations from the dataset. Herbarium observations are only used for rare species to populate classes with few observations. They are not used if there are \emph{enough} in-the-wild observations as they might not be representative of a real observation.
 
 From the selected observations, the observations constitute a highly imbalanced dataset. This imbalance is necessary as plant species' presence is not balanced in the real world.
 Additional data is then collected from partners -- botanic gardens, GBIF, \emph{etc.} -- to get information on organs, species, diseases and other relevant information.
@@ -543,7 +543,7 @@ Users are said \textbf{self-validating} when they are trusted enough so that the
 From \Cref{alg:plantnet_algorithm}, we see that this is verified when their weight $w_j$ is greater than the level $\theta_{\text{conf}}$.
 Indeed, with a single label we obtain $\mathrm{conf}_i(\hat y_i) = w_j > \theta_{\text{conf}}$ and $\mathrm{acc}_i(\hat y_i) = 1 > \theta_{\text{acc}}$.
 In practice, this means that an experienced user who has collected enough weight can validate any observation without any other user's vote.
-Note that this identification can later be invalidated by other users with enough weight thanks to the accuracy threshold $\theta_{\text{conf}}$.
+Note that this identification can later be invalidated by other users with enough weight thanks to the accuracy threshold $\theta_{\text{accs}}$.
 
 \subsection{Introducing a subset of Pl@ntNet to evaluate the current strategy}
 
