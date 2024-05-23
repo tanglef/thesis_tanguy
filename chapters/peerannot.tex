@@ -123,7 +123,7 @@ More discussion on the \texttt{crowd-kit} library is available in \Cref{sec:benc
 The \texttt{LabelMe} dataset labels are stored in a dense matrix of size $(n_{\text{task}}, n_{\text{worker}})$, where each entry is the label given by the worker for the task. This format is not memory efficient for a large number of tasks or workers. Especially if workers do not get to label all tasks.
 
 On a more practical note, the \texttt{json} format has the advantage of being easily readable and writable by humans and is also easily convertible to a data frame. It is also easy to use for \texttt{python}, \texttt{SQL} and \texttt{JavaScript}.
-As large crowdsourcing web platforms use requests in \texttt{JavaScript} to send and receive data, the \texttt{json} format is a motivating choice for applications.
+As large crowdsourcing web platforms use requests in \texttt{JavaScript} to send and receive data, the \texttt{json} format is a motivating choice for these applications.
 
 \subsection{Label agggregation with \texttt{peerannot}}
 
@@ -148,7 +148,7 @@ Each strategy is a class object in its own \texttt{python} file.
 It inherits from the \texttt{CrowdModel} class template and is defined with at least three methods:
 \begin{itemize}
     \item \texttt{run}(): includes the optimization procedure to obtain needed weights (\emph{e.g.} the EM algorithm for DS). It is only needed for optimization-based strategies.
-    \item \texttt{get\_probas}(): returns the soft labels output for each task after running the \texttt{run} method,
+    \item \texttt{get\_probas}(): returns the soft labels output for each task after running the \texttt{run} method, -- if available, otherwise it returns the hard labels.
     \item \texttt{get\_answers}(): returns the hard labels output for each task after running the \texttt{run} method.
 \end{itemize}
 
@@ -230,7 +230,7 @@ for strat in [
     ]:
   ! peerannot aggregate ./simus/independent/ -s {strat}
     \end{minted}
-    \caption{Running aggregation on the independent mistakes generated dataset.}
+    \caption{Running aggregation strategies on the independent mistakes simulated dataset.}
     \label{lst:indep_mistakes_agg}
 \end{listing}
 
@@ -240,7 +240,7 @@ for strat in [
     \label{tab:accuracy_train_indep}
     \begin{tabular}{|l|c|c|c|c|c|c|}
     \hline
-    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
+    \textbf{Strategy} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
     \hline
     AccTrain & 0.765 & 0.775 & 0.890 & 0.775 & 0.770 & 0.760 \\
     \hline
@@ -279,7 +279,7 @@ for strat in [
     ]:
   ! peerannot aggregate ./simus/independent-imbalanced/ -s {strat}
     \end{minted}
-    \caption{Running aggregation on the independent mistakes generated dataset.}
+    \caption{Running aggregation strategies on the independent mistakes simulated dataset.}
     \label{lst:indep_mistakes_agg_imbalance}
 \end{listing}
 
@@ -289,7 +289,7 @@ for strat in [
     \label{tab:accuracy_train_indep}
     \begin{tabular}{|l|c|c|c|c|c|c|}
     \hline
-    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
+    \textbf{Strategy} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
     \hline
     AccTrain & 0.830 &	0.810 &	0.895 	&0.845& 	0.840 &	0.830\\
     \hline
@@ -299,7 +299,7 @@ for strat in [
 While more realistic, working with an imbalanced number of votes per task can lead to disrupting orders of performance for some strategies (here GLAD is outperformed by other strategies).
 
 \subsubsection{Simulated correlated mistakes}
-The correlated mistakes are also known as the student-teacher or junior-expert setting \citep{maxmig}. Consider that the crowd of workers is divided into two categories: teachers and students (with $n_{\text{teacher}} + n_{\text{student}}=n_{\text{worker}}$). Each student is randomly assigned to one teacher at the beginning of the experiment. We generate the (diagonally dominant as in @sec-simu-independent) confusion matrices of each teacher and the students share the same confusion matrix as their associated teacher. Hence, clustering strategies are expected to perform best in this context. Then, they all answer independently, following a multinomial distribution with weights given at the row $y_i^\star$ of their confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$.
+The correlated mistakes are also known as the student-teacher or junior-expert setting \citep{maxmig}. Consider that the crowd of workers is divided into two categories: teachers and students (with $n_{\text{teacher}} + n_{\text{student}}=n_{\text{worker}}$). Each student is randomly assigned to one teacher at the beginning of the experiment. We generate the confusion matrices of each teacher and the students share the same confusion matrix as their associated teacher. Hence, clustering strategies are expected to perform best in this context. Then, they all answer independently, following a multinomial distribution with weights given at the row $y_i^\star$ of their confusion matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$.
 
 We simulate $n_{\text{task}}=200$ tasks and $n_{\text{worker}}=30$ with $80\%$ of students in the crowd. There are $K=5$ possible classes. Each task receives $\vert\mathcal{A}(x_i)\vert=10$ labels. And, with the obtained answers, we can look at the aforementioned aggregation strategies' performance:
 
@@ -329,7 +329,7 @@ $ peerannot simulate --n-worker=30 --n-task=200  --n-classes=5 \
     \label{tab:accuracy_train_corr}
     \begin{tabular}{|l|c|c|c|c|c|c|}
     \hline
-    \textbf{Method} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
+    \textbf{Strategy} & \textbf{MV} & \textbf{GLAD} & \textbf{DS} & \textbf{DSWC[L=5]} & \textbf{DSWC[L=10]} & \textbf{NS} \\
     \hline
     AccTrain & 0.705 &	0.645 &	0.755 	&0.795 &0.815 	&0.690\\
     \hline
@@ -364,7 +364,7 @@ In particular, we display a type of worker that can hurt data quality: the spamm
     \forall k\in[K],\ \mathbb{P}(y_i^{(j)}=k|y_i^\star) = \mathbb{P}(y_i^{(j)}=k)\enspace.
 \end{equation}
 
-Each row of the confusion matrix represents the label's probability distribution given a true label. Hence, the spammer has a confusion matrix with near-identical rows.
+Each row of the confusion matrix represents the label's probability distribution given a true label. Hence, the spammer has a confusion matrix with near-identical rows -- potentially not uniform.
 Apart from the spammer, common mistakes often involve workers mixing up one or several classes.
 Expert workers have a confusion matrix close to the identity matrix.
 
@@ -372,7 +372,7 @@ Expert workers have a confusion matrix close to the identity matrix.
 \label{subsec:learning_peerannot}
 
 The \texttt{peerannot} library has also integrated end-to-end learning strategies in the \texttt{aggregate-deep} module.
-Such strategies include CrowdLayer and CoNAL presented in \Cref{subsec:crowdlayer} and \Cref{subsec:conal}.
+Such strategies include CrowdLayer and CoNAL presented in \Cref{subsec:crowdlayer}.
 
 Let us use \texttt{peerannot} to train a VGG-16 with two dense layers on the $\texttt{LabelMe}$ dataset. This model is called \texttt{modellabelme} in the \texttt{peerannot} library as this modification was introduced to reach state-of-the-art performance in \citet{chu2021learning}.
 Other models from the \texttt{torchvision} library can be used, such as Resnets, Alexnet \emph{etc.}
@@ -420,7 +420,7 @@ for strat in ["CrowdLayer", "CoNAL[scale=0]", "CoNAL[scale=1e-4]"]:
     \begin{tabular}{|l|c|c|}
     \hline
     \rowcolor{gray!20}
-    \textbf{Method} & \textbf{AccTest} & \textbf{ECE} \\
+    \textbf{Strategy} & \textbf{AccTest} & \textbf{ECE} \\
     \hline
     DS & 81.061 & 0.189 \\
     MV & 85.606 & 0.143 \\
@@ -461,13 +461,13 @@ To explore the tasks' intrinsic difficulty, we propose to compare three scoring 
 \begin{itemize}
     \item the entropy of the NS distribution: the entropy measures the inherent uncertainty of the distribution to the possible outcomes. It is reliable with a big enough and not adversarial crowd. More formally:
     $$
-    \forall i\in [n_{\text{task}}],\ \mathrm{Entropy}(\hat{y}_i^{NS}) = -\sum_{k\in[K]} (y_i^{NS})_k \log\left((y_i^{NS})_k\right) \enspace.
+    \forall i\in [n_{\text{task}}],\ \mathrm{Entropy}(\hat{y}_i^{NS}) = -\sum_{k\in[K]} (\hat{y}_i^{NS})_k \log\left((\hat{y}_i^{NS})_k\right) \enspace.
     $$
     \item GLAD's scoring: by construction, \citet{whitehill_whose_2009} introduced a scalar coefficient to score the difficulty of a task.
     \item the Weighted Area Under the Margins (WAUM): introduced by \citet{lefort2022improve} and presented in \Cref{chap:waum}, this weighted area under the margins indicates how difficult it is for a classifier $\mathcal{C}$ to learn a task's label. This procedure is done with a budget of $T>0$ epochs. Given the crowdsourced labels and the trust we have in each worker denoted $s^{(j)}(x_i)>0$, the WAUM of a given task $x_i\in\mathcal{X}$ and a set of crowdsourced labels $\{y_i^{(j)}\}_j \in [K]^{|\mathcal{A}(x_i)|}$ is defined as:
     $$\mathrm{WAUM}(x_i) := \frac{1}{|\mathcal{A}(x_i)|}\sum_{j\in\mathcal{A}(x_i)} s^{(j)}(x_i)\left\{\frac{1}{T}\sum_{t=1}^T  \sigma(\mathcal{C}(x_i))_{y_i^{(j)}} - \sigma(\mathcal{C}(x_i))_{[2]}\right\} \enspace,
     $$
-    where we remind that $\mathcal{C}(x_i))_{[2]}$ is the second largest probability output by the classifier $\mathcal{C}$ for the task $x_i$.
+    where we remind that $\mathcal{C}(x_i)_{[2]}$ is the second largest probability output by the classifier $\mathcal{C}$ for the task $x_i$.
 
     The weights $s^{(j)}(x_i)$ are computed à la \citet{servajean2017crowdsourcing}:
     $$
@@ -479,7 +479,7 @@ To explore the tasks' intrinsic difficulty, we propose to compare three scoring 
 The WAUM is a generalization of the AUM by \citet{pleiss_identifying_2020} to the crowdsourcing setting. A high WAUM indicates a high trust in the task classification by the network given the crowd labels. A low WAUM indicates difficulty for the network to classify the task into the given classes (taking into consideration the trust we have in each worker for the task considered). Where other methods only consider the labels and not directly the tasks, the WAUM directly considers the learning trajectories to identify ambiguous tasks. One pitfall of the WAUM is that it is dependent on the architecture used.
 
 Note that each of these statistics could prove useful in different contexts.
-The entropy is irrelevant in settings with few labels per task (small $|\mathcal{A}(x_i)|$). For instance, it is uninformative for $\texttt{LabelMe}$ dataset.
+The entropy is irrelevant in settings with few labels per task (small $|\mathcal{A}(x_i)|$). For instance, it is uninformative for the $\texttt{LabelMe}$ dataset.
 The WAUM can handle any number of labels, but the larger the better. However, as it uses a deep learning classifier, the WAUM needs the tasks $(x_i)_i$ in addition to the proposed labels while the other strategies are feature-blind.
 
 \paragraph{Results on the \texttt{CIFAR-10H} dataset.}
@@ -507,7 +507,7 @@ $ peerannot identify ./datasets/cifar10H/ -K 10 \
 \begin{figure}[htb]
     \centering
     \includegraphics[width=.8\textwidth]{./images_peerannot/c10h_identification.pdf}
-    \caption{Most difficult tasks sorted by class from MV aggregation identified depending on the strategy used (entropy, GLAD or WAUM) using a Resnet34. We only display the \texttt{truck} class. All class results are available interactively in the main paper at \url{https://tanglef.github.io/computo_2023}.}
+    \caption{Most difficult tasks sorted by class from MV aggregation identified depending on the strategy used (entropy, GLAD or WAUM) using a Resnet34. We only display the \texttt{truck} class. All class results are available interactively in the main paper at \url{https://computo.sfds.asso.fr/published-202402-lefort-peerannot/}.}
     \label{fig:identfication_c10h}
 \end{figure}
 
@@ -516,7 +516,7 @@ The entropy, GLAD's difficulty, and WAUM's difficulty each show different images
 \begin{figure}[htb]
     \centering
     \includegraphics[width=.8\textwidth]{./images_peerannot/labelme_identification.pdf}
-    \caption{Most difficult tasks sorted by class from MV aggregation identified depending on the strategy used (entropy, GLAD or WAUM) using a VGG-16 model with two dense layers. We only display the \texttt{opencountry} class. All class results are available interactively in the main paper at \url{https://tanglef.github.io/computo_2023}.}
+    \caption{Most difficult tasks sorted by class from MV aggregation identified depending on the strategy used (entropy, GLAD or WAUM) using a VGG-16 model with two dense layers. We only display the \texttt{opencountry} class. All class results are available interactively in the main paper at \url{https://computo.sfds.asso.fr/published-202402-lefort-peerannot/}.}
     \label{fig:identfication_labelme}
 \end{figure}
 
@@ -534,12 +534,26 @@ The underlying difficulty of these tasks mainly comes from the overlap in possib
 
 \subsubsection{Identification of worker reliability}
 
-From the labels, we can explore different worker evaluation scores.
-GLAD's strategy estimates a reliability scalar coefficient $\alpha_j$ per worker.
+From the labels, we can explore different worker evaluation scores $s_j\in\mathbb{R}$.
+GLAD's strategy estimates a reliability scalar coefficient $s_j=\alpha_j$ per worker.
 With strategies looking to estimate confusion matrices, we investigate two scoring rules for workers:
 \begin{itemize}
-    \item The trace of the confusion matrix: the closer to $K$ the better the worker.
-    \item The closeness to spammer metric \citep{raykar_ranking_2011} (also called spammer score) that is the Frobenius norm between the estimated confusion matrix $\hat{\pi}^{(j)}$ and the closest rank-$1$ matrix. The further to zero the better the worker. On the contrary, the closer to zero, the more likely it is for the worker to be a spammer. This score separates spammers from common workers and experts (with profiles as presented in \Cref{fig:confusionmatrix}).
+    \item The trace of the confusion matrix: the closer to $K$ the better the worker:
+        \[
+            \forall j\in [n_\texttt{worker}],\ s_j=\mathrm{Trace}(\pi^{(j)}) \enspace.
+        \]
+    \item The closeness to spammer metric \citep{raykar_ranking_2011} (also called spammer score) that is the Frobenius norm between the estimated confusion matrix $\hat{\pi}^{(j)}$ and the closest rank-$1$ matrix. Denote $\mathbf{e}$ the vector of ones in $\mathbb{R}^K$.
+    \[
+        \begin{aligned}
+        \forall j\in [n_\texttt{worker}],\ &s_j = \|\pi^{(j)}- \mathbf{e}u_j^\top\|_F^2\enspace \\
+        & \text{with } u_j = \argmin_{u\in\mathbb{R}^K, u_j\top \mathbf{e}=1} \|\pi^{(j)}- \mathbf{e}u^\top\|_F^2 \enspace.
+        \end{aligned}
+        \]
+    Solving this problem and standardizing the result in $[0,1]$ gives the spammer score:
+    \[
+    \forall j \in [n_\texttt{worker}],\ s_j = \frac{1}{K(K-1)}\sum_{1\leq k<k'\leq K}\sum_{\ell\in[k]} (\pi^{(j)}_{k,\ell} - \pi^{(j)}_{k',\ell})^2 \enspace.
+    \]
+    The further to zero the better the worker. On the contrary, the closer to zero, the more likely it is for the worker to be a spammer. This score separates spammers from common workers and experts (with profiles as presented in \Cref{fig:confusionmatrix}).
 \end{itemize}
 
 When the tasks are available, confusion-matrix-based deep learning models can also be used.
@@ -641,7 +655,7 @@ Note that NS and MV performance difference comes from the random tie-breakers in
     \label{tab:accuracy_train_audiobirds}
     \begin{tabular}{|l|c|c|c|c|}
     \hline
-    \textbf{Method} & \textbf{MV} & \textbf{DS} & \textbf{GLAD} & \textbf{NS} \\
+    \textbf{Strategy} & \textbf{MV} & \textbf{DS} & \textbf{GLAD} & \textbf{NS} \\
     \hline
     AccTrain & 0.954 	&0.946 &	0.950& 	0.960\\
     \hline
@@ -651,7 +665,7 @@ Note that NS and MV performance difference comes from the random tie-breakers in
 We can explore what tasks lead to the most disagreements depending on the entropy criterion or GLAD's difficulty-estimated latent variable.
 Using the entropy criterion, the most difficult tasks (highest entropy) and GLAD's difficulty, we recover the index of the most ambiguous tasks.
 As we work with audio files, we can listen to the most ambiguous tasks and see if they are indeed difficult to classify.
-Audio records of such identified tasks are made available at \url{https://tanglef.github.io/computo_2023/#case-study-with-bird-sound-classification}.
+Audio records of such identified tasks are made available at \url{https://computo.sfds.asso.fr/published-202402-lefort-peerannot/#case-study-with-bird-sound-classification}.
 
 \begin{itemize}
     \item Entropy: we obtain the candidate \texttt{MRG18\_20180514\_000000\_203.mp3} that was to be compared with the letter \texttt{HLO15\_20180515\_021439\_31.mp3} (one worker agrees and another disagrees).
