@@ -768,7 +768,7 @@ Each benchmark is defined by three objects. Each of them is defined as a class o
 
 Datasets, solvers and objectives are compatible with hyperparameter settings. Solvers can have step sizes. Datasets can come with different versions or, in the case of simulations, different noise levels. Objectives can have different regularizations \emph{etc.}
 Then, for each combination of dataset, solver and objective, the library computes the performance of the solver on the objective using the dataset.
-These metrics are stored in a \texttt{parquet} file and then produce interactive figures using \texttt{plotly}. The full pipeline is described in \Cref{fig:benchopt}.
+These metrics are stored in a \texttt{parquet} file -- similar to a \texttt{csv} -- and then produce interactive figures using \texttt{plotly}. The full pipeline is described in \Cref{fig:benchopt}.
 
 \begin{figure}[tbh]
     \centering
@@ -1020,7 +1020,7 @@ The associated likelihood -- maximized using the EM algorithm as in DS -- writes
 In \Cref{fig:plate_mace}, we represent the associated bayesian plate diagram.
 
 \paragraph{KOS \citep{karger2011iterative}.}
-Only set for binary classification $y_i^\star\in\{\pm 1\}$, the KOS strategy from a graph-theory perspective.
+Only set for binary classification $y_i^\star\in\{\pm 1\}$, the KOS strategy is from a graph-theory perspective.
 Denote $G([n_\text{task}]\cup [n_\text{worker}], E)$ the graph where edge $(i,j)$ is connected if worker $j$ has answered task $i$. The neighborhood of a task $i$ is denoted $\partial_i$ and the same with index $j$ for workers.
 On each edge is stored the label answered by worker $j$ for task $i$: $y_i^{(j)}\in[K]$.
 
@@ -1145,7 +1145,7 @@ In \texttt{peerannot}, we added:
     \item The trace confusion: sum of the diagonal terms of the DS confusion matrices. Indicates the level of reliability per worker for their answered label. The closer the trace to $K$, the more reliable the worker.
 \end{itemize}
 
-The \texttt{peerannot} also supports top-$k$ classification metrics for deep-learning methods.
+The \texttt{peerannot} library also supports top-$k$ classification metrics for deep-learning methods.
 We provide the \texttt{train} command to train deep learning models from \texttt{TorchVision} on the dataset and evaluate their accuracy and calibration if a test set is available. This allows users to have a fully end-to-end pipeline:
 \begin{itemize}
     \item identify potential ambiguous tasks / bad workers,
