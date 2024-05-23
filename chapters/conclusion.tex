@@ -3,7 +3,7 @@
 \section{Conclusion}
 In this thesis, we considered the problem of image classification via crowdsourced labels.
 First, we proposed a novel method -- the $\mathrm{WAUM}$ -- to identify possibly ambiguous images in a crowdsourced dataset.
-We showed qualitatively and quantitatively that the $\mathrm{WAUM}$ can help enhance computer vision model performances on crowdsourced datasets by identifying the tasks to remove.
+We showed qualitatively and quantitatively that the $\mathrm{WAUM}$ can help enhance computer vision model performance on crowdsourced datasets by identifying the tasks to remove.
 It is another step towards the automation of the data-cleaning process in crowdsourced datasets.
 
 Second, we introduced the \texttt{peerannot} library to handle crowdsourced datasets in image classification settings.
@@ -27,12 +27,7 @@ A long-term perspective would be to consider other weights, that do not rely on 
 Preferably weights that can be theoretically evaluated to have performance guarantees.
 
 In the shorter term, the current way to use the $\mathrm{WAUM}$ method is to remove the tasks with the $\mathrm{WAUM}$ below a quantile $\alpha\in\mathbb{R}$.
-This is class-agnostic and, in highly imbalanced settings, could remove a class entirely from the tIn the longer term, \texttt{peerannot} has been created as an organization to provide multiple modules for other crowdsourced frameworks.
-Having a module to consider reinforcement learning for data collection strategies would be a great addition to the library.
-Indeed, in this thesis, we focused on how to handle collected data.
-However, the data collection process is also crucial in crowdsourced settings.
-Having a tool to evaluate the influence of actions and recommender systems for crowdsourced platforms would help researchers design better data collection strategies.
-raining set.
+This is class-agnostic and, in highly imbalanced settings, could remove a class entirely from the training set.
 A by-class quantile sequence $(\alpha_k)_{k\in [K]}$ could be introduced to only prune a few tasks per class and not globally.
 This would create a finer exploration of ambiguity in the training set.
 
