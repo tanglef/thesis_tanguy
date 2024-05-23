@@ -37,7 +37,7 @@ The tasks are observations of plants (detailed in \Cref{sub:obs_plantnet_what}) 
 \section{Crowdsourcing for plant species identification}
 \label{sec:introducing_plantnet}
 
-Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,borowiec2022,mader2021flora}.
+Computer vision models are a great aid in plant species recognition in the field \citep{vidal2021perspectives,mader2021flora,borowiec2022}.
 However, to train them one needs large annotated datasets.
 These datasets are usually created thanks to crowdsourcing, but citizen science approaches, collecting both reliable and useful information \citep{brown2019potential,wright2021pixelwise}, tend to be more and more popular.
 Among existing plant recognition applications, the Pl@ntNet citizen science platform \citep{affouard2017pl} enables global data collection by allowing users to upload and annotate plant observations \citep{bonnet2020citizen}.
@@ -56,10 +56,10 @@ Further secondary ranks also exist (tribe, subspecies, variety, form) but we wil
 Roughly, an example of taxonomy levels is:
 \begin{itemize}
         \item Kingdom: separates plants from animals, fungi, and bacteria -- \emph{e.g} Plantae.
-        \item Division: separates spore (\emph{angiosperms}) or seed (\emph{gymnosperms}) reproduction with specific characteristics. There are 14 plant divisions in total.
+        \item Division: separates spore (angiosperms) or seed (gymnosperms) reproduction with specific characteristics. There are 14 plant divisions in total.
         \item Class: Angiosperms are divided into Monocotyledons(grasses, yuccas, etc.) and Dicotyledons (angiosperms with pair of leaves).
-        \item Order: Group of families with common characteristics -- \emph{e.g} \emph{Cucurbitales} (generally ends with \emph{-ales}).
-        \item Family: Plants with similar flower, fruit and seed structures -- \emph{e.g} \emph{Begonaias and Allies}.
+        \item Order: Group of families with common characteristics -- \emph{e.g} Cucurbitales (generally ends with \emph{-ales}).
+        \item Family: Plants with similar flower, fruit and seed structures -- \emph{e.g} Begonaias and Allies.
         \item Genus (genera in plural): First part of the plant's scientific name (capitalized and italicized) -- \emph{e.g} \emph{Begonia}.
         \item Species: a group of organisms capable of producing fertile offspring -- \emph{e.g} \emph{Begonia ferox}. If the species is unknown it is called \emph{sp.} or \emph{spp.} for plural.
     \end{itemize}
@@ -71,7 +71,7 @@ Roughly, an example of taxonomy levels is:
     \label{fig:classif_begonia}
 \end{figure}
 
-In the case a plant is a hybrid -- a cross between two species -- it is written with an × as in \emph{Begonia} × \emph{semperflorens}. The position of the × indicates if it is the hybridization between two genera or species.
+In the case a plant is a hybrid a cross between two species is added -- it is written with an × as in \emph{Begonia} × \emph{semperflorens}. The position of the × indicates if it is the hybridization between two genera or species.
 For example, the ×\emph{Agroelymus hajastanica} is the hybridization of the \emph{Agropyron cristatum} and the \emph{Elymus repens} -- note that the genera are aggregating into a resulting genus.
 Similarly to the ×, a + is used to indicate a transplant chimera between two plants.
 For example, the + \emph{Laburnocytisus adamii} results of the transplant of two individuals with different genera: the \emph{Laburnum anagyroides} and the \emph{Cytisus purpureus}.
