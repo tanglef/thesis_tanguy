@@ -626,7 +626,9 @@ with $\lambda$ the regularization hyperparameter and $\mathrm{H}$ the crossentro
 
 \subsection{Evaluation metrics.}
 \label{sub:evaluation-metrics}
-Throughout this thesis, we evaluate our results using different metrics depending on the data available.
+Throughout this thesis, we evaluate our results using different metrics depending on the data available. All of these metrics necessitate true labels $y^\star$ and estimated labels $\hat y$ to be computed.
+In \Cref{chap:waum} and \Cref{chap:peerannot}, this ground truth is given by the authors of the datasets. In \Cref{chap:plantnet}, we created and released multiple test sets to evaluate the strategies with ground truth extracted thanks to the participation of $98$ botanical experts to the Pl@ntNet platform.
+
 \begin{itemize}
     \item If a dataset $\mathcal{D}$ of $n$ tasks is only composed of the answered labels -- \emph{i.e.,} the images are not available: the crowdsourcing methods consist in estimating the label $y^\star_i$ with an aggregated label $\hat y_i$. To evaluate the aggregation method, we use the training recovery accuracy $\mathrm{Acc}_{\text{train}}$ defined as:
     \begin{equation}\label{eq:acctrain}
