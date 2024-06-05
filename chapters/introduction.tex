@@ -185,8 +185,7 @@ The Pl@ntNet data collection process -- explained in \Cref{chap:plantnet} -- is 
 In this thesis, we deal with image classification problems in crowdsourcing.
 The main setting we consider is: \emph{How to learn from crowdsourced labels?}
 As this is a large problem we want to focus on the data quality we learn our classifiers from, especially in a context with few labels given per task.
-The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, raykar_ranking_2011, sinha2018fast,rodrigues2018dee},
-XXX ISSUE with a citation here XXX
+The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, raykar_ranking_2011, sinha2018fast,rodrigues2018deep},
 but very few models incorporate the tasks' difficulty \citep{whitehill_whose_2009,chu2021learning}.
 Moreover, when this difficulty is taken into account, it is often done without considering the actual images, only the answered labels \citep{whitehill_whose_2009}.
 In this work, we first propose in \Cref{chap:waum} to identify ambiguous tasks in training datasets from the crowdsourced labels and the actual image with a metric called the $\mathrm{WAUM}$ (Weighted Areas Under the Margin) introduced in \citep{lefort2022improve}.
@@ -216,7 +215,6 @@ We investigate Pl@ntNet's current label aggregation strategy performance and how
 
 \paragraph*{Classical supervised setting.}Let us first reconsider classical supervised learning in a classification setting.
 A dataset $\mathcal{D}=\{(x_i, y_i^\star)\}_{i=1}^n$ is composed of $n$ tasks $x_i\in\mathcal{X}$ and $y_i^\star\in\mathcal{Y}$.
-XXX mention the $y_i^\star$ are unknown and one aims at recovering them XXX
 In image classification, $\mathcal{X}$ is classically the space of RGB images and $\mathcal{Y}$ is the set of possible labels.
 The possible labels are encoded as numbers, thus in a classification problem with $K$ classes, $\mathcal{Y}=[K]=\{1,\dots,K\}$.
 The cardinal of the set $\mathcal{Y}$ is written as $|\mathcal{Y}|=K$.
@@ -293,9 +291,8 @@ These models -- and more -- are available in the library \texttt{peerannot} usin
 \label{subsub:mv}
 
 The majority vote strategy is the simplest mechanism to create a label from multiple answers.
-It consists in collecting the votes and taking the most answered category.
-In the case of a draw, a random choice in the most answered choices is applied.
-XXX mention that this could lead to variability in the experiments due to this random choice XXX
+It consists of collecting the votes and taking the most answered category.
+In the case of a draw, a random choice in the most answered choices is applied: this can lead to some variability in the results due to the stochastic nature of this choice.
 More formally:
 
 \begin{equation}\label{eq:mv}
@@ -318,11 +315,10 @@ Another issue with the MV strategy is that by taking the mode of the votes' dist
 \end{figure}
 
 Furthermore, the majority vote is sensitive to a specific type of attack on the data: \textbf{spams}.
-A spammer is defined as a worker whose answers are given independently of the underlying ground truth \citep{raykar_ranking_2011}. More formally:
+A spammer is defined as a worker whose answers are given independently of the underlying ground truth \citep{raykar_ranking_2011}. For example, in plant species classification one worker can label all images as a type of rose. Another common example is a random choice over the $K$ possible classes. More formally:
 \begin{equation}\label{eq:spammer}
     \forall i \in [n_\text{task}] \forall (k,c) \in [K]^2,\ \mathbb{P}(y_i^{(j)} = k\ | y_i^\star=c) = \mathbb{P}(y_i^{(j)} = k) \enspace.
 \end{equation}
-XXX may be mention the simplest spam case where one uses a dirac, and simply say  cat cat cat etc.XXX
 \citet{vuurens2011much} discusses how critical it is to identify spammers to improve labeling quality. They show through several simulation settings that even with trapping systems, the majority vote is still sensitive to spam.
 
 In practice, the MV strategy is most often used as a baseline strategy.
@@ -402,7 +398,7 @@ Using the expectation-maximization (EM) algorithm \citep{Dempster_Laird_Rubin77}
 Denote $Y=\{y_i^{(j)}\}_{i,j}$ for readability.
 The logarithm of the likelihood function writes:
 \begin{equation*}
-    \log \text{Lik}(\pi,\rho|T, Y) = \sum_{i} \sum_{k} \left[T_{i,k} \log (\rho_k) \sum_j \sum_\ell \mathds{1}_{\{y_i^{(j)}=\ell\}}\log(\pi^{(j)}_{k,\ell})\right] \enspace.
+    \log \text{Lik}(\pi,\rho|T, Y) = \sum_{i} \sum_{k} \left[T_{i,k} \log (\rho_k) + \sum_j \sum_\ell \mathds{1}_{\{y_i^{(j)}=\ell\}}\log(\pi^{(j)}_{k,\ell})\right] \enspace.
 \end{equation*}
 To compute $\pi$ and $\rho$ knowing $T$, we use the Lagrangian multipliers method. Let $\lambda=\{\lambda^{(j)}\}_{j}$ the Lagrange multipliers for the constraint $\sum_\ell \pi_{k,\ell}^{(j)}=1$ -- sum of probabilities for each row of confusion matrices equals $1$ -- and $\eta$ the Lagrange multiplier for the constraint $\sum_k \rho_k=1$ -- the prevalence must sum to $1$. Then the full Lagrangian $\mathcal{L}$ writes:
 \begin{equation*}
