@@ -751,6 +751,99 @@ Instead of working with the original audio files, we have used Mel spectrograms,
 From \Cref{fig:Music_dataset_visualization} we observe that each task received up to $7$ labels. Around $7.5\%$ of those tasks were annotated by a single worker. Hence the entropy can not be used to detect the ambiguity for them.
 Most workers labeled few tasks, and some outliers labeled more than $300$ music recordings.
 
+\subsection{Résumé en français}
+Alors que les ensembles de données de classification sont composés d'un nombre croissant d'éléments, le besoin d'expertise humaine pour les étiqueter est toujours présent. Les plateformes d'apprentissage participatif sont un moyen de recueillir les commentaires d'experts à faible coût. Cependant, la qualité de ces étiquettes n'est pas toujours garantie. Dans cette thèse, nous nous concentrons sur le problème de l'ambiguïté des étiquettes dans l'apprentissage participatif. L'ambiguïté des étiquettes a principalement deux sources : la capacité du travailleur et la difficulté de la tâche. Nous présentons tout d'abord un nouvel indicateur, le $\mathrm{WAUM}$ (aire sous la marge pondérée), pour détecter les tâches ambiguës confiées aux travailleurs. Basé sur le $\mathrm{AUM}$ existant dans le cadre supervisé classique, il nous permet d'explorer de grands ensembles de données tout en nous concentrant sur les tâches qui pourraient nécessiter une expertise plus pertinente ou qui devraient être éliminées de l'ensemble de données actuel. Nous présentons ensuite une nouvelle bibliothèque \texttt{python} open-source, PeerAnnot, que nous avons développée pour traiter les ensembles de données en apprentissage participatif dans la classification d'images. Nous avons créé une référence d'état de performance dans la bibliothèque Benchopt pour évaluer nos stratégies d'agrégation d'étiquettes afin d'obtenir des résultats plus reproductibles. Enfin, nous présentons une étude de cas sur l'ensemble de données Pl@ntNet, où nous évaluons l'état actuel de la stratégie d'agrégation d'étiquettes de la plateforme et proposons des moyens de l'améliorer. Ce contexte avec un grand nombre de tâches, d'experts et de classes est très difficile pour les stratégies d'agrégation d'apprentissage participatif actuelles. Nous faisons état de performances systématiquement supérieures à celles de nos concurrents et proposons une nouvelle stratégie d'agrégation qui pourrait être utilisée à l'avenir pour améliorer la qualité de l'ensemble de données Pl@ntNet. Nous publions également ce grand ensemble de données de commentaires d'experts qui pourrait être utilisé pour améliorer la qualité des méthodes d'agrégation actuelles et fournir un nouveau point de référence.
+
+\section{Introduction: apprentissage participatif en classification d'images}
+
+Suite à la révolution de l'apprentissage profond, on entraîne aujourd'hui des modèles avec des millions voire des milliards de paramètres à optimiser. Et pour ce faire, nous avons besoin d'augmenter la taille de nos ensembles de données d'entraînement.
+Le problème est que dans un ensemble d'entraînement en classification supervisée (et nous considérerons principalement la classification d'images pour le reste de ce travail), les images doivent être accompagnées d'une étiquette à partir de laquelle l'entraînement est effectué.
+Bien que des recherches aient été menéees sur l'inférence de cette étiquette à partir des données elles-mêmes, dans les ensembles de données classiques d'apprentissage supervisé, ces étiquettes ont été collectées et partagées à un moment donné au cours de la création de l'ensemble de données.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.8\textwidth]{chapters/images/expert_knowledge.pdf}
+    \caption{L'apprentissage participatif peut être utilisé pour créer des ensembles de données, mais il permet également de soulager la tension que subissent les experts lorsqu'ils évaluent de nouvelles données. En faisant appel à une foule de travailleurs, de nombreuses tâches peuvent être étiquetées sans nécessiter l'évaluation d'un expert.}
+\end{figure}
+
+La tâche consistant à collecter des données afin de créer un ensemble de données pour la classification des images a été de plus en plus associée à l'extraction automatique de données en ligne \citep{rhodes2015vaping}.
+Toutefois, il a été démontré à de nombreuses reprises que cette stratégie de collecte de données entraîne des erreurs d'étiquetage \citep{northcutt_pervasive_2021,vasudevan2022does}.
+Dans d'autres domaines de recherche, comme les prestataires de soins de santé, les images ne proviennent pas nécessairement du web mais sont collectées à plusieurs endroits, comme les scanners des hôpitaux.
+Lorsqu'il s'agit de classer un scanner comme "présence ou absence de tumeurs", c'est souvent un expert sur le terrain qui fournit l'étiquette.
+Cependant, ces professionnels de la santé ne peuvent pas étiqueter des milliers d'images.
+Dans ce cas, la puissance de la foule peut être utilisée pour étiqueter les scanners et fournir un certain niveau d'incertitude.
+Il appartient alors au scientifique des données, en collaboration avec les experts, de déterminer quels travailleurs ont été utiles dans l'expérience et lesquels ne l'ont pas été, puis de demander aux experts d'étiqueter uniquement les scans les plus ambigus - qui ne représenteraient qu'une petite fraction de l'ensemble de données original (comme illustré dans \Cref{fig:expert_knowledge}).
+
+\subsection{Le crowdsourcing est partout}
+
+Cette collaboration entre citoyens et scientifiques n'est pas une niche technique, mais elle passe souvent inaperçue.
+L'utilisation du crowdsourcing pour collecter des données a été utilisée en médecine, dans les systèmes de recommandation vidéo, et dans bien d'autres domaines de la recherche et du développement.
+Nous souhaitons présenter une liste - non exhaustive et non ordonnée - de ces projets qui s'appuient sur les interactions humaines pour collecter des données, et pas seulement pour la classification d'images :
+\begin{itemize}
+    \item Pl@ntNet : application de reconnaissance des espèces végétales \citep{plantet},
+    \item Eyewire : un jeu pour cartographier les neurones de la rétine \citep{tinati2017investigation},
+    \item Tournesol : système de recommandation de vidéos d'intérêt public sur YouTube \citep{hoang2021tournesol},
+    \citep{openai2023gpt4}, \citep{openai2023gpt4}, \citep{openai2023gpt4}, \citep{openai2023gpt4},
+    \item Duolingo : corrections de traduction et améliorations,
+    \item RTR : segmentation des panneaux photovoltaïques dans les images \citep{kasmi2023crowdsourced},
+    \item Twitter/$\mathbb{X}$ via Birdwatch : identifier les informations trompeuses \citep{wojcik2022birdwatch},
+    \item Spotify, TripAdvisor, SNCF,\dots
+\end{itemize}
+
+Avec cette liste, nous mettons en évidence les vastes domaines d'application qui permettent aux humains - et aux citoyens - de rester dans la boucle, et donc la nécessité de poursuivre les recherches sur les paramètres, les stratégies et les implications du crowdsourcing.
+Dans cette thèse, nous nous concentrons principalement sur la classification d'images.
+
+\subsection{Le projet Pl@ntNet}
+Créé par Alexis Joly et Pierre Bonnet, Pl@ntNet \citep{plantet} est la rencontre de deux communautés -- les botanistes et l'informatique -- pour identifier des espèces végétales à partir de photos prises sur le vif.
+Le projet est né en 2008, a sorti sa première application web en 2011, son application mobile en 2013 et a reçu en 2020 le prix \emph{Prix de l'innovation Inria - Académie des sciences - Dassault Systèmes}.
+\begin{figure}[tbh]
+    \centering
+    \includegraphics[width=.8\textwidth, clip, trim={0cm 0cm 0cm 2.5cm}]{chapters/images/Pl@ntNet-overview-Janv-2022.pdf}
+    \caption{Timeline du projet Pl@ntNet}
+    \label{fig:timeline-plantnet}
+\end{figure}
+
+Le système Pl@ntNet peut être interprété comme suit. Un utilisateur enregistre une observation (une image ou un groupe d'images de la même plante) et envoie une requête d'identification.
+La version actuelle du modèle de vision par ordinateur de Pl@ntNet (appelé modèle IA de Pl@ntNet et détaillé dans \Cref{chap:plantnet}) fait une prédiction et fournit l'espèce la plus probable.
+L'utilisateur peut alors approuver le modèle d'IA ou saisir une autre espèce.
+Avec les probabilités prédites, des observations similaires avec les espèces indiquées sont montrées à l'utilisateur pour l'aider à prendre sa décision.
+L'observation est ensuite partagée (avec l'accord de l'utilisateur) avec la communauté et peut faire l'objet d'un vote de la part des autres utilisateurs/
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=.65\textwidth, clip, trim={0cm 0cm 0cm 2cm}]{chapters/images/cooperative learning Pl@ntNet schema.pdf}
+    \caption{Pl@ntNet pipeline from the observation taken in the field to the active training of the computer vision model.}
+\end{figure}
+
+Une fois l'observation enregistrée, elle peut être révisée à tout moment par d'autres utilisateurs.
+Actuellement, Pl@ntNet enregistre plus de $50$K espèces, $6$M utilisateurs enregistrés et $21$M observations réparties sur $77$ flores.
+Plus d'un milliard de requêtes d'images ont été effectuées et l'application a été téléchargée plus de 10 millions de fois sur Google AppStore.
+Au total, plus de 22 millions de votes ont été exprimés au niveau international.
+Chaque observation partagée publiquement présente, comme dans \Cref{fig:interface-plantnet} avec un auteur associé, les votes actuels et l'état de la détermination actuelle de l'espèce.
+Sur la plateforme, les utilisateurs peuvent voter pour une étiquette malformée, si l'image concerne une feuille, une fleur, un fruit, l'écorce, le port ou autre. Dans cette thèse, nous ne prenons en compte que la détermination de l'espèce, et non les autres votes.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{.55\linewidth}
+        \centering
+        \subfloat[Identification webpage. L'observation est composée de deux images, l'une de l'organe (à gauche) et l'autre de la fleur (à droite).]{\includegraphics[width=\textwidth]{chapters/images/plantnet_online.png}}
+    \end{minipage}%
+        \hfill
+    \begin{minipage}{.4\linewidth}
+        \centering
+        \subfloat[Vision de l'utilisateur sur les prédictions du modèle actuel. Des exemples pour chaque espèce sont proposés à des fins de comparaison visuelle.]{\includegraphics[width=\textwidth]{chapters/images/AI_votes.png}}
+    \end{minipage}\par\medskip
+        \caption{Exemple d'observation à partir de l'interface en ligne de Pl@ntNet. L'utilisateur représenté est l'auteur de l'observation. Nous enregistrons le nom de l'espèce initialement soumis, ainsi que les différents votes (ici, 5 utilisateurs sont d'accord sur la détermination de l'étiquette). Si les images d'une observation ne contiennent pas la même plante, les utilisateurs peuvent voter pour une étiquette malformée. En cliquant sur l'icône près du champ d'identification, les utilisateurs peuvent voir la prédiction actuelle du modèle de vision par ordinateur.}
+    \end{figure}
+
+
+Lors du vote, les utilisateurs voient apparaître la prédiction actuelle de vision par ordinateur sur l'observation -- comme indiqué dans \Cref{fig:interface-ai}. Cette prédiction influence le vote des utilisateurs, mais contient également des informations.
+Au moment de la rédaction de ce document, le modèle de vision par ordinateur de Pl@ntNet est un réseau DINOv2 \citep{oquab2024dinov2} basé sur des transformateurs.
+En utilisant l'apprentissage contrastif \citep{waida2023understanding} \emph{i.e.} représentant des images similaires sous forme d'encastrement proche pour apprendre des caractéristiques similaires pour des observations similaires, puis en utilisant l'apprentissage supervisé pour affiner le modèle.
+
+Dans le Chapitre $4$, nous présentons la stratégie d'agrégation des étiquettes de Pl@ntNet, mais aussi la manière dont nous pouvons incorporer les prédictions du modèle dans l'agrégation des étiquettes.
+La prise en compte du vote du réseau est une question délicate, car nous ne voulons pas que l'IA devienne trop confiante dans ses prédictions en s'appuyant principalement sur ses prédictions et en écartant les votes humains.
+L'expertise humaine étant l'objectif principal de la plateforme, nous voulons garder les humains dans la boucle, en particulier les experts botaniques, afin de continuer à améliorer les identifications de plantes des utilisateurs finaux.
 
 \subsection{List of publications}
 
@@ -764,6 +857,6 @@ This thesis is supported by the following publications:
     \item Lefort, T., Affouard, A., Charlier, B., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm using label aggregation. 55èmes Journées de Statistique de la SFDS 2024
     \item Dubar, A., Lefort, T., \& Salmon, J. (2024). peerannot: A framework for label aggregation in crowdsourced datasets. 55èmes Journées de Statistique de la SFDS 2024
     \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Weighted majority vote using Shapley values in crowdsourcing. CAp 2024-Conférence sur l'Apprentissage Automatique.
-    \item Article MEE (XXX rajoute et mets "submitted to " XXX)
+    \item Lefort, T., Affouard, A., Charlier, B., Lombardo, J-C., Chouet, M., Goëau, H., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm: how does it work and how can we improve it? Submitted to Methods in Ecology and Evolution (under review)
 \end{itemize}
 
