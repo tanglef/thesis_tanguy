@@ -732,6 +732,15 @@ There is also a vast consensus on tasks with a high peak for the entropy distrib
 \subsubsection{The \texttt{Music} dataset}
 \label{subsubsec:music}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
+The goal of this classification task was to decide the genre of $ 30$-second musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
+The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop}, \texttt{reggae} and \texttt{rock}.
+Each audio file was labeled by between $1$ and $7$ workers.
+To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
+Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
+
 \begin{figure}[thb]
     \centering
     \subfloat[Feedback effort per task distribution]{\includegraphics[trim={0 0 0 0.8cm},clip,width=0.3\textwidth]{chapters/images/distribution_feedback_effort_Music}\label{subfig:music_feedback_effort}}\hfill
@@ -741,15 +750,9 @@ There is also a vast consensus on tasks with a high peak for the entropy distrib
     \label{fig:Music_dataset_visualization}
 \end{figure}
 
-\citet{rodrigues2014gaussian} released a crowdsourced dataset of audio files.
-The goal of this classification task was to decide the genre of $ 30$-second musical excerpts. Number of tasks is $n_{\texttt{task}}=700$.
-The $n_{\texttt{worker}}=44$ workers had $K=10$ possible labels: \texttt{blues}, \texttt{classical}, \texttt{country}, \texttt{disco}, \texttt{hiphop}, \texttt{jazz}, \texttt{metal}, \texttt{pop}, \texttt{reggae} and \texttt{rock}.
-Each audio file was labeled by between $1$ and $7$ workers.
-To test the results, a dataset of $299$ labeled clips is used (originally $300$, but one file is known to be corrupted).
-Instead of working with the original audio files, we have used Mel spectrograms, openly available\footnote{ \scriptsize \url{https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification?datasetId=568973}}, to rely on standard neural networks architecture for image classification.
-
 From \Cref{fig:Music_dataset_visualization} we observe that each task received up to $7$ labels. Around $7.5\%$ of those tasks were annotated by a single worker. Hence the entropy can not be used to detect the ambiguity for them.
 Most workers labeled few tasks, and some outliers labeled more than $300$ music recordings.
+
 
 \subsection{List of publications}
 
@@ -763,6 +766,6 @@ This thesis is supported by the following publications:
     \item Lefort, T., Affouard, A., Charlier, B., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm using label aggregation. 55èmes Journées de Statistique de la SFDS 2024
     \item Dubar, A., Lefort, T., \& Salmon, J. (2024). peerannot: A framework for label aggregation in crowdsourced datasets. 55èmes Journées de Statistique de la SFDS 2024
     \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Weighted majority vote using Shapley values in crowdsourcing. CAp 2024-Conférence sur l'Apprentissage Automatique.
-    \item Article MEE
+    \item Article MEE (XXX rajoute et mets "submitted to " XXX)
 \end{itemize}
 
