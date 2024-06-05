@@ -10,7 +10,7 @@
 
         \item Handling crowdsourced data comes with two main strategies: either aggregate the collected labels and then use supervised learning from them. Or directly integrate a model that mitigates the crowd noise inside the neural network's architecture. However, while most models deal with worker quality, few consider data difficulty.
 
-        \item Research tries to better learn the prediction uncertainty for a neural network by inducing noise in the label distribution. Using crowdsourced data, we have a direct access to the human uncertainty. However, this data is rarely openly available, making crowdsourcing experiments hard to reproduce and compare.
+        \item Researches aim at better quantify uncertainty neural networks' predictions by inducing noise in the label distribution. Using crowdsourced data, we have a direct access to the human uncertainty. Yet, this data is rarely openly available, making crowdsourcing experiments hard to reproduce and compare.
 
         \end{enumerate}
 
@@ -20,7 +20,7 @@
 
         \item We emphasize the need for reproducible results and shared algorithms with the creation of a crowdsourcing library: \texttt{peerannot}. This lets us easily compare scoring metrics for workers depending on the strategy used and their use case. We discuss the need for more openly available crowdsourced datasets and the limitations of currently accessible ones.
 
-        \item We apply different label aggregation strategies on a newly released large-scale dataset from the Pl@ntNet project. We evaluate the current aggregation used and propose improvements.
+        \item We apply different label aggregation strategies on a newly released large-scale dataset from the Pl@ntNet project. We evaluate the current aggregation used and propose some possible improvements.
         \end{enumerate}
 
 \end{keypointstwomargins}
@@ -42,13 +42,13 @@ The task of collecting data to create a dataset for image classification has bee
 However, it has been shown numerous times that labeling mistakes do happen with this data collection strategy \citep{northcutt_pervasive_2021,vasudevan2022does}.
 In other fields of research, as healthcare providers, images might not come from the web but are collected between multiple locations -- like hospital scanners.
 When trying to classify a scanner as \emph{"presence or absence of tumors"}, it is often a field expert that provides the label.
-However such healthcare providers can't label thousands of images.
+This yields a major drawback: such healthcare providers can't label thousands of images.
 In this case, the power of the crowd can be used to label the scans and provide some level of uncertainty.
-This is then to the data scientist area, in collaboration with experts, to determine which workers were useful in the experiment, and which were not, and then only ask experts to label the most ambiguous scans -- which would represent only a small fraction of the original dataset (as illustrated in \Cref{fig:expert_knowledge}).
+This is then to the data scientists, in collaboration with experts, to determine which workers were useful in the experiment, and which were not, and then only ask experts to label the most ambiguous scans -- which would represent only a small fraction of the original dataset (as illustrated in \Cref{fig:expert_knowledge}).
 
 \subsection{Crowdsourcing is all over}
 
-This collaboration between citizens and scientists is not technically niche, only quite often it goes unnoticed.
+This collaboration between citizens and scientists is not a niche, but quite often it goes unnoticed.
 Using crowdsourcing to collect data has been used in medical science, video recommendation systems, and so many other fields of research and development.
 We wish to show a -- non-exhaustive and not ordered -- list of such projects relying on human interactions to collect data, not just for image classification:
 \begin{itemize}
@@ -67,7 +67,7 @@ With this list, we showcase the large domains of applications of keeping humans 
 In this thesis, we mainly focus on the image classification setting.
 
 \subsection{The Pl@ntNet project}
-Created by Alexis Joly and Pierre Bonnet, Pl@ntNet \citep{plantet} is the meeting of two communities -- botanists and computer science -- to identify plant species from photos taken on the spot.
+Created by Alexis Joly and Pierre Bonnet, Pl@ntNet \citep{plantet} is the meeting of two communities -- botanists and computer scientists -- to identify plant species from photos taken on the spot.
 The project's birth began in 2008, released its first web application in 2011, mobile application in 2013 and received in 2020 the prize \emph{Prix de l’innovation Inria – Académie des sciences – Dassault Systèmes}.
 \begin{figure}[tbh]
     \centering
@@ -107,13 +107,13 @@ On the platform, users can vote for a malformed label, if the picture is about a
         \centering
         \subfloat[User vision of current model predictions. Examples for each species are proposed for visual comparison.]{\label{fig:interface-ai}\includegraphics[width=\textwidth]{chapters/images/AI_votes.png}}
         \end{minipage}\par\medskip
-            \caption{Example of observation from the Pl@ntNet online interface. The user shown is the author of the observation. We record the initial submitted species name, and the different votes (here 5 users agree on the label determination). If an observation's pictures do not contain the same plant, users can vote for a malformed label. By clicking on the icon near the identification field, users can see the current computer vision model prediction.}
+            \caption{Example of an observation from the Pl@ntNet online interface. The user shown is the author of the observation. We record the initial submitted species name, and the different votes (here 5 users agree on the label determination). If  the pictures in an observation do not contain the same plant, users can vote for a malformed label. By clicking on the icon near the identification field, users can see the current computer vision model prediction.}
     \label{fig:interface-plantnet}
 \end{figure}
 
 When voting, users are shown the current computer vision prediction on the observation -- as shown in \Cref{fig:interface-ai}. This prediction influences users' votes, but also contains information.
 At the time of writing, Pl@ntNet's computer vision model is a DINOv2 \citep{oquab2024dinov2} transformer-based network.
-It uses contrastive learning \citep{waida2023understanding} \emph{i.e.} representing similar images as close embedding to learn similar features for similar observations and then is finetuned in a classical supervised learning fashion.
+It uses contrastive learning \citep{waida2023understanding} \emph{i.e.,} representing similar images as close embedding to learn similar features for similar observations and then is finetuned in a classical supervised learning fashion.
 
 In \Cref{chap:plantnet}, we present the Pl@ntNet label aggregation strategy, but also how we can incorporate model predictions into the label aggregation.
 Taking into account the network's vote is a delicate matter, as we don't want the AI to become overconfident in its prediction by relying mostly on its predictions and discarding human votes.
@@ -137,19 +137,19 @@ Exploitation in itself is a loaded word, and we shall use the definition from \c
     }
     \end{minipage}
 \end{center}
-Mayer further classifies the exploitation into three subsets viewed from the fairness principle:
+\citet{mayerexploitation} further classifies the exploitation into three subsets viewed from the fairness principle:
 \begin{itemize}
     \item exploiters do not benefit their victims at all,
     \item exploiters do not benefit their victims sufficiently,
     \item exploiters do not benefit their victims authentically.
 \end{itemize}
 
-In the case of part of the security system of chatgpt \citep{openai2023gpt4}, OpenAI hired the company Sama to outsource examples of potential hate speech text, violence \emph{etc.} and label them.
-This labeling was done by Kenyan workers in 2021, paid between 1\$.32 and 2\$ an hour\footnote{\url{https://time.com/6247678/openai-chatgpt-kenya-workers/}}. Here the exploiters do not benefit their victims sufficiently considering the wage\footnote{There is currently no universal minimum wage in Kenya, however in 2022 a cashier would earn in average 309.06Ksh/hour in Nairobi \emph{i.e.} around \$2.14/hour: \url{https://africapay.org/kenya/salary/minimum-wages/2182-cities-nairobi-mombasa-and-kisumu}}.
+In the case of part of the security system of ChatGPT \citep{openai2023gpt4}, OpenAI hired the company Sama to outsource examples of potential hate speech text, violence \emph{etc.}, and label them.
+This labeling was done by Kenyan workers in 2021, paid between 1\$.32 and 2\$ an hour\footnote{\url{https://time.com/6247678/openai-chatgpt-kenya-workers/}}. Here the exploiters do not benefit their victims sufficiently considering the wage\footnote{There is currently no universal minimum wage in Kenya, however in 2022 a cashier would earn in average 309.06Ksh/hour in Nairobi \emph{i.e.,} around \$2.14/hour: \url{https://africapay.org/kenya/salary/minimum-wages/2182-cities-nairobi-mombasa-and-kisumu}}.
 
-Even more recently, Toloka\footnote{\url{https://toloka.ai/}} one of the largest crowdsourcing platforms, owned by Yandex, has been found collaborating with NTechLab and Tevian -- \emph{both sanctioned under the EU's human rights regime in July 2023 for contributing to the oppression and detention of protestors in Russia}\footnote{\url{https://www.thebureauinvestigates.com/stories/2024-03-27/paid-pennies-to-train-tools-of-repression-the-humans-behind-moscows-state-surveillance/}}.
+Even more recently, Toloka\footnote{\url{https://toloka.ai/}}, one of the largest crowdsourcing platforms, owned by Yandex, has been found collaborating with NTechLab and Tevian -- \emph{both sanctioned under the EU's human rights regime in July 2023 for contributing to the oppression and detention of protestors in Russia}\footnote{\url{https://www.thebureauinvestigates.com/stories/2024-03-27/paid-pennies-to-train-tools-of-repression-the-humans-behind-moscows-state-surveillance/}}.
 Workers were not aware of the use of their annotations when drawing bounding boxes around people in images or labeling actions from surveillance videos.
-As the data was used to train facial recognition technology and employed for repression -- monitoring and detention of journalists and activists in support of Alexei Navalny for example -- the EU Council found Tevian and NTechLab to be \emph{responsible for providing technical or material support for serious human rights violations in Russia, including arbitrary arrests or detentions, and violations or abuses of freedom of peaceful assembly and of association.}\footnote{\url{https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32023R1495}}. According to Annex I to Regulation (EU) 2020/1998, direct exchange of resources with these companies is thus prohibited and sanctioned. Further investigations are currently happening, however, the use of crowdsourcing data in this context is a clear example of possible malicious exploitations of knowledge and participation of workers.
+As the data was used to train facial recognition technology and employed for repression -- monitoring and detention of journalists and activists in support of Alexei Navalny for example -- the EU Council found Tevian and NTechLab to be \emph{responsible for providing technical or material support for serious human rights violations in Russia, including arbitrary arrests or detentions, and violations or abuses of freedom of peaceful assembly and of association}\footnote{\url{https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32023R1495}}. According to Annex I to Regulation (EU) 2020/1998, direct exchange of resources with these companies is thus prohibited and sanctioned. Further investigations are currently happening, however, the use of crowdsourcing data in this context is a clear example of possible malicious exploitations of knowledge and participation of workers.
 
 The legal protection is also limited per the unusual working framework. At the European Union level, the Joint Research Centre (JRC) and the European Commission’s Science and knowledge service published a report\footnote{\url{https://publications.jrc.ec.europa.eu/repository/bitstream/JRC112243/jrc112243_legal_framework_digital_labour_platforms_final.pdf}} to help policymakers in their decisions stating that \emph{"current labour law framework is not aptly suited to govern new working patterns and should be revised, either on legislative or interpretative level"}.
 This report stresses that \emph{"from a purely legal point of view, 'digital platform-enabled labour' does not even exist, in the sense that it is not a sort of watertight dimension of the economy and the labour market'"} as this is a very heterogeneous active field of work with difficult generalizations and conflicting perspectives between scholars, commentators and lawmakers.
@@ -185,11 +185,13 @@ The Pl@ntNet data collection process -- explained in \Cref{chap:plantnet} -- is 
 In this thesis, we deal with image classification problems in crowdsourcing.
 The main setting we consider is: \emph{How to learn from crowdsourced labels?}
 As this is a large problem we want to focus on the data quality we learn our classifiers from, especially in a context with few labels given per task.
-The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, raykar_ranking_2011, sinha2018fast,rodrigues2018dee}, but very few models incorporate the tasks' difficulty \citep{whitehill_whose_2009, chu2021learning}.
+The literature has mainly considered modeling workers abilities and faults \citep{dawid_maximum_1979, raykar_ranking_2011, sinha2018fast,rodrigues2018dee},
+XXX ISSUE with a citation here XXX
+but very few models incorporate the tasks' difficulty \citep{whitehill_whose_2009,chu2021learning}.
 Moreover, when this difficulty is taken into account, it is often done without considering the actual images, only the answered labels \citep{whitehill_whose_2009}.
-In this work, we first propose in \Cref{chap:waum} to identify ambiguous tasks in training datasets from the crowdsourced labels and the actual image with a metric called the $\mathrm{WAUM}$ (Waighted Areas Under the Margin) introduced in \citet{lefort2022improve}.
+In this work, we first propose in \Cref{chap:waum} to identify ambiguous tasks in training datasets from the crowdsourced labels and the actual image with a metric called the $\mathrm{WAUM}$ (Weighted Areas Under the Margin) introduced in \citep{lefort2022improve}.
 Defining what is a difficult task proves to be a challenge in itself.
-An informal definition of a difficult task is given in \citet{angelova2004data}:
+An informal definition of a difficult task is given in \citep{angelova2004data}:
 \begin{center}
 \begin{minipage}{.75\textwidth}
 \emph{
@@ -203,10 +205,10 @@ Our $\mathrm{WAUM}$ heavily relies on how easy it is for current models to learn
 Furthermore, identifying possible ambiguous tasks lets us better explore large crowdsourced datasets and consider strategies to improve learning performance.
 In addition, the work of \citet{merler2004bias} and more recently \citet{pleiss_identifying_2020} show significant learning performance of models after pruning most unreliable tasks from the datasets.
 We show that similar improvements can be made in the crowdsourcing setting.
-In \cref{chap:peerannot}, we present our open-source \texttt{python} library \texttt{peerannot} to ease and help standardize how to deal with crowdsourced datasets in image classification.
+In \Cref{chap:peerannot}, we present our open-source \texttt{python} library \texttt{peerannot} to ease and help standardize how to deal with crowdsourced datasets in image classification.
 We handle label aggregation strategies, learning strategies and identification processes of ambiguous tasks and/or poorly performing workers.
 We also propose a framework to evaluate multiple datasets and aggregation strategies with the \texttt{Benchopt} library.
-Finally, in \cref{chap:plantnet} we compare label aggregation strategies on a large subset of Pl@ntNet's south-western European database we released.
+Finally, we compare in \Cref{chap:plantnet} label aggregation strategies on a large subset of Pl@ntNet's south-western European database we released.
 This subset is challenging as it contains more than $6$ million tasks and over $800$ thousand workers with a large number of classes ($>10^4$).
 We investigate Pl@ntNet's current label aggregation strategy performance and how we can improve it using the currently running computer vision model predictions.
 
@@ -214,12 +216,13 @@ We investigate Pl@ntNet's current label aggregation strategy performance and how
 
 \paragraph*{Classical supervised setting.}Let us first reconsider classical supervised learning in a classification setting.
 A dataset $\mathcal{D}=\{(x_i, y_i^\star)\}_{i=1}^n$ is composed of $n$ tasks $x_i\in\mathcal{X}$ and $y_i^\star\in\mathcal{Y}$.
+XXX mention the $y_i^\star$ are unknown and one aims at recovering them XXX
 In image classification, $\mathcal{X}$ is classically the space of RGB images and $\mathcal{Y}$ is the set of possible labels.
 The possible labels are encoded as numbers, thus in a classification problem with $K$ classes, $\mathcal{Y}=[K]=\{1,\dots,K\}$.
 The cardinal of the set $\mathcal{Y}$ is written as $|\mathcal{Y}|=K$.
 To classify images, we need a classifier denoted $\mathcal{C}$.
 Then, given a task $x_i\in\mathcal{X}$, $\mathcal{C}(x_i)\in\mathbb{R}^K$ represents the vector of scores.
-To transform these scores into probabilities, we use the softmax function $\sigma(\bigcdot)$ defined as:
+To transform these scores into probabilities, we use the most standard strategy and apply the softmax function $\sigma(\cdot)$, defined for any $z\in\mathbb{R}^K$ as:
 $$
 \sigma(z) = \left(\frac{e^{z_k}}{\sum_{\ell\in [K]} e^{z_\ell}}\right)_{k\in [K]} \enspace.
 $$
@@ -227,14 +230,14 @@ The probabilities predicted by the classifier sorted in decreasing order are
 $$
 \sigma(\mathcal{C}(x_i))_{[1]} \geq \sigma(\mathcal{C}(x_i))_{[2]}\geq \dots\geq \sigma(\mathcal{C}(x_i))_{[K]} \enspace,
 $$
-where $\sigma(\mathcal{C}(x_i))_{[1]}$ represents the predicted class for the task by the classifier.
-The indicator function is denoted $\mathds{1}(\bigcdot)$. The simplex of dimension $K-1$ is written as $\Delta_K=\{p \in\mathbb{R}^K_+ | \sum_{k=1}^K p_k = 1\}$.
+where $\sigma(\mathcal{C}(x_i))_{[1]}$ represents the probability of the predicted class.
+The indicator function is denoted $\mathds{1}(\cdot)$. The simplex of dimension $K-1$ is written as $\Delta_K=\{p \in\mathbb{R}^K_+ | \sum_{k=1}^K p_k = 1\}$.
 And finally, given a vector $z\in\mathbb{R}^K$, we denote the normalization operator $\mathbf{N}$ such that $\mathbf{N}(z) = z / \sum_{k\in[K]}z_k$.
 
 \begin{figure}[thb]
     \centering
     \includegraphics[width=.7\textwidth]{chapters/images/notations.pdf}
-    \caption{Crowdsourcing notation on a toy example. There are three tasks to classify into $K=2$ groups. Only worker $w_4$ answers all tasks. Only the task $x_1$ is answered by all workers. The workerload of $w_2$ is $|\mathcal{T}(w_2)|=|\{1,2\}|=2$. The feedback effort on $x_3$ is $|\mathcal{A}(x_3)|=|\{3,4\}|=2$.}
+    \caption{Crowdsourcing notation on a toy example. There are $n=3$ tasks to classify into $K=2$ groups. Only worker $w_4$ answers all tasks. Only the task $x_1$ is answered by all workers. The workerload of $w_2$ is $|\mathcal{T}(w_2)|=|\{1,2\}|=2$. The feedback effort on $x_3$ is $|\mathcal{A}(x_3)|=|\{3,4\}|=2$.}
     \label{fig:enter-label}
 \end{figure}
 
@@ -246,7 +249,7 @@ The set of workers answering the task $x_i$ is denoted by
 \begin{equation}\label{eq:feedback}
 \mathcal{A}(x_i)=\left\{j\in[n_\text{worker}]: w_j \text{ answered }x_i\right\}.
 \end{equation}
-We call \textbf{feedback effort} the number of labels for a given task: $|\mathcal{A}(x_i)|$.
+We call \textbf{feedback effort} the number of labels collected for a given task: $|\mathcal{A}(x_i)|$.
 Note that the feedback effort can not exceed the total number of workers $n_{\text{worker}}$.
 
 Similarly, one can adopt a worker point of view: the set of tasks answered by a worker $w_j$ is denoted
@@ -263,12 +266,7 @@ Note that we use the index notation $i$ for the tasks and $j$ for the workers in
 \subsection{Existing label aggregation strategies}
 \label{sub:aggregating_votes}
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=\textwidth]{chapters/images/strategies_crowd_data.pdf}
-    \caption{pipleine of crowdsourcing experiments. The data is collected. We identify poorly performing workers and/or ambiguous tasks. Then labels are aggregated to be used in a supervised learning setting. If the tasks are available and the goal is to learn a predictor, deep-learning-based strategies can be used to learn the confusion model and the classifier at the same time.}
-    \label{fig:pipeline_crowdsourcing}
-\end{figure}
+
 
 If the goal of the crowdsourcing experiment is to associate a label with a task in the training set, then we need to aggregate the collected labels into a single one.
 This aggregation step can lead to two types of labels:
@@ -276,13 +274,20 @@ This aggregation step can lead to two types of labels:
     \item hard labels: the aggregated label $\hat y_i\in [K]$ represents a single class -- it can be seen as a Dirac distribution over $\mathcal{Y}$.
     \item soft labels: the aggregated label $\hat y_i\in\Delta_K$ is a probability distribution over $\mathcal{Y}$ that is not necessarily a Dirac. This type of label keeps more of the uncertainty for the learning procedure.
 \end{itemize}
-Note that if the aggregation step produces a soft label, it is always possible to produce a hard label taking the mode of the distribution -- \emph{i.e.} using the $\mathrm{argmax}$ function.
+Note that if the aggregation step produces a soft label, it is always possible to produce a hard label taking the mode of the distribution -- \emph{i.e.,} using the $\mathrm{argmax}$ function.
 
 In the following, we present classical aggregation strategies.
 This is not an exhaustive list, only models we mostly use for comparison.
 Assume that a dataset $\left(x_i, \{y_i^{(j)}\}_{j\in\mathcal{A}(x_i)}\right)_{i\in [n_\text{task}]}$ is available.
-We only need to consider the proposed labels -- \emph{i.e.} the tasks $x_i$ are not used.
+We only need to consider the proposed labels -- \emph{i.e.,} the tasks $x_i$ are not used.
 These models -- and more -- are available in the library \texttt{peerannot} using the \texttt{aggregate} command shown in \Cref{fig:pipeline_crowdsourcing}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{chapters/images/strategies_crowd_data.pdf}
+    \caption{pipleine of crowdsourcing experiments. The data is collected. We identify poorly performing workers and/or ambiguous tasks. Then labels are aggregated to be used in a supervised learning setting. If the tasks are available and the goal is to learn a predictor, deep-learning-based strategies can be used to learn the confusion model and the classifier at the same time.}
+    \label{fig:pipeline_crowdsourcing}
+\end{figure}
 
 \subsubsection{Majority vote (MV)}
 \label{subsub:mv}
@@ -290,6 +295,7 @@ These models -- and more -- are available in the library \texttt{peerannot} usin
 The majority vote strategy is the simplest mechanism to create a label from multiple answers.
 It consists in collecting the votes and taking the most answered category.
 In the case of a draw, a random choice in the most answered choices is applied.
+XXX mention that this could lead to variability in the experiments due to this random choice XXX
 More formally:
 
 \begin{equation}\label{eq:mv}
@@ -316,12 +322,13 @@ A spammer is defined as a worker whose answers are given independently of the un
 \begin{equation}\label{eq:spammer}
     \forall i \in [n_\text{task}] \forall (k,c) \in [K]^2,\ \mathbb{P}(y_i^{(j)} = k\ | y_i^\star=c) = \mathbb{P}(y_i^{(j)} = k) \enspace.
 \end{equation}
+XXX may be mention the simplest spam case where one uses a dirac, and simply say  cat cat cat etc.XXX
 \citet{vuurens2011much} discusses how critical it is to identify spammers to improve labeling quality. They show through several simulation settings that even with trapping systems, the majority vote is still sensitive to spam.
 
 In practice, the MV strategy is most often used as a baseline strategy.
 Note that some taskmasters improved majority vote accuracy using prevention systems that are not considered throughout this work.
 \citet{hoang2021tournesol} for example uses a vouching system where volunteer workers can be approved via specific institutional email domains.
-\citet{khattak_toward_2017} and \citet{peterson_human_2019} use trapping sets -- \emph{i.e.} separate set of tasks where a ground truth is known. This set is considered to evaluate worker abilities and identify poorly performing workers, or potential spammers. \citet{vuurens2011much} showed that these sets lead to still sensitive decisions regarding other types of spammers.
+\citet{khattak_toward_2017} and \citet{peterson_human_2019} use trapping sets -- \emph{i.e.,} separate set of tasks where a ground truth is known. This set is considered to evaluate worker abilities and identify poorly performing workers, or potential spammers. \citet{vuurens2011much} showed that these sets lead to still sensitive decisions regarding other types of spammers.
 
 \subsubsection{Naive Soft (NS)}
 \label{subsub:ns}
@@ -359,7 +366,7 @@ More formally:
 \end{equation}
 
 Given the probabilistic model, we wish to maximize the likelihood concerning the confusion matrices, the prevalence of each class in the dataset and the underlying true labels.
-Assume that the ground truths are sampled from a multinomial distribution parameterized by the class prevalence $\rho\in\Delta_K$ -- $\emph{i.e.}$ for $k\in[K]$, $\mathbb{P}(y_i^\star=k)=\rho_k$, and that workers answer independently from one another.
+Assume that the ground truths are sampled from a multinomial distribution parameterized by the class prevalence $\rho\in\Delta_K$ -- $\emph{i.e.,}$ for $k\in[K]$, $\mathbb{P}(y_i^\star=k)=\rho_k$, and that workers answer independently from one another.
 Denote $T_{i,k}=\mathds{1}(y_i^\star=k)$ the indicator of the true label.
 Then the maximum likelihood estimation of the DS model writes:
 \begin{equation}\label{eq:ds_likelihood}
@@ -373,7 +380,7 @@ Given a single task $i$ with true label $y_i^\star=k$ and one worker $w_j$, then
 \begin{equation*}
     \prod_{\ell\in[K]}\left(\pi^{(j)}_{k,\ell}\right)^{\mathds{1}_{\{y_i^{(j)}=\ell\}}} \enspace.
 \end{equation*}
-Then, conditionally on the true label being $k$ -- \emph{i.e.} $T_{i,k}=1$ and for $k'\neq k$, $T_{i,k'}=0$, we can use the workers' independence assumption to consider multiple workers:
+Then, conditionally on the true label being $k$ -- \emph{i.e.,} $T_{i,k}=1$ and for $k'\neq k$, $T_{i,k'}=0$, we can use the workers' independence assumption to consider multiple workers:
 \begin{equation*}
     \prod_{j\in [n_{\text{worker}}]}\prod_{\ell\in[K]}\left(\pi^{(j)}_{k,\ell}\right)^{\mathds{1}_{\{y_i^{(j)}=\ell\}}} \enspace.
 \end{equation*}
@@ -474,7 +481,7 @@ Other criteria could be applied, like relative error instead of absolute, but of
 \subsubsection{Weighted with Dawid and Skene (WDS)}
 \label{subsub:wds}
 
-The DS model, by design, often leads to soft labels $(T_{i,\bigcdot})_i$ with very low entropy distribution -- \emph{i.e.} close to Dirac distributions.
+The DS model, by design, often leads to soft labels $(T_{i,\bigcdot})_i$ with very low entropy distribution -- \emph{i.e.,} close to Dirac distributions.
 Indeed, the $T$ variable represents indicator functions for belonging to a given class.
 To keep more uncertainty, one possibility is to shift our focus to only consider the diagonal of the confusion matrices estimated in the DS model.
 Each term on the diagonal represents the ability of the worker to answer correctly the underlying label.
@@ -586,7 +593,7 @@ Aggregation strategies that rely on these data collection models are not conside
 In the era of deep learning, it is only expected to find new ways to introduce crowdsourcing into neural network architectures.
 Incorporating layers taking into account the crowd/tasks pairing in the architecture leads to a neural network able to be trained on crowdsourced data.
 The newly obtained classifier function denoted $f$ in this part, is used to predict labels of unseen images.
-However, contrary to models seen in \Cref{sub:aggregating_votes}, these strategies are only used for prediction and not for aggregating labels for each task.
+Yet, contrary to models seen in \Cref{sub:aggregating_votes}, these strategies are only used for prediction and not for aggregating labels for each task.
 We thus not only need the crowdsourced labels but also the associated tasks and a set of unseen data to validate/test the model on.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -627,7 +634,7 @@ with $\lambda$ the regularization hyperparameter and $\mathrm{H}$ the crossentro
 \label{sub:evaluation-metrics}
 Throughout this thesis, we evaluate our results using different metrics depending on the data available.
 \begin{itemize}
-    \item If a dataset $\mathcal{D}$ of $n$ tasks is only composed of the answered labels -- \emph{i.e.} the images are not available: the crowdsourcing methods consist in estimating the label $y^\star_i$ with an aggregated label $\hat y_i$. To evaluate the aggregation method, we use the training recovery accuracy $\mathrm{Acc}_{\text{train}}$ defined as:
+    \item If a dataset $\mathcal{D}$ of $n$ tasks is only composed of the answered labels -- \emph{i.e.,} the images are not available: the crowdsourcing methods consist in estimating the label $y^\star_i$ with an aggregated label $\hat y_i$. To evaluate the aggregation method, we use the training recovery accuracy $\mathrm{Acc}_{\text{train}}$ defined as:
     \begin{equation}\label{eq:acctrain}
         \mathrm{Acc}_{\text{train}}(\hat y, y^\star; \mathcal{D}) = \frac{1}{n} \sum_{i=1}^{n} \mathds{1}(\hat y_i = y^\star_i)\enspace.
     \end{equation}
