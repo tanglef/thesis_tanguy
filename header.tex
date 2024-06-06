@@ -6,6 +6,7 @@
 % \usepackage[lantin1]{inputenc} % If not utf8 encoding, then this is probably the way to go
 \usepackage[T1]{fontenc}    %
 \usepackage[round]{natbib}
+% \usepackage{backref}
 \usepackage[french,english]{babel} % English please
 \usepackage[final]{microtype} % Less badboxes
 \usepackage{siunitx}
@@ -350,13 +351,22 @@ title={#1},
 %%%-------------------------------------------------------------------------------
 
 \PassOptionsToPackage{hyphens}{url}
-\usepackage{hyperref}   % Internal hyperlinks
+\usepackage[pagebackref=true]{hyperref}   % Internal hyperlinks
 \hypersetup{
-pdfborder={0 0 0},      % No borders around internal hyperlinks
+% pdfborder={0 0 0},      % No borders around internal hyperlinks
 pdfauthor={Tanguy Lefort}  % author
 }
 \usepackage{memhfixc}   %
 \usepackage{cleveref}
+\renewcommand*{\backrefalt}[4]{%
+\ifcase #1 %
+No citations.%
+\or
+(cit. on p. #2).%
+\else
+(cit. on pp. #2).%
+\fi
+}
 %%% -----------------------------------------------------------------------------------
 % chapters titlepage
 % \usepackage{kpfonts}

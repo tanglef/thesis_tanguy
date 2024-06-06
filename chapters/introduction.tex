@@ -214,7 +214,7 @@ We investigate Pl@ntNet's current label aggregation strategy performance and how
 \subsection{Notation}
 
 \paragraph*{Classical supervised setting.}Let us first reconsider classical supervised learning in a classification setting.
-A dataset $\mathcal{D}=\{(x_i, y_i^\star)\}_{i=1}^n$ is composed of $n$ tasks $x_i\in\mathcal{X}$ and $y_i^\star\in\mathcal{Y}$.
+A dataset $\mathcal{D}=\{(x_i, y_i^\star)\}_{i=1}^n$ is composed of $n$ tasks $x_i\in\mathcal{X}$ and labels $y_i^\star\in\mathcal{Y}$.
 In image classification, $\mathcal{X}$ is classically the space of RGB images and $\mathcal{Y}$ is the set of possible labels.
 The possible labels are encoded as numbers, thus in a classification problem with $K$ classes, $\mathcal{Y}=[K]=\{1,\dots,K\}$.
 The cardinal of the set $\mathcal{Y}$ is written as $|\mathcal{Y}|=K$.
@@ -243,6 +243,7 @@ And finally, given a vector $z\in\mathbb{R}^K$, we denote the normalization oper
 With crowdsourced data, the ground truth $y_i^\star$ of a task $x_i$ is unknown.
 Instead, there is a crowd of $n_{\text{worker}}\in \mathbb{N}^\star$ labeling the $n_\text{task}$ training tasks -- we assume access to a classical test and validation set.
 Each worker $w_j,j\in [n_{\text{worker}}]$ answers at least one task by giving a label denoted $y_i^{(j)}\in[K]$.
+The task/label pairs $(x_i,y_i^{(j)})$ are assumed to be generated -- not \emph{i.i.d} as it is worker-dependent -- by an unknown probability distribution $\mathbb{P}$.
 The set of workers answering the task $x_i$ is denoted by
 \begin{equation}\label{eq:feedback}
 \mathcal{A}(x_i)=\left\{j\in[n_\text{worker}]: w_j \text{ answered }x_i\right\}.
@@ -626,17 +627,28 @@ with $\lambda$ the regularization hyperparameter and $\mathrm{H}$ the crossentro
 
 \subsection{Evaluation metrics.}
 \label{sub:evaluation-metrics}
-Throughout this thesis, we evaluate our results using different metrics depending on the data available. All of these metrics necessitate true labels $y^\star$ and estimated labels $\hat y$ (resulting either from an aggregation strategy -- \emph{e.g.} MV, NS -- or a prediction model -- $\mathrm{CoNAL}$, $\mathrm{CrowdLayer}$).
-In \Cref{chap:waum} and \Cref{chap:peerannot}, this ground truth is released by the original authors of the datasets in addition to the crowdsourced answers. XXX here maybe you can be a bit more specific about the datasets and the ground truth. XXX
+Throughout this thesis, we evaluate our results using different metrics depending on the data available.
+
+In classical supervised learning settings, performance metrics consider an evaluation between an estimation $\hat y$ of the true label $y^\star$ for each task.
+This true label is available and was chosen by the authors of the dataset following a data collection process (scraping, expert knowledge, \emph{etc.}).
+There can be noise in this truth, but it is assumed to be minimal \citep{northcutt_confident_2021}.
+This issue with crowdsourced datasets is that the ground truth is supposed to be unknown.
+To alleviate this problem, authors often release a subset of the data with true labels to evaluate the performance of the different strategies.
+For example: the \texttt{CIFAR-10H} \citep{peterson_human_2019} crowdsourced dataset is based on the \texttt{CIFAR-10} dataset, a classical supervised learning dataset. Note that the original labels in \texttt{CIFAR-10} also come from a crowdsourcing experiment (and were validated manually according to the appendices of the original paper). At the end of the data collection, the authors decided to consider their labels as ground truth to be able to evaluate the performance of their model.
+In \Cref{chap:waum} and \Cref{chap:peerannot}, all ground truth labels used were released by the original authors of the datasets with the associated crowdsourced answers.
 These standard benchmarking datasets do not represent the real-world crowdsourcing setting where the ground truth is unknown but are useful to evaluate performance.
+
 In the practical application presented in \Cref{chap:plantnet}, we released a new crowdsourced dataset from Pl@ntNet with more than $6$M images to label.
 To obtain performance scores, we collected the votes of $98$ botanical experts and considered them as the ground truth $y^\star$.
 Images labeled by the experts compose the test set.
-The full pipeline to create this dataset is detailed in \Cref{chap:plantnet}.
 Having these true labels on a subset of the data lets us evaluate the performance of different strategies in a real-world crowdsourcing setting.
+Note however that this choice to consider an expert's vote as ground truth can impact the evaluation and be debated.
+The full pipeline to create this dataset is detailed in \Cref{chap:plantnet}.
 
-
-Let us detail the evaluation metrics used in this thesis:
+Now that we know how to access ground truth labels -- either released by authors or collected and then considered as true following a decision rule -- we can define the evaluation metrics used in this thesis.
+There are two main types of metrics: those evaluating the aggregation strategy -- \emph{e.g.} MV, NS -- and those evaluating the prediction of a model -- \emph{e.g.} $\mathrm{CoNAL}$, $\mathrm{CrowdLayer}$.
+Aggregation strategies consist on estimating the true label $y^\star$ from the workers' votes $\{y_i^{(j)}\}_{i,j}$ on a set of tasks.
+Prediction strategies consist of training a model on tasks and their associated votes and then predicting the label of unseen tasks.
 
 \begin{itemize}
     \item If a dataset $\mathcal{D}$ of $n$ tasks is only composed of the answered labels -- \emph{i.e.,} the images are not available: the crowdsourcing strategies consist in estimating the label $y^\star_i$ with an aggregated label $\hat y_i$. To evaluate the aggregation method, we use the training recovery accuracy $\mathrm{Acc}_{\text{train}}$ defined as:
