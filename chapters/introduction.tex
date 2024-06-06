@@ -317,7 +317,7 @@ Another issue with the MV strategy is that by taking the mode of the votes' dist
 Furthermore, the majority vote is sensitive to a specific type of attack on the data: \textbf{spams}.
 A spammer is defined as a worker whose answers are given independently of the underlying ground truth \citep{raykar_ranking_2011}. For example, in plant species classification one worker can label all images as a type of rose. Another common example is a random choice over the $K$ possible classes. More formally:
 \begin{equation}\label{eq:spammer}
-    \forall i \in [n_\text{task}] \forall (k,c) \in [K]^2,\ \mathbb{P}(y_i^{(j)} = k\ | y_i^\star=c) = \mathbb{P}(y_i^{(j)} = k) \enspace.
+    \forall i \in [n_\text{task}], \forall (k,c) \in [K]^2,\ \mathbb{P}(y_i^{(j)} = k\ | y_i^\star=c) = \mathbb{P}(y_i^{(j)} = k) \enspace.
 \end{equation}
 \citet{vuurens2011much} discusses how critical it is to identify spammers to improve labeling quality. They show through several simulation settings that even with trapping systems, the majority vote is still sensitive to spam.
 
@@ -627,7 +627,7 @@ with $\lambda$ the regularization hyperparameter and $\mathrm{H}$ the crossentro
 \subsection{Evaluation metrics.}
 \label{sub:evaluation-metrics}
 Throughout this thesis, we evaluate our results using different metrics depending on the data available. All of these metrics necessitate true labels $y^\star$ and estimated labels $\hat y$ (resulting either from an aggregation strategy -- \emph{e.g.} MV, NS -- or a prediction model -- $\mathrm{CoNAL}$, $\mathrm{CrowdLayer}$).
-In \Cref{chap:waum} and \Cref{chap:peerannot}, this ground truth is released by the original authors of the datasets in addition to the crowdsourced answers. XXX here may be you can be a bit more specific about the datasets and the ground truth. XXX
+In \Cref{chap:waum} and \Cref{chap:peerannot}, this ground truth is released by the original authors of the datasets in addition to the crowdsourced answers. XXX here maybe you can be a bit more specific about the datasets and the ground truth. XXX
 These standard benchmarking datasets do not represent the real-world crowdsourcing setting where the ground truth is unknown but are useful to evaluate performance.
 In the practical application presented in \Cref{chap:plantnet}, we released a new crowdsourced dataset from Pl@ntNet with more than $6$M images to label.
 To obtain performance scores, we collected the votes of $98$ botanical experts and considered them as the ground truth $y^\star$.
