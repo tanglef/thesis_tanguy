@@ -633,14 +633,17 @@ In the practical application presented in \Cref{chap:plantnet}, we released a ne
 To obtain performance scores, we collected the votes of $98$ botanical experts and considered them as the ground truth $y^\star$.
 Images labeled by the experts compose the test set.
 The full pipeline to create this dataset is detailed in \Cref{chap:plantnet}.
-Having these true labels on part of the data lets us evaluate the performance of the different strategies in a real-world crowdsourcing setting.
+Having these true labels on a subset of the data lets us evaluate the performance of different strategies in a real-world crowdsourcing setting.
+
+
+Let us detail the evaluation metrics used in this thesis:
 
 \begin{itemize}
-    \item If a dataset $\mathcal{D}$ of $n$ tasks is only composed of the answered labels -- \emph{i.e.,} the images are not available: the crowdsourcing methods consist in estimating the label $y^\star_i$ with an aggregated label $\hat y_i$. To evaluate the aggregation method, we use the training recovery accuracy $\mathrm{Acc}_{\text{train}}$ defined as:
+    \item If a dataset $\mathcal{D}$ of $n$ tasks is only composed of the answered labels -- \emph{i.e.,} the images are not available: the crowdsourcing strategies consist in estimating the label $y^\star_i$ with an aggregated label $\hat y_i$. To evaluate the aggregation method, we use the training recovery accuracy $\mathrm{Acc}_{\text{train}}$ defined as:
     \begin{equation}\label{eq:acctrain}
         \mathrm{Acc}_{\text{train}}(\hat y, y^\star; \mathcal{D}) = \frac{1}{n} \sum_{i=1}^{n} \mathds{1}(\hat y_i = y^\star_i)\enspace.
     \end{equation}
-    \item If the dataset is composed of both the answered labels and the associated images: we can learn the parameters of a classifier and then test the classifier performance on a test set. We thus record the test accuracy and the expected calibration error as in \citet{guo_calibration_2017}. The test accuracy is defined as:
+    \item If the dataset is composed of both the answered labels and the associated images: we can learn the parameters of a classifier and ask this classifier to make predictions of a separate test set of $n_\texttt{test}$ images with known true labels $y^\star$. We thus record the test accuracy and the expected calibration error as in \citet{guo_calibration_2017}. The test accuracy is defined as:
         \begin{equation}\label{eq:acctest}
         \mathrm{Acc}_{\text{test}}(\hat y, y^\star,\mathcal{D}) = \frac{1}{n_{\text{test}}}\sum_{i=1}^{n_\text{test}} \mathds{1}(\hat y_i = y^\star_i)\enspace.
     \end{equation}
