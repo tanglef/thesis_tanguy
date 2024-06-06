@@ -627,8 +627,8 @@ with $\lambda$ the regularization hyperparameter and $\mathrm{H}$ the crossentro
 \subsection{Evaluation metrics.}
 \label{sub:evaluation-metrics}
 Throughout this thesis, we evaluate our results using different metrics depending on the data available. All of these metrics necessitate true labels $y^\star$ and estimated labels $\hat y$ (resulting either from an aggregation strategy -- \emph{e.g.} MV, NS -- or a prediction model -- $\mathrm{CoNAL}$, $\mathrm{CrowdLayer}$).
-In \Cref{chap:waum} and \Cref{chap:peerannot}, this ground truth is released by the original authors of the datasets in addition to the crowdsourced answers.
-These standard benchmarking datasets do not represent the real-world crowdsourcing setting where the ground truth is unknown but are useful to evaluate different performances.
+In \Cref{chap:waum} and \Cref{chap:peerannot}, this ground truth is released by the original authors of the datasets in addition to the crowdsourced answers. XXX here may be you can be a bit more specific about the datasets and the ground truth. XXX
+These standard benchmarking datasets do not represent the real-world crowdsourcing setting where the ground truth is unknown but are useful to evaluate performance.
 In the practical application presented in \Cref{chap:plantnet}, we released a new crowdsourced dataset from Pl@ntNet with more than $6$M images to label.
 To obtain performance scores, we collected the votes of $98$ botanical experts and considered them as the ground truth $y^\star$.
 Images labeled by the experts compose the test set.
