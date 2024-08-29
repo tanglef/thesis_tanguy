@@ -249,3 +249,45 @@ class Dawid_Skene(CrowdModel):
 \caption{MWE for the DS label aggregation in \texttt{peerannot}.}
 \label{listing:DS}
 \end{listing}
+
+\clearpage
+
+\section{Table of strategies used}
+\label{sec:tab-strategies}
+Here, we provide a table resuming the strategies used in the experiments presented in this thesis and some of their specificities.
+
+% \begin{longtable}[htbp]
+    \begin{center}
+    \begin{longtable}{|l|p{15mm}|p{35mm}|p{25mm}|p{40mm}|}
+        % \caption{Table of strategies used in the experiments presented in this thesis.}
+        % \label{tab:strategies}
+    \hline
+    \textbf{Strategy} & \textbf{Type} & \textbf{Full name} &  \textbf{Paper} & \textbf{In short}\\
+    \hline
+    MV & aggregate & Majority vote & -- & -- \\
+    NS & aggregate & Naive soft & -- & Frequency of votes \\
+    DS & aggregate & Dawid and Skene's & \citet{dawid_maximum_1979} & Model worker with confusion matrix \\
+    WDS & aggregate & Weighted with Dawid and Skene's & -- & Use DS diagonal to represent worker abilities \\
+    Fast-DS & aggregate & Fast Dawid and Skene's & \citet{sinha2018fast} & DS aggregate with Dirac representation of the estimated labels \\
+    GLAD & aggregate & Generative models of Labels, Abilities and Difficulties & \citet{whitehill_whose_2009}& Models task difficulty and worker ability as scalar values  \\
+    DSWC & aggregate & Dawid and Skene's with Worker clustering & \citet{imamura2018analysis} & Clustered DS model over the workers\\
+    WAWA & aggregate & Worker Agreement With Aggregate & Appen & Worker ability is the accuracy against MV labels \\
+    MACE & aggregate & Multi-Annotator Competence Estimation & \citet{hovy2013learning} & Worker ability is the accuracy against MV labels \\
+    KOS & aggregate & Karger, Oh and Shah & \citet{karger2011iterative} & Binary classification using graph representation \\
+    TwoThird & aggregate & -- & -- & Label with at least two votes and a two-third of consensus is accepted \\
+    \hline \hline
+    CrowdLayer & inference & -- & \citet{rodrigues2018deep} & Confusion matrices as a new layer in the neural network \\
+    CoNAL & inference & Common Noise Adaptation Layers & \citet{chu2021learning} & Local confusion and shared confusion as new layers\\
+    \hline \hline
+    AUM & identify (task) & Area Under the Margin & \citet{pleiss_identifying_2020} & Identify ambiguous tasks in classical supervised setting\\
+    AUMC & identify (task)& Area Under the Margin for crowdsourcing & \citet{lefort2022improve} & Identify ambiguous tasks with MV aggregation \\
+    WAUM & identify (task)& Weighted Area Under the Margin & \citet{lefort2022improve} & Identify ambiguous tasks relative to worker abilities \\
+    Entropy & identify (task) & -- & -- & Identify worker abilities with entropy of NS labels\\
+    Spam Score & identify (worker) & -- & \citet{raykar_ranking_2011} & Identify spammers via DS matrices\\
+    Trace confusion & identify (worker) & -- & -- & Identify poor workers via DS matrices' trace\\
+    Krippendorff's $\alpha$ & identify (dataset) & -- & \citet{krippendorff1980validity} & Identify unreliable crowdsourced datasets\\
+    \hline
+    \end{longtable}
+\end{center}
+%     \end{tabular}
+% \end{table}

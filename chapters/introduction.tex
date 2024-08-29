@@ -262,10 +262,10 @@ The final dataset can then be decomposed as:
 \end{equation}
 Note that we use the index notation $i$ for the tasks and $j$ for the workers in the crowdsourcing experiments.
 
+We created in \Cref{sec:tab-strategies} a table of the different strategies we will use in this thesis and a short explanation of their specificities.
+
 \subsection{Existing label aggregation strategies}
 \label{sub:aggregating_votes}
-
-
 
 If the goal of the crowdsourcing experiment is to associate a label with a task in the training set, then we need to aggregate the collected labels into a single one.
 This aggregation step can lead to two types of labels:
@@ -350,7 +350,7 @@ With its theoretical guarantees \citep{gao2013minimax} and its flexibility in th
 \begin{figure}[htb]
     \centering
     \includegraphics[width=.65\textwidth]{chapters/images/bayesien_plaque_ds.pdf}
-    \caption{Bayesian plate diagram representation of the DS model. Only the labels $\{y_i^{(j)}\}_{i,j}$ are observed. Latent variables to estimate are the true labels $(y_i^\star)_i$, the prevalence $\rho$ of each class and the confusion matrices $\{\pi^{(j)}\}_j$ for each worker. The underlying task features $(x_i)_i$ are not considered.}
+    \caption{Bayesian plate diagram representation of the DS model. Only the labels $\{y_i^{(j)}\}_{i,j}$ are observed. Latent variables to estimate are the true labels $(y_i^\star)_i$. Parameters are the prevalence $\rho$ of each class and the confusion matrices $\{\pi^{(j)}\}_j$ for each worker. The underlying task features $(x_i)_i$ are not considered.}
     \label{fig:plaque_ds}
 \end{figure}
 
@@ -389,11 +389,13 @@ Finally, as all tasks are independent, we obtain \Cref{eq:ds_likelihood} by mult
 \end{constructionbox}
 
 Note that the likelihood in \Cref{eq:ds_likelihood} can not be maximized directly.
+In practice we are not given the complete data set, but incomplete data where the true labels are unknown.
 Using the expectation-maximization (EM) algorithm \citep{Dempster_Laird_Rubin77}, we can define a recursive procedure to estimate $\rho,\pi=\{\pi^{(j)}\}_j$ and $T=\{T_{i,k}\}_{i,k}$:
 \begin{itemize}
     \item Assuming that $T$ is known, compute $\rho$ and $\pi$.
     \item Assuming that $\rho$ and $\pi$ are known, compute $T$.
 \end{itemize}
+Because we can not use the complete data, we consider the expected value under the posterior distribution of the latent variable to maximize (EM steps).
 
 \paragraph{With $T$ known: }
 Denote $Y=\{y_i^{(j)}\}_{i,j}$ for readability.
@@ -492,7 +494,7 @@ Using this DS diagonal, we obtain a weighted majority vote denoted WDS:
 \begin{figure}[thb]
     \centering
     \includegraphics[width=.6\linewidth]{chapters/images/glad_plaque.pdf}
-    \caption{Bayesian plate diagram representation of the GLAD model. Only the labels $\{y_i^{(j)}\}_{i,j}$ are observed. Parameters to estimate are the true labels $(y_i^\star)_i$, the worker ability $\alpha_j$ and the task difficulty $\beta_i$. The underlying task features $(x_i)_i$ are not considered.}
+    \caption{Bayesian plate diagram representation of the GLAD model. Only the labels $\{y_i^{(j)}\}_{i,j}$ are observed. Latent variables to estimate are the true labels $(y_i^\star)_i$. Parameters are the worker ability $\alpha_j$ and the task difficulty $\beta_i$. The underlying task features $(x_i)_i$ are not considered.}
     \label{fig:plaque_glad}
 \end{figure}
 

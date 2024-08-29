@@ -1,0 +1,168 @@
+\documentclass[10pt,aspectratio=43,unknownkeysallowed]{beamer}
+
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,amsthm,amssymb}
+\usepackage{graphicx}
+
+
+\newcommand{\srcimages}{srcimages}           % Source images dir. name
+\newcommand{\images}{images}                 % create images dir. name
+\newcommand{\prebuiltimages}{prebuiltimages} % prebuiltimages images dir. name
+
+\graphicspath{{../\images}}
+\usepackage[rotationcw]{beamer_sty}% clockwise, default is counterclockwise
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{copyrightbox}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage[inline]{enumitem}
+% \setlist[itemize]{itemjoin=\hspace*{\fill},itemjoin*=\hspace*{\fill}}
+\setlist[itemize]{label=$\blacktriangleright$}
+
+\usepackage[scaled]{beramono}
+\usepackage[scale=1.05]{AlegreyaSans}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+\usepackage{minted}
+\usepackage{mathtools}
+\usepackage{bbm}
+\usepackage{wrapfig}
+\usepackage[export]{adjustbox}
+\usepackage{csquotes}
+\usepackage{dsfont}
+
+% for tikz
+\usepackage[titlenumbered,ruled,linesnumbered,noend]{algorithm2e}
+
+\usepackage{tikz}
+%\usetikzlibrary{trees}
+\usetikzlibrary{arrows,shapes,positioning,shadows,trees,mindmap}
+% \usepackage{forest}
+\usepackage[edges]{forest}
+\usetikzlibrary{arrows.meta}
+\colorlet{linecol}{black!75}
+\usepackage{xkcdcolors} % xkcd colors
+
+
+% for colorful equation
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{calc}
+% Commands for Highlighting text -- non tikz method
+\newcommand{\highlight}[2]{\colorbox{#1!17}{$\displaystyle #2$}}
+%\newcommand{\highlight}[2]{\colorbox{#1!17}{$#2$}}
+\newcommand{\highlightdark}[2]{\colorbox{#1!47}{$\displaystyle #2$}}
+
+% Commands for Highlighting text -- non tikz method
+\renewcommand{\highlight}[2]{\colorbox{#1!17}{#2}}
+\renewcommand{\highlightdark}[2]{\colorbox{#1!47}{#2}}
+
+%\usepackage{minted}
+\usepackage{tkz-fct}
+% \pgfplotsset{compat=1.17}
+%\usetikzlibrary{spy}
+% \usepackage[round]{natbib}
+% \bibliographystyle{plainnat}
+\addbibresource{../biblio.bib}
+
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\usepackage{dsfont}
+\newcommand{\ind}{\mathds{1}}
+\def\1{\mathbf 1}
+
+\definecolor{javared}{rgb}{0.6,0,0} % for strings
+\definecolor{javagreen}{rgb}{0.25,0.5,0.35} % comments
+\definecolor{javapurple}{rgb}{0.5,0,0.35} % keywords
+\definecolor{javadocblue}{rgb}{0.25,0.35,0.75} % javadoc
+\definecolor{marron}{rgb}{0.64,0.16,0.16}
+\definecolor{orange_js}{RGB}{230,159,0}
+\colorlet{LightGray}{gray!40}
+\definecolor{chocolate}{rgb}{0.48, 0.25, 0.0}
+\definecolor{deepmagenta}{rgb}{0.8, 0.0, 0.8}
+\newcommand{\mybold}[1]{\textcolor{marron}{\textbf{#1}}}
+\newcommand{\cRm}[1]{\textsc{\romannumeral #1}}
+\newcommand{\inred}[1]{\textcolor{red}{#1}}
+\usetikzlibrary{decorations.pathmorphing}
+\definecolor{paper}{RGB}{211,211,211}
+
+\usepackage{xspace}
+\newcommand{\ie}{{\em{i.e.,}}\xspace}
+\newcommand{\etal}{{\em{et al.}}\xspace}
+\newcommand{\eg}{{\em{e.g.,}}\xspace}
+\newcommand{\lcf}{{\em cf.~}}
+\newcommand{\st}{{{s.t.}}\xspace}
+\newcommand{\iid}{{\em{i.i.d.}}\xspace}
+\newcommand{\VA}{{\em v.a. {}}}
+\newcommand{\rem}{\underline{Rem}:~}
+\newcommand{\wrt}{with respect to\xspace}
+\newcommand{\ow}{o.w.\xspace}
+
+\usepackage{pifont}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\cmark}{\ding{51}}%
+\def\scalecheck{\resizebox{\widthof{\cmark}*\ratio{\widthof{x}}{\widthof{\normalsize x}}}{!}{\cmark}}
+\def\scalecross{\resizebox{\widthof{\xmark}*\ratio{\widthof{x}}{\widthof{\normalsize x}}}{!}{\xmark}}
+
+% allow pauses in align
+\makeatletter
+\let\save@measuring@true\measuring@true
+\def\measuring@true{%
+  \save@measuring@true
+  \def\beamer@sortzero##1{\beamer@ifnextcharospec{\beamer@sortzeroread{##1}}{}}%
+  \def\beamer@sortzeroread##1<##2>{}%)
+  \def\beamer@finalnospec{}%
+}
+\makeatother
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HEADER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title[] %shown at the top of frames
+{
+    Label ambiguity in crowdsourcing \\ for classification and
+    expert feedback} %shown in title frame
+
+\date{09-20-2024} % explicitly set date- Le parc zoologique est ouvert.
+\author[]%shown at the top of frames
+{%shown in title frame
+    {\textbf{Tanguy Lefort}\\ IMAG, Univ Montpellier, CNRS \\ INRIA, LIRMM,}%
+    \vspace{1cm}\\
+    {Supervised by\\ \hspace{.5cm} \textbf{Benjamin Charlier} \\ \hspace{.5cm}\textbf{Alexis Joly} \\ \hspace{.5cm} and \textbf{Joseph Salmon}}%
+}
+\institute[
+]
+{% is placed on the bottom of the title page
+}
+
+\titlegraphic{% logos are put at the bottom-right part of the page
+    % \includesvgpdf{All_logos}{width=5cm} % logo
+    \includegraphics[width=5cm]{../images/All_logos_new.pdf}% up to 3 (after it gets messy)
+    % \includegraphics[width=2cm]{CNRS.pdf} % if more, combine them in one image.
+    % \includegraphics[width=2cm]{inr_logo_rouge_cmjn.pdf} % if more, combine them in one image.
+    }
+
+\setbeamercolor{itemize subitem}{fg=javadocblue}
+\setbeamertemplate{itemize subitem}[triangle]
+\setbeamercolor{subsection in toc}{fg=black}
+
+\def\Put(#1,#2)#3{\leavevmode\makebox(0,0){\put(#1,#2){#3}}}
+
+\begin{document}
+\maketitle
+\input{./content_beamer_thesis.tex}
+
+\begin{frame}[allowframebreaks,noframenumbering]
+    \frametitle{References}
+    \footnotesize
+    \printbibliography
+\end{frame}
+\end{document}

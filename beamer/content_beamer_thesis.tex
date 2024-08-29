@@ -1,0 +1,796 @@
+\section{Intro}
+
+\begin{frame}{How to train your classifier}{}
+
+\foreach \i in {1,...,6} {
+    \begin{onlyenv}<\i>
+        \includegraphics[width=\textwidth]{./images/questioning_labels_\i.pdf}
+    \end{onlyenv}
+}
+\end{frame}
+
+\begin{frame}{Ask citizens to label our data}{Framework and notations}
+    \begin{itemize}
+        \item Workers sort a given task into one of the $K$ classes
+    \end{itemize}
+\begin{onlyenv}<1-2>
+   \includegraphics[width=\textwidth, clip,trim={0cm 4cm 0cm 0cm}]{./images/notations_1.pdf}
+\end{onlyenv}
+\begin{onlyenv}<2->
+\begin{itemize}
+    \item $ y_i^{(j)}\in [K]:= \text{ answer of worker } j \text{ to task }i$
+\end{itemize}
+\end{onlyenv}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{From the data to the classifier}{The pipeline}
+\includegraphics[width=\textwidth]{./images/strategies_crowd_data.pdf}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Main contributions}{}
+
+\begin{itemize}[itemsep=20pt]
+    \item<1-> Can we improve performance by leveraging better-quality data
+    \begin{itemize}
+        \item<4-> Creation of the \textbf{WAUM}\footfullcite{lefort2022improve}: a metric to identify ambiguous images %
+    \end{itemize}
+    \item<2-> Can we standardize crowdsourcing dataset's tools in \texttt{python} for reproducibility?
+        \begin{itemize}
+            \item<5-> \textbf{peerannot}\footfullcite{lefort2024}: available via \texttt{pip}/github %
+            \begin{onlyenv}<5->
+                \begin{center}
+                    \url{https://peerannot.github.io}
+                \end{center}
+            \end{onlyenv}
+        \end{itemize}
+    \item<3-> Release a real, large-scaled dataset with \texttt{Pl@ntNet}
+        \begin{itemize}
+            \item<6-> Creation and evaluation of a \textbf{new benchmark dataset}
+        \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{General setting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Classical aggregation strategy}{(Weighted) Majority Votes}
+    \begin{center}
+        \includegraphics[width=.8\textwidth, clip, trim={50cm 0cm 30cm 75cm}]{./images/MV_label.pdf}
+    \end{center}
+
+        For example with equal weights:
+
+    \begin{center}
+        \includegraphics[width=\textwidth, clip, trim={0cm 10cm 0cm 0cm}]{./images/MV_label.pdf}
+    \end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Classical aggregation strategy}{(Weighted) Majority Votes}
+Many existing weight choices:
+\begin{itemize}[itemsep=15pt]
+    \item WAWA \footnote{\url{https://success.appen.com/hc/en-us/articles/202703205-Calculating-Worker-Agreement-with-Aggregate-Wawa}}:
+    \[
+    \mathrm{weight}(w_j) = \mathrm{Accuracy}(\{y_i^{(j)}\}_i, \{\hat {y_i}^\mathrm{MV}\}_i)
+    \]
+    \item Shapley based\footfullcite{lefort:hal-04573727}
+    \item Matrix completion (MACE)\footfullcite{hovy2013learning} \dots
+\end{itemize}
+\vspace{1cm}
+Pros: "simple" weight can scale to large datasets and be easy to interpret
+
+Cons: Can not capture worker skills in detail
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{frame}{Classical aggregation strategy}{Dawid and Skene\footfullcite{dawid_maximum_1979}}
+\begin{itemize}
+    \item Represent workers from their pairwise confusions matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$
+    \item Probabilistic model on their answers:
+    \[
+    y^{(j)} | y^\star \sim \mathrm{Multinomial}(\pi^{(j)}_{y^\star, \bullet})
+    \]
+    with $\pi^{(j)}_{k,\ell}=\mathbb{P}(\text{worker }j \text{ answers }\ell \text{ with unknown truth} k)$
+\end{itemize}
+\vspace{.5cm}
+\begin{columns}
+    \begin{column}{.45\textwidth}
+    \textbf{Pros:}
+    \begin{itemize}
+        \item Finer modelisation
+        \item Can use adversarial workers
+    \end{itemize}
+    \end{column}
+    \begin{column}{.45\textwidth}
+        \textbf{Cons:}
+        \begin{itemize}
+            \item Memory issue: $n_{\texttt{worker}}\times K^2$ parameters to estimate only the confusion matrices
+        \end{itemize}
+    \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Classical aggregation strategy}{Dawid and Skene -- Model}
+Probabilistic model $\longrightarrow$ Likelihood (to maximize)
+% \[
+%     \displaystyle\prod_{i\in [n_{\texttt{task}}]}\prod_{k \in [K]}\bigg[\rho_k\prod_{j\in [n_{\texttt{worker}}]}
+%     \prod_{\ell\in [K]}\big(\pi^{(j)}_{k, \ell}\big)^{\mathds{1}_{\{y_i^{(j)}=\ell\}}}
+%     \bigg]^{T_{i,k}},
+% \]
+% $\rho_k=\mathbb{P}(y_i^\star=k)$ the prevalence and $T_{i,k}=\mathds{1}(y_i^\star=k)$ the estimated labels
+% \vspace{.5cm}
+\begin{center}
+\includegraphics[width=.75\textwidth]{./images/DS_EM.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Classical deep-learning strategy}{CrowdLayer\footfullcite{rodrigues2018deep}}
+    \begin{itemize}
+        \item Idea: put the DS confusion matrix in a neural network as a new layer
+    \end{itemize}
+
+    \begin{center}
+        \includegraphics[width=\textwidth]{./images/crowdlayer_scheme.pdf}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Classical deep-learning strategy}{CoNAL\footfullcite{chu2021learning}}
+    \begin{itemize}
+        \item Idea: CrowdLayer + global and local confusions
+    \end{itemize}
+    \begin{center}
+        \includegraphics[width=\textwidth]{./images/conal_scheme.pdf}
+    \end{center}
+
+\end{frame}
+
+\section{From the AUM to the WAUM}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{When images have underlying ambiguity}{}
+    \begin{onlyenv}<1>
+        \includegraphics[width=\textwidth, clip,trim={0cm 4cm 0cm 0cm}]{./images/notations_1.pdf}
+     \end{onlyenv}
+     \begin{onlyenv}<2>
+        \includegraphics[width=\textwidth]{./images/notations_1.pdf}
+    \end{onlyenv}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Ambiguity in classical supervised setting}{Area Under the Margin (AUM)}
+    Goal: identify issues in classical datasets $(x_1, y_1),\dots,(x_n, y_n)\in \mathcal{X}\times [K]$
+\begin{itemize}
+    \item AUM\footfullcite{pleiss_identifying_2020}: monitor margin during training
+\end{itemize}
+
+\begin{itemize}
+    \item Classifier: at epoch $t \in [T]$, $\mathcal{C}^{(t)}(x_i)\in\mathbb{R}^K$ a vector of \textcolor{red}{scores} (logits)
+\end{itemize}
+
+\vspace{0.2cm}
+
+\begin{equation*}
+    \mathrm{AUM}(x_i, y_i) =
+    \tikzmarknode{avg}{\highlight{purple}{
+            \color{black}
+            $\displaystyle\frac{1}{T} \sum_{t=1}^T$
+        }}
+    \color{purple}
+    \overbrace{
+        \Bigg[
+            \tikzmarknode{scorelabel}{\highlight{blue}{ \color{black}
+                    $\mathcal{C}^{(t)}(x_i)_{y_i}$
+                }}
+            -
+            \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
+                    $\displaystyle\max_{\ell \neq y_i}\mathcal{C}^{(t)}(x_i)_\ell$
+                }}
+            \Bigg]
+    }^{\substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores:
+                }} \\ \text{\sf \footnotesize \textcolor{purple!85}{
+                    content of Hinge loss
+                }} } }
+\end{equation*}
+
+
+\begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+    % Score assigned label
+    \path (scorelabel.north) ++ (-3.85,-3.5em) node[anchor=north west,color=blue!85] (scorelabeltext){\textsf{\footnotesize Score of assigned label}};
+    \draw [color=blue](scorelabel.south) |- ([xshift=-0.3ex,color=blue]scorelabeltext.south west);
+    % Score other max
+    \path (scoremax.north) ++ (.5,-3.5em) node[anchor=north west,color=gray] (scoremaxtext){\textsf{\footnotesize Other maximum score}};
+    \draw [color=gray](scoremax.south) |- ([xshift=-0.3ex,color=gray]scoremaxtext.south east);
+
+    % Avg
+    \path (avg.north) ++ (-2.5,+1.5em) node[anchor=north west,color=purple] (avgtext){\textsf{\footnotesize Average = Stability}};
+    \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south west);
+\end{tikzpicture}
+
+\vspace{0.6cm}
+
+\pause
+\textbf{Challenging for crowdsourcing:}
+\begin{itemize}[label=$\bullet$]
+    \item No single $y_i$, multiple $y_i^{(j)}$: one for each worker $w_j$ answering task $x_i$
+          \begin{itemize}[label=$\blacktriangleright$]
+              \pause
+              \item \dots so $\mathcal{C}^{(t)}(x_i)_{y_i}$ does not exist \pause
+              \item \dots and same issue with $\ell \neq y_i$.
+          \end{itemize}
+\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Going to the crowdsourcing setting}{AUMC}
+Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unknown $y_i$ + use previous work of margins' properties\footfullcite{lapin2016loss}
+
+\begin{equation*}
+    \mathrm{AUMC}(x_i, \hat{y_i}^{\mathrm{MV}}) =
+    \tikzmarknode{avg}{\highlight{purple}{
+            \color{black}
+            $\displaystyle\frac{1}{T} \sum_{t=1}^T$
+        }}
+    \color{purple}
+    \overbrace{
+        \Bigg[
+            \tikzmarknode{scorelabel}{\highlight{blue}{ \color{black}
+                    $\mathcal{C}^{(t)}(x_i)_{\hat{y_i}^{\mathrm{MV}}}$
+                }}
+            -
+            \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
+                    $\mathcal{C}^{(t)}(x_i)_{[2]}$
+                }}
+            \Bigg]
+    }^{\substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores:
+                }} \\ \text{\sf \footnotesize \textcolor{purple!85}{
+                    margin for top-1 classification
+                }} } }
+\end{equation*}
+
+
+\begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+    % Score assigned label
+    \path (scorelabel.north) ++ (-3.85,-3.5em) node[anchor=north west,color=blue!85] (scorelabeltext){\textsf{\footnotesize Score of MV label}};
+    \draw [color=blue](scorelabel.south) |- ([xshift=-0.3ex,color=blue]scorelabeltext.south west);
+    % Score other max
+    \path (scoremax.north) ++ (.5,-3.5em) node[anchor=north west,color=gray] (scoremaxtext){\textsf{\footnotesize Other maximum score}};
+    \draw [color=gray](scoremax.south) |- ([xshift=-0.3ex,color=gray]scoremaxtext.south east);
+
+    % Avg
+    \path (avg.north) ++ (-2.5,+1.5em) node[anchor=north west,color=purple] (avgtext){\textsf{\footnotesize Average = Stability}};
+    \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south west);
+\end{tikzpicture}
+
+\vspace{0.6cm}
+
+\textbf{Issue:}
+\begin{itemize}[label=$\bullet$]
+    \item Lose all worker-related information
+    \item Sensitive to poorly performing workers
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Going to the crowdsourcing setting}{WAUM}
+    \textbf{Weighted Areas Under the Margins:}
+    \begin{itemize}
+        \item Scale effects in the scores discarded, need normalization\footfullcite{ju2018relative}
+    \end{itemize}
+
+    \pause
+    \vspace{0.2cm}
+
+    \textbf{With:}
+    \begin{itemize}[label=$\bullet$]
+        \item $\sigma(x_i) = \sigma(\mathcal{C}(x_i))\in\Delta_{K-1}$ (simplex of dim $K-1$)
+        \item Softmax ordered: $\sigma_{[1]}(x_i) \geq \dots \geq \sigma_{[K]}(x_i) > 0$
+    \end{itemize}
+
+
+    \begin{align*}
+        \hspace{-.5cm}\mathrm{WAUM}(x_i):=
+        \tikzmarknode{avgworker}{\highlight{chocolate}{
+                \color{black}
+                $\displaystyle\frac{1}{S} \sum_{j\in \mathcal{A}(x_i)}^{\phantom{T}}$
+            }}\
+        \tikzmarknode{trustscore}{\highlight{deepmagenta}{
+                \color{black}
+                $s^{(j)}(x_i)$
+            }}\
+        \tikzmarknode{avg}{\highlight{purple}{
+                \color{black}
+                $\displaystyle\frac{1}{T} \sum_{t=1}^T$
+            }}
+        \color{purple}
+        \overbrace{
+        \Bigg[
+        \tikzmarknode{scorelabel}{\highlight{blue}{ \color{black}
+        $\sigma_{y_i^{(j)}}^{(t)}(x_i)$
+        }}
+        -
+        \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
+        $\sigma_{[2]}^{(t)}(x_i)$
+        }}
+        \Bigg]
+        }^{
+            \substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores}}}
+        % }} \\ \text{\sf \footnotesize \textcolor{purple!85}{
+        %             content of Hinge loss
+        %         }} }
+                }
+    \end{align*}
+    \vspace*{1cm}
+    \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+        % Score assigned label
+        \path (scorelabel.north) ++ (-3.85,-3.5em) node[anchor=north west,color=blue!85] (scorelabeltext){\textsf{\footnotesize Probability of assigned label by worker $w_j$}};
+        \draw [color=blue](scorelabel.south) |- ([xshift=-0.3ex,color=blue]scorelabeltext.south west);
+
+        % Score other max
+        \path (scoremax.north) ++ (-2.5,-5em) node[anchor=north west,color=gray] (scoremaxtext){\textsf{\footnotesize Second maximum probability}};
+        \draw [color=gray](scoremax.south) |- ([xshift=-0.3ex,color=gray]scoremaxtext.south west);
+
+        % Trust score
+        \path (trustscore.north) ++ (-1,+2.5em) node[anchor=north west,color=deepmagenta] (trustscoretext){\textsf{\footnotesize Trust score of $w_j$ for $x_i$}};
+        \draw [color=deepmagenta](trustscore.north) |- ([xshift=-0.3ex,color=deepmagenta] trustscoretext.south west);
+        \draw [color=deepmagenta](trustscore.north) |- ([xshift=+0.3ex,color=deepmagenta] trustscoretext.south east);
+
+
+        % Avg
+        \path (avg.north) ++ (.5,+2em) node[anchor=north west,color=purple] (avgtext){\textsf{\footnotesize Average = Stability}};
+        \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south east);
+
+        % Avg workers
+        \path (avgworker.north) ++ (-2.5,1.5em) node[anchor=north west,color=chocolate] (avgworkertext){\textsf{\footnotesize Weighted average of $\mathrm{AUM}$}};
+        \draw [color=chocolate](avgworker.north) |- ([xshift=-0.3ex,color=chocolate] avgworkertext.south west);
+    \end{tikzpicture}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Weights in the WAUM}{Leverage both tasks and labels}
+    \textbf{Our chosen worker/task score:}
+    \begin{itemize}[label=$\bullet$]
+        \item Consider a score of the form: worker term  $\times$  task term (similar to GLAD\footfullcite{whitehill_whose_2009})
+        \item Use multidimensionality of DS confusion matrices
+        \item Use a neural network as a control agent to measure task difficulty\footfullcite{servajean2017crowdsourcing}
+    \end{itemize}
+
+    \vspace*{.5cm}
+    \pause
+
+    \begin{equation*}
+        s^{(j)}(x_i) =
+        \left\langle
+        \tikzmarknode{workersability}{\highlight{purple}{
+                \color{black}
+                $
+                    \mathrm{diag} (\hat \pi^{(j)})
+                $
+            }}
+        \,|\,
+        \tikzmarknode{taskdifficulty}{\highlight{chocolate}{
+                \color{black}
+                $
+                    \sigma^{(T)}(x_i)
+                $
+            }}
+        \right\rangle\in [0, 1]
+    \end{equation*}
+    \begin{tikzpicture}[remember picture,overlay,>=stealth,nodes={align=left,inner ysep=1pt},<-,xshift=0cm,yshift=0cm]
+        % workersability
+        \path (workersability.south) ++ (-2.1, -1.5em) node[anchor=south west,color=purple] (workersabilitytext){\footnotesize\textsf{ Worker $j$ overall ability }};
+        \draw [color=purple](workersability.south) |- ([xshift=-0.3ex,color=purple] workersabilitytext.south west);
+        % confusion
+        \path (taskdifficulty.south) ++ (1.1,-1.5em) node[anchor=south,color=chocolate] (taskdifficultytext){\footnotesize\textsf{ Difficulty of task  } i };
+        \draw [color=chocolate](taskdifficulty.south) |- ([xshift=-0.3ex,color=chocolate] taskdifficultytext.south east);
+        % indicator
+    \end{tikzpicture}%
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Computing the WAUM}{The pipeline summarized}
+    \begin{itemize}[label=$\bullet$]
+        \item Estimate confusion matrices $\pi^{(j)} \in \mathbb{R}^{K\times K}$, for all $j\in [n_{\texttt{worker}}]$
+
+              % \item<2-> For each worker $j$
+              % \begin{itemize}[label=$\blacktriangleright$]
+
+              \pause
+
+        \item Train a network on all crowdsourced task/label pairs:  $(x_i, y_i^{(j)})$
+
+              \vspace{0.05cm}
+              \pause
+
+        \item Compute all $\displaystyle\mathrm{AUM}(x_i, y_i^{(j)})$
+              %   $$\displaystyle\mathrm{AUM}(x_i, y_i^{(j)})=\frac{1}{T}\sum_{t=1}^T\big[\mathrm{softmax}^{(t)}_{y_i^{(j)}} (x_i)- \mathrm{softmax}^{(t)}_{[2]}(x_i)\big]$$
+              \vspace{0.1cm}
+
+              \pause
+
+        \item Compute trust scores $s^{(j)}(x_i)$
+
+              \vspace{-0.1cm}
+
+              \pause
+
+        \item For each task compute $\mathrm{WAUM}(x_i)=\frac{\displaystyle\sum_{j \in \mathcal{A}(x_i)} s^{(j)}(x_i) \mathrm{AUM}(x_i, y_i^{(j)})}{\displaystyle\sum_{j' \in \mathcal{A}(x_i)} s^{(j')}(x_i)}$
+              % \end{itemize}
+              % \begin{align*}
+              %     \mathrm{WAUM}(x_i):= \displaystyle\frac{1}{S}
+              %     \sum_{j\in \mathcal{A}(x_i)}^{\phantom{T}} s^{(j)}(x_i) \displaystyle\frac{1}{T} \sum_{t=1}^T
+              %     \Bigg[\mathrm{softmax}_{y_i^{(j)}}^{(t)}(x_i)-
+              %     \mathrm{softmax}_{[2]}^{(t)}(x_i)\Bigg]
+              % \end{align*}
+
+    \end{itemize}
+
+    \vspace{0.2cm}
+
+    \visible<5->{\underline{Usage (for learning)}:
+
+        \pause
+
+        \begin{itemize}[label=$\bullet$]
+            \item \textbf{Prune} $x_i$'s with $\mathrm{WAUM}(x_i)$ below quantile $q_{\alpha}$ (say $\alpha=0.01$)
+
+                  \vspace{0.05cm}
+
+            \item \textbf{Estimate confusion matrices} $\hat\pi^{(j)}$ on pruned training dataset
+                  \pause
+            % \item Get \textbf{soft labels}: normalize $\hat y_i = \bigg(\displaystyle\sum_{j\in\mathcal{A}(x_i)}\pi^{(j)}_{k,k}\mathds{1}_{\{y_i^{(j)}=k\}}\bigg)_{k\in[K]}\in \mathbb{R}^K$
+            \item \textbf{Aggregate} labels and \textbf{Train} a classifier on the newly pruned dataset
+        \end{itemize}
+    }
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Presenting CIFAR-10H\footfullcite{peterson_human_2019}dataset}{}
+    \begin{center}
+    \includegraphics[width=.75\textwidth]{./images/cifar-10h_creation.pdf}
+    \end{center}
+    Labels: cat, dog, car, plane, bird, horse, frog, deer, ship, truck
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \pause
+    \begin{columns}
+        \begin{column}{.3\textwidth}
+            \    \includegraphics[width=\textwidth]{../chapters/images/image_n_hist7681_paper.pdf}
+        \end{column}
+        \begin{column}{.3\textwidth}
+            \    \includegraphics[width=\textwidth]{../chapters/images/image_n_hist6750_paper.pdf}
+
+        \end{column}
+        \begin{column}{.3\textwidth}
+
+            \includegraphics[width=\textwidth]{../chapters/images/image_n_hist9246_paper.pdf}
+
+        \end{column}
+
+
+    \end{columns}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Presenting LabelMe dataset\footfullcite{rodrigues2014gaussian}}{}
+\begin{itemize}
+    \item 1000 training / 500 validation / 1188 test images
+    \item 59 workers: each task has up to 3 votes
+    \item 8 classes: highway, insidecity, tallbuilding, street, forest, coast, mountain, opencountry
+\end{itemize}
+
+\pause
+
+\centering
+\includegraphics[width=.85\textwidth]{../chapters/images/tallbuilding_and_distrib.pdf}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}{And the entropy?}{Data sparsity}
+
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Qualitative results}{}
+    \begin{columns}
+    \begin{column}{.3\textwidth}
+        \textbf{WAUM}
+
+        \vspace{.25cm}
+
+        \centering
+           \includegraphics[width=\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_waums_cut.pdf}
+
+        \end{column}
+
+        \begin{column}{.3\textwidth}
+            \textbf{AUMC}
+
+            \vspace{.25cm}
+
+            \centering
+               \includegraphics[width=\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/AUMC_yang_cut.pdf}
+        \end{column}
+        \begin{column}{.3\textwidth}
+            \textbf{AUM}
+
+            \vspace{.25cm}
+
+            \centering
+            \includegraphics[width=\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_aum_cut.pdf}
+        \end{column}
+
+    \end{columns}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Ablation study}{}
+    \begin{columns}
+        \begin{column}{.5\textwidth}
+            \textbf{CIFAR-10H}
+
+            \vspace{.25cm}
+
+            \centering
+               \includegraphics[width=\textwidth]{../chapters/images/acc_cifar10H.pdf}
+
+            \end{column}
+
+            \begin{column}{.5\textwidth}
+                \textbf{LabelMe}
+
+                \vspace{.25cm}
+
+                \centering
+                   \includegraphics[width=\textwidth]{../chapters/images/acc_labelme.pdf}
+            \end{column}
+
+        \end{columns}
+    \centering
+    \includegraphics[width=.75\textwidth]{../chapters/images/legend_ablation_study.pdf}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Discussion}{Going to the large-scale problem}
+\begin{block}{In short}
+\begin{itemize}
+    \item Introduced the WAUM to find ambiguous images
+    \item Better quality data can improve performance
+\end{itemize}
+\end{block}
+
+\pause
+\begin{block}{Towards large-scale problems}
+\begin{itemize}
+    \item DS model and confusion matrices do not scale
+    \item What is currently done in large-scale settings?
+    \item Can we evaluate their performance?
+    \begin{itemize}
+    \item<3> \textcolor{red}{To evaluate we need the dataset!}
+    \end{itemize}
+\end{itemize}
+\end{block}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Pl@ntNet dataset}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Presenting Pl@ntNet pipeline}
+\begin{center}
+    \includegraphics[width=.85\textwidth]{../chapters/images/plantnet_schema_global_green.pdf}
+\end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Pl@ntNet aggregation strategy}
+    \begin{center}
+        \includegraphics[width=\textwidth]{../chapters/images_plantnet/schema_plantnet_aggregation.pdf}
+    \end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Pl@ntNet aggregation strategy}{Weight function}
+\[f(n_j)=n_j^\alpha -n_j^\beta + \gamma \text{ with }\begin{cases} \alpha&=0.5 \\ \beta &=0.2 \\ \gamma&\simeq 0.74\end{cases}\]
+
+\begin{center}
+    \includegraphics[width=.6\textwidth]{../chapters/images_plantnet/weight_function.pdf}
+\end{center}
+
+\begin{itemize}
+    \item With 8 identified species one becomes self-validating
+    \item<2> But observations can be invalidated at any time in the future
+\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Pl@ntNet aggregation strategy}{Examples}
+    \begin{onlyenv}<1>
+        Initial setting
+        \begin{columns}
+            \begin{column}{.5\textwidth}
+                \begin{center}
+                    \includegraphics[width=\textwidth]{./images/histplot_conf_init.pdf}
+                \end{center}
+            \end{column}
+            \begin{column}{.5\textwidth}
+                \begin{center}
+                    \includegraphics[width=\textwidth]{./images/histplot_acc_init.pdf}
+                \end{center}
+            \end{column}
+        \end{columns}
+    \end{onlyenv}
+    \begin{onlyenv}<2>
+        Label switch
+        \begin{columns}
+            \begin{column}{.5\textwidth}
+                \begin{center}
+                    \includegraphics[width=\textwidth]{./images/histplot_conf_switch.pdf}
+                \end{center}
+            \end{column}
+            \begin{column}{.5\textwidth}
+                \begin{center}
+                    \includegraphics[width=\textwidth]{./images/histplot_acc_switch.pdf}
+                \end{center}
+            \end{column}
+        \end{columns}
+    \end{onlyenv}
+    \begin{onlyenv}<3>
+        Invalidate
+        \begin{columns}
+            \begin{column}{.5\textwidth}
+                \begin{center}
+                    \includegraphics[width=\textwidth]{./images/histplot_conf_invalidate.pdf}
+                \end{center}
+            \end{column}
+            \begin{column}{.5\textwidth}
+                \begin{center}
+                    \includegraphics[width=\textwidth]{./images/histplot_acc_invalidate.pdf}
+                \end{center}
+            \end{column}
+        \end{columns}
+    \end{onlyenv}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Realeasing a new dataset}{}
+    \begin{itemize}
+        \item South Western European flora obs since $2017$
+        \item $~823\ 000$ users answered more than $11 000$ species
+        \item $~6\ 700\ 000$ observations
+        \item $~9\ 000\ 000$ votes casted
+        \item \textbf{Imbalance}: 80\% of observations are represented by 10\% of total votes
+    \end{itemize}
+\pause
+\vspace{1cm}
+\begin{itemize}
+    \item Extraction of $98$ experts (TelaBotanic + prior knowledge -- thanks to Pierre Bonnet)
+    \vspace{1cm}
+\end{itemize}
+% \centering
+% \includegraphics[width=.75\textwidth]{images/sankey_v2.pdf}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Compared strategies}{}
+    \begin{itemize}
+        \item<1-> \textbf{Majority Vote} (MV)
+        \item<2-> \textbf{Worker agreement with aggregate (WAWA)} \citep{appen}
+            \begin{itemize}
+                \item Majority vote
+                \item Weight user by how much they agree with the majority
+                \item Weighted majority vote
+            \end{itemize}
+        \item<3-> \textbf{iNaturalist}
+        \begin{itemize}
+            \item Need 2 votes
+            \item $2/3$ of agreements
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Results}{}
+    \centering
+    \begin{columns}[c]
+   \begin{column}{0.4\textwidth}
+       \includegraphics[width=\linewidth, height=3cm]{./images/accuracy_by_vol_class_kept_two_votes__micro-5.pdf}
+           \end{column}
+   \begin{column}{0.4\textwidth}
+       \label{fig:accuracy_vol_class_multiple}
+       \includegraphics[width=\linewidth, height=3cm]{./images/accuracy_by_vol_class_kept_one_disagreeement__micro-5.pdf}
+           \end{column}
+ \end{columns}
+ \pause
+ \begin{block}{In short}
+   \begin{itemize}
+       \item Pl@ntNet aggregation performs better overall
+       \item TwoThird is highly impacted by their reject threshold
+       \item In ambiguous settings (right), strategies weighting users are better
+   \end{itemize}
+ \end{block}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{More experiments}{}
+\begin{itemize}
+    \item AI vote's integration
+    \begin{itemize}
+        \item<2-> include AI's vote in the aggregation
+        \item<2-> Risks of model collapse
+        \item<2-> Results suggest using AI's vote if the score is above a threhsold $\theta_{\text{score}}=0.7$ can improve performance
+    \end{itemize}
+    \item Penalizing user's mistakes
+    \begin{itemize}
+        \item<3-> users with large number of erroneous votes would be penalized in weight
+        \item<3-> Currently this does not improve performance
+        \item<3-> Taking the Accuracy of each user in the weight function shows however close performance from the current strategy
+    \end{itemize}
+\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Conclusion and perspectives}{Key points}
+    \begin{itemize}
+        \item We released a new dataset for large-scale crowdsourced data: \url{https://zenodo.org/records/10782465}
+        \item We evaluated the current label aggregation in Pl@ntNet against other scaling ones and show better performance overall
+    \end{itemize}
+    \pause
+    \vspace{1.5cm}
+    \begin{itemize}
+        \item There is a need to \emph{better collect votes} and not \emph{waste} expert knowledge $\rightarrow$ recommendation system
+        \item We worked on the aggregation of species determination, users can enter other information -- the observation is a flower/organ/\emph{etc.}
+    \end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[plain,noframenumbering]{}{}
+    \centering \Huge{
+    \emph{Thank you}}
+
+    \vspace{1cm}
+\begin{block}{Peerannot library}
+    \centering
+    \large{
+    \url{https://peerannot.github.io}}
+\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
