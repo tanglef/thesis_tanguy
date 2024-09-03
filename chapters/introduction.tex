@@ -1,30 +1,31 @@
+\cleartooddpage
 \chapter{Introduction}
-\enlargethispage{3\baselineskip}
+% \enlargethispage{3\baselineskip}
 
-\begin{keypointstwomargins}{Introduction}{-2cm}{-1cm}
+% \begin{keypointstwomargins}{Introduction}{-2cm}{-1cm}
 
-        \textbf{Key points -- Crowdsourcing in todays spectrum}
-        \begin{enumerate}[leftmargin=*]
+%         \textbf{Key points -- Crowdsourcing in today's spectrum}
+%         \begin{enumerate}[leftmargin=*]
 
-        \item In the deep learning era we create bigger and bigger datasets, using labels that are not always correct. The prediction quality of a model follows the input data quality. Can we mitigate the impact of the noise induced by the data collection process?
+%         \item In the deep learning era we create bigger and bigger datasets, using labels that are not always correct. The prediction quality of a model follows the input data quality. Can we mitigate the impact of the noise induced by the data collection process?
 
-        \item Handling crowdsourced data comes with two main strategies: either aggregate the collected labels and then use supervised learning from them. Or directly integrate a model that mitigates the crowd noise inside the neural network's architecture. However, while most models deal with worker quality, few consider data difficulty.
+%         \item Handling crowdsourced data comes with two main strategies: either aggregate the collected labels and then use supervised learning from them. Or directly integrate a model that mitigates the crowd noise inside the neural network's architecture. However, while most models deal with worker quality, few consider data difficulty.
 
-        \item Researches aim at better quantify uncertainty neural networks' predictions by inducing noise in the label distribution. Using crowdsourced data, we have a direct access to the human uncertainty. Yet, this data is rarely openly available, making crowdsourcing experiments hard to reproduce and compare.
+%         \item Researches aim at better quantifying uncertainty neural networks' predictions by inducing noise in the label distribution. Using crowdsourced data, we have a direct access to the human uncertainty. Yet, this data is rarely openly available, making crowdsourcing experiments hard to reproduce and compare.
 
-        \end{enumerate}
+%         \end{enumerate}
 
-        \textbf{Thesis contributions -- Crowdsourcing: from the worker to the task and back}
-        \begin{enumerate}[leftmargin=*,start=4]
-        \item Following research on labeling noise in supervised datasets, we adapt the AUM into the WAUM to help detect highly ambiguous images in crowdsourced datasets.
+%         \textbf{Thesis contributions -- Crowdsourcing: from the worker to the task and back}
+%         \begin{enumerate}[leftmargin=*,start=4]
+%         \item Following research on labeling noise in supervised datasets, we adapt the Area Under the Margin (AUM) into the Weighted AUM (WAUM) to help detect highly ambiguous images in crowdsourced datasets.
 
-        \item We emphasize the need for reproducible results and shared algorithms with the creation of a crowdsourcing library: \texttt{peerannot}. This lets us easily compare scoring metrics for workers depending on the strategy used and their use case. We discuss the need for more openly available crowdsourced datasets and the limitations of currently accessible ones.
+%         \item We emphasize the need for reproducible results and shared algorithms with the creation of a crowdsourcing library: \texttt{peerannot}. This lets us easily compare scoring metrics for workers depending on the strategy used and their use case. We discuss the need for more openly available crowdsourced datasets and the limitations of currently accessible ones.
 
-        \item We apply different label aggregation strategies on a newly released large-scale dataset from the Pl@ntNet project. We evaluate the current aggregation used and propose some possible improvements.
-        \end{enumerate}
+%         \item We apply different label aggregation strategies on a newly released large-scale dataset from the Pl@ntNet project. We evaluate the current aggregation used and propose some possible improvements.
+%         \end{enumerate}
 
-\end{keypointstwomargins}
-
+% \end{keypointstwomargins}
+% \clearpage
 \section{Crowdsourcing in computer vision}
 
 Following the deep learning revolution, models with millions if not billions of parameters to optimize are trained nowadays. And to do so, we need to increase the size of our training datasets.
@@ -873,14 +874,26 @@ L'expertise humaine étant l'objectif principal de la plateforme, nous voulons g
 
 This thesis is supported by the following publications:
 \begin{itemize}
+    \item Chapter 2:
+    \begin{itemize}
+        \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2023) Weighting areas under the margin in crowdsourced datasets. 54èmes Journées de Statistique de la SFDS 2023.
+        \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Improve learning combining crowdsourced labels by weighting Areas Under the Margin. TMLR.
+    \end{itemize}
+    \item Chapter 3:
+    \begin{itemize}
+        \item Moreau, T., Massias, M., Gramfort, A., Ablin, P., Bannier, P. A., Charlier, B., \dots \& Vaiter, S. (2022). Benchopt: Reproducible, efficient and collaborative optimization benchmarks. Advances in Neural Information Processing Systems, 35, 25404-25421.
+        \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Peerannot: classification for crowdsourced image datasets with \texttt{python}. Computo (SFDS)
+        \item Dubar, A., Lefort, T., \& Salmon, J. (2024). peerannot: A framework for label aggregation in crowdsourced datasets. 55èmes Journées de Statistique de la SFDS 2024
+    \end{itemize}
+    \item Chapter 4:
+    \begin{itemize}
+        \item Lefort, T., Affouard, A., Charlier, B., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm using label aggregation. 55èmes Journées de Statistique de la SFDS 2024
+        \item Lefort, T., Affouard, A., Charlier, B., Lombardo, J-C., Chouet, M., Goëau, H., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm: how does it work and how can we improve it? Submitted to Methods in Ecology and Evolution (under review)
+    \end{itemize}
+    \item Other publications:
+    \begin{itemize}
     \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2022). Crowdsourcing label noise simulation on image classification tasks. 53èmes Journées de Statistique de la SFDS 2022.
-    \item Moreau, T., Massias, M., Gramfort, A., Ablin, P., Bannier, P. A., Charlier, B., \dots \& Vaiter, S. (2022). Benchopt: Reproducible, efficient and collaborative optimization benchmarks. Advances in Neural Information Processing Systems, 35, 25404-25421.
-    \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2023) Weighting areas under the margin in crowdsourced datasets. 54èmes Journées de Statistique de la SFDS 2023.
-    \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Peerannot: classification for crowdsourced image datasets with \texttt{python}. Computo (SFDS)
-    \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Improve learning combining crowdsourced labels by weighting Areas Under the Margin. TMLR.
-    \item Lefort, T., Affouard, A., Charlier, B., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm using label aggregation. 55èmes Journées de Statistique de la SFDS 2024
-    \item Dubar, A., Lefort, T., \& Salmon, J. (2024). peerannot: A framework for label aggregation in crowdsourced datasets. 55èmes Journées de Statistique de la SFDS 2024
     \item Lefort, T., Charlier, B., Joly, A., \& Salmon, J. (2024). Weighted majority vote using Shapley values in crowdsourcing. CAp 2024-Conférence sur l'Apprentissage Automatique.
-    \item Lefort, T., Affouard, A., Charlier, B., Lombardo, J-C., Chouet, M., Goëau, H., Salmon, J., Bonnet, P. \& Joly, A. (2024). Cooperative learning of Pl@ntNet's Artificial Intelligence algorithm: how does it work and how can we improve it? Submitted to Methods in Ecology and Evolution (under review)
+    \end{itemize}
 \end{itemize}
 

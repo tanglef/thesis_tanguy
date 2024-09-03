@@ -1099,7 +1099,7 @@ However, empirical results show that the Fast-DS strategy with this \emph{hard} 
 To alleviate this convergence issue, \citet{sinha2018fast} proposed to use a \emph{hybrid} version of the Fast-DS strategy.
 The hybrid strategy is defined as:
 \begin{itemize}
-    \item Run the classical DS algorithm first to estimate the marginal class likelihood $\rho\in\Delta_K$ at each iteration.
+    \item Run the classical DS algorithm first to estimate the marginal class likelihood $\rho\in\Delta_K$ at each iterate.
     \item When the absolute difference between two consecutive iterates of $\rho$ is lower than a given threshold, switch to the \emph{hard} version of the DS strategy.
 \end{itemize}
 This hybrid strategy allows having a softer control on the label estimation at the beginning and better exploring the latent variable's space.

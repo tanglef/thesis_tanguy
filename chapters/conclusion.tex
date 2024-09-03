@@ -15,6 +15,33 @@ Very few label aggregation strategies can be run on a dataset with such a large 
 Experimental results showed that the Pl@ntNet label aggregation strategy performs best in this setting.
 We also proposed different strategies to improve it, and the current solution found is to use the probability output of Pl@ntNet's model as prior knowledge in the label aggregation strategy -- with a threshold on the probability considered.
 
+\section{Discussion and limits}
+
+We investigated crowdsourcing in a classification framework at different scales:
+\begin{itemize}
+    \item Small to medium scale with the $\mathrm{WAUM}$ method.
+    \item Large scale with the Pl@ntNet project.
+\end{itemize}
+The \texttt{peerannot} library was designed to handle these different scales.
+This thesis is a step towards the automation of the data-cleaning process in crowdsourced datasets. We propose tools to help researchers handle crowdsourced datasets and improve the quality of the data, within a reproducible framework.
+
+We evaluated and created a framework to explore tasks and workers in crowdsourced datasets.
+There are several limitations to our work:
+\begin{itemize}
+    \item We did not consider a shift in the data distribution that could come from temporal changes, users learning new skills, \emph{etc.} In our setting, the database is considered static, and the aggregation is run after the data collection. However, in practice, the data collection process is ongoing, and the data distribution could change over time.
+    This is the case for example in \Cref{chap:plantnet} with the Pl@ntNet project. Users contribute to the platform over time, and the quality of the annotations/engagement could change.
+    \item We did not consider running new experiments to collect more data, especially in \Cref{chap:plantnet}. Platforms such as \texttt{zooniverse}\footnote{\url{https://zooniverse.org/}} allow researchers to collect data and annotations from users. This could be used to collect more data and improve the quality of the annotations. However, our goal was to evaluate the current label aggregation strategy with the current available data from the platform. Acquiring new votes on an alternative platform would change the distribution of the votes we evaluate and would not be comparable to the current label aggregation strategy released. Also, the votes' imbalance is one of the big challenges in Pl@ntNet: mitigating this effect could help improve other strategies' performance, at the cost of not being representative of what happens currently in practice.
+\end{itemize}
+
+However, one point of interest that is addressed briefly in this thesis is the way the annotations were collected. We shall expand on this point as we did not run new experiments but could be of interest.
+The datasets used in this thesis were collected with different processes:
+\begin{itemize}
+    \item CIFAR-10H, Music and LabelMe: workers were asked to annotate the tasks by clicking on one of the labels proposed
+    \item Pl@ntNet: users are guided by the AI prediction, visual feedback (to compare other observations from the proposed label) and textual feedback (if they propose another species, a list of auto-completed species appears).
+\end{itemize}
+The first datasets have a constrained set of labels. Workers could have other answers and not find the labels proposed in the list. For example, the image of a camper van could be annotated as a car or a truck. Workers could not click on both or say "\emph{I don't know}". This is a limitation of the dataset and could be improved by allowing workers to propose other labels or to say "\emph{I don't know}". This would help to have a more accurate representation of the ambiguity in the dataset. In the Pl@ntNet project, users can propose other labels in a text input field. This can be seen as an unconstrained input. But the list of labels is constrained to the species known in POWO (or at least we use a filter not to consider other inputs). This could be seen as a semi-constrained contribution (or guided input). Research \citep{chamberlain2020speaking,oppenlaender2020crowdui} has shown that unconstrained input could help gather more feedback from the users (regarding the interface, the answers proposed, \emph{etc.}). Especially, in \Cref{chap:waum} we use the $\mathrm{WAUM}$ to find ambiguous tasks in small to medium size datasets.
+On large datasets, unconstrained input could help identify those tasks directly or build a framework to include them differently -- \emph{e.g.} to add a tag. However, the cost is that the information gathered from users can become more complex to analyze and require specific data preprocessing steps that are not considered in this thesis. Also, we should keep in mind that the more freedom the user has, the more complex the data collection process becomes. And users can prefer to have a constrained (or semi-constrained) input to have a more straightforward annotation process, especially if they have a monetization incentive and are required to do a large amount of annotations per day as (partial or total) income.
+
 \section{Perspectives}
 
 Each work presented in the chapters of this thesis has immediate and long-term perspectives that we detail below.

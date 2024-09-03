@@ -46,7 +46,7 @@ Mistakes happen, and the quality of the data is not always perfect (\Cref{fig:la
 
 
 Data quality is linked with model performance \citep{budach2022effects}, looking for outliers to prune or weight differently during the learning procedure is not new \citep{angelova2004data}.
-In this chapter, we first present the Area Under the Margin ($\AUM$): a statistic from \citet{pleiss_identifying_2020} that uses model iterates score prediction to detect unreliable training data points in the classically supervised learning setting.
+In this chapter, we first present the Area Under the Margin ($\AUM$): a statistic from \citet{pleiss_identifying_2020} that uses model's iterates score prediction to detect unreliable training data points in the classically supervised learning setting.
 Then, we propose to extend the $\AUM$ to the crowdsourcing setting with the Weighted Areas Under the Margin ($\WAUM$).
 We show that the $\WAUM$ allows the identification of ambiguous tasks in crowdsourced datasets, and pruning a portion of those tasks leads to better test performance overall.
 
@@ -310,7 +310,7 @@ Once a pruned dataset $\mathcal{D}_{\text{pruned}}$ has been obtained thanks to 
 Aggregated soft labels contain information regarding human uncertainty, and could often be less noisy than NS labels.
 They can help improve model calibration \citep{wen2020combining, zhong2021improving}, a property useful for interpretation \citep{jiang2012calibrating, kumar2019verified}.
 Concerning the classifier training, note that it can differ from the one used to compute the $\mathrm{WAUM}$.
-We train a neural network whose architecture is adapted dataset per dataset and that can differ from the one used in \Cref{alg:WAUMstack} (it is the case for instance for the \texttt{LabelMe} dataset).
+We train a neural network whose architecture is dataset dependent and that can differ from the one used in \Cref{alg:WAUMstack} (it is the case for instance for the \texttt{LabelMe} dataset).
 For an aggregation technique $\texttt{agg}$, we write the full training method on the pruned dataset created from the $\mathrm{WAUM}$: $\texttt{agg}+\mathrm{WAUM}$ and instantiate several choices in our experiments.
 For comparison, we write $\texttt{agg} + \mathrm{AUMC}$ the training method on the pruned dataset created from the $\mathrm{AUMC}$.
 
