@@ -1,4 +1,4 @@
-\section{Intro}
+% \section{Intro}
 
 \begin{frame}{How to train your classifier}{}
 
@@ -13,57 +13,63 @@
     \begin{itemize}
         \item Workers sort a given task into one of the $K$ classes
     \end{itemize}
-\begin{onlyenv}<1-2>
+\visible<1-2>{
    \includegraphics[width=\textwidth, clip,trim={0cm 4cm 0cm 0cm}]{./images/notations_1.pdf}
-\end{onlyenv}
-\begin{onlyenv}<2->
+}%
+\visible<2->{
 \begin{itemize}
     \item $ y_i^{(j)}\in [K]:= \text{ answer of worker } j \text{ to task }i$
+    \item $n_{\text{worker}}$ workers answer $n_{\text{task}}$ tasks
 \end{itemize}
-\end{onlyenv}
+}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{From the data to the classifier}{The pipeline}
-\includegraphics[width=\textwidth]{./images/strategies_crowd_data.pdf}
-\end{frame}
+    \foreach \i in {1,...,5} {
+        \begin{onlyenv}<\i>
+            \includegraphics[width=\textwidth]{./images/strategies_crowd_data_\i.pdf}
+        \end{onlyenv}
+    }
+    \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Main contributions}{}
 
 \begin{itemize}[itemsep=20pt]
-    \item<1-> Can we improve performance by leveraging better-quality data
+    \item<1-> Can we improve performance by leveraging better-quality data?
     \begin{itemize}
         \item<4-> Creation of the \textbf{WAUM}\footfullcite{lefort2022improve}: a metric to identify ambiguous images %
     \end{itemize}
     \item<2-> Can we standardize crowdsourcing dataset's tools in \texttt{python} for reproducibility?
         \begin{itemize}
-            \item<5-> \textbf{peerannot}\footfullcite{lefort2024}: available via \texttt{pip}/github %
+            \item<5-> Creation of \textbf{peerannot} library \footfullcite{lefort2024}:
             \begin{onlyenv}<5->
                 \begin{center}
                     \url{https://peerannot.github.io}
                 \end{center}
             \end{onlyenv}
         \end{itemize}
-    \item<3-> Release a real, large-scaled dataset with \texttt{Pl@ntNet}
+    \item<3-> What can we do in a large-scale setting? Application to \texttt{Pl@ntNet}
         \begin{itemize}
-            \item<6-> Creation and evaluation of a \textbf{new benchmark dataset}
+            \item<6-> Creation and evaluation of a \textbf{new benchmark dataset}\footfullcite{lefort2024cooperative}
         \end{itemize}
 \end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{General setting}
+\section{Existing aggregation strategies}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \begin{frame}{Classical aggregation strategy}{(Weighted) Majority Votes}
     \begin{center}
-        \includegraphics[width=.8\textwidth, clip, trim={50cm 0cm 30cm 75cm}]{./images/MV_label.pdf}
+        \includegraphics[width=.8\textwidth, clip, trim={50cm 0cm 30cm 80cm}]{./images/MV_label.pdf}
     \end{center}
 
-        For example with equal weights:
+        For example with balanced weights:
 
     \begin{center}
         \includegraphics[width=\textwidth, clip, trim={0cm 10cm 0cm 0cm}]{./images/MV_label.pdf}
@@ -72,33 +78,48 @@
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}{Classical aggregation strategy}{(Weighted) Majority Votes}
+    \begin{center}
+        \includegraphics[width=.8\textwidth, clip, trim={50cm 0cm 30cm 80cm}]{./images/MV_label.pdf}
+    \end{center}
+
+        For example with unbalanced weights:
+
+    \begin{center}
+        \includegraphics[width=\textwidth, clip, trim={0cm 10cm 0cm 0cm}]{./images/MV_label_unbalanced.pdf}
+    \end{center}
+
+\end{frame}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Classical aggregation strategy}{(Weighted) Majority Votes}
 Many existing weight choices:
 \begin{itemize}[itemsep=15pt]
-    \item WAWA \footnote{\url{https://success.appen.com/hc/en-us/articles/202703205-Calculating-Worker-Agreement-with-Aggregate-Wawa}}:
+    \item Inter worker agreement: WAWA \footnote{\url{https://success.appen.com/hc/en-us/articles/202703205-Calculating-Worker-Agreement-with-Aggregate-Wawa}}:
     \[
     \mathrm{weight}(w_j) = \mathrm{Accuracy}(\{y_i^{(j)}\}_i, \{\hat {y_i}^\mathrm{MV}\}_i)
     \]
-    \item Shapley based\footfullcite{lefort:hal-04573727}
-    \item Matrix completion (MACE)\footfullcite{hovy2013learning} \dots
+    \item Feature importance + game theory: Shapley-value weight\footfullcite{lefort:hal-04573727}
+    \item Matrix completion: MACE\footfullcite{hovy2013learning} \dots
 \end{itemize}
 \vspace{1cm}
-Pros: "simple" weight can scale to large datasets and be easy to interpret
+\textbf{Pros:} "simple" weight can scale to large datasets and be easy to interpret
 
-Cons: Can not capture worker skills in detail
+\textbf{Cons:} Can not capture worker skills in detail
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \begin{frame}{Classical aggregation strategy}{Dawid and Skene\footfullcite{dawid_maximum_1979}}
 \begin{itemize}
-    \item Represent workers from their pairwise confusions matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$
+    \item Introduced in a medical context (aggregate multiple diagnosis)
+    \item Represent worker $j$ from their pairwise confusions matrix $\pi^{(j)}\in\mathbb{R}^{K\times K}$
     \item Probabilistic model on their answers:
     \[
     y^{(j)} | y^\star \sim \mathrm{Multinomial}(\pi^{(j)}_{y^\star, \bullet})
     \]
-    with $\pi^{(j)}_{k,\ell}=\mathbb{P}(\text{worker }j \text{ answers }\ell \text{ with unknown truth} k)$
+    with $\pi^{(j)}_{k,\ell}=\mathbb{P}(\text{worker }j \text{ answers }\ell \text{ with unknown truth } k)$
 \end{itemize}
 \vspace{.5cm}
 \begin{columns}
@@ -119,7 +140,7 @@ Cons: Can not capture worker skills in detail
 \end{frame}
 
 \begin{frame}{Classical aggregation strategy}{Dawid and Skene -- Model}
-Probabilistic model $\longrightarrow$ Likelihood (to maximize)
+Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectation Maximization algorithm)
 % \[
 %     \displaystyle\prod_{i\in [n_{\texttt{task}}]}\prod_{k \in [K]}\bigg[\rho_k\prod_{j\in [n_{\texttt{worker}}]}
 %     \prod_{\ell\in [K]}\big(\pi^{(j)}_{k, \ell}\big)^{\mathds{1}_{\{y_i^{(j)}=\ell\}}}
@@ -152,7 +173,7 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize)
 
 \end{frame}
 
-\section{From the AUM to the WAUM}
+\section{Identify ambiguous tasks in crowdsourced datasets}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{When images have underlying ambiguity}{}
@@ -165,15 +186,27 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize)
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Ambiguity in classical supervised setting}{Area Under the Margin (AUM)}
-    Goal: identify issues in classical datasets $(x_1, y_1),\dots,(x_n, y_n)\in \mathcal{X}\times [K]$
+    \textbf{Goal:} identify issues in classical datasets $(x_1, y_1),\dots,(x_n, y_n)\in \mathcal{X}\times [K]$
 \begin{itemize}
     \item AUM\footfullcite{pleiss_identifying_2020}: monitor margin during training
 \end{itemize}
-
+\vspace{.5cm}
+\begin{columns}
+    \begin{column}{.45\textwidth}
+        \includegraphics[width=\textwidth]{./../chapters/images/high_aum_mnist.pdf}
+    \end{column}
+    \begin{column}{.45\textwidth}
+        \includegraphics[width=\textwidth]{./../chapters/images/mid_aum_mnist.pdf}
+    \end{column}
+\end{columns}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Ambiguity in classical supervised setting}{Area Under the Margin (AUM)}
+    \textbf{Goal:} identify issues in classical datasets $(x_1, y_1),\dots,(x_n, y_n)\in \mathcal{X}\times [K]$
 \begin{itemize}
-    \item Classifier: at epoch $t \in [T]$, $\mathcal{C}^{(t)}(x_i)\in\mathbb{R}^K$ a vector of \textcolor{red}{scores} (logits)
+    \item AUM\footfullcite{pleiss_identifying_2020}: monitor margin during training
+    \item Classifier: at training epoch $t \in [T]$, $\mathcal{C}^{(t)}(x_i)\in\mathbb{R}^K$ a vector of \textcolor{red}{scores} (logits)
 \end{itemize}
 
 \vspace{0.2cm}
@@ -215,24 +248,77 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize)
     \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south west);
 \end{tikzpicture}
 
-\vspace{0.6cm}
-
 \pause
 \textbf{Challenging for crowdsourcing:}
 \begin{itemize}[label=$\bullet$]
-    \item No single $y_i$, multiple $y_i^{(j)}$: one for each worker $w_j$ answering task $x_i$
+    \item $y_i$ unknown
           \begin{itemize}[label=$\blacktriangleright$]
               \pause
-              \item \dots so $\mathcal{C}^{(t)}(x_i)_{y_i}$ does not exist \pause
-              \item \dots and same issue with $\ell \neq y_i$.
-          \end{itemize}
+              \item \dots so $\mathcal{C}^{(t)}(x_i)_{y_i}$ does not exist
+            \end{itemize}
+\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Ambiguity in classical supervised setting}{Area Under the Margin (AUM)}
+    \textbf{Naive Extension:} identify issues in concatenated datasets $\{(x_i, y_i^{(j)})\}_{i,j}$
+\begin{itemize}
+    \item Plugin estimate of $y_i$ using $\hat{y}_i^{\mathrm{MV}}$
+\end{itemize}
+
+\vspace{0.2cm}
+
+\begin{equation*}
+    \widetilde{\mathrm{AUM}}(x_i, \hat{y_i}^{\mathrm{MV}}) =
+    \tikzmarknode{avg}{\highlight{purple}{
+            \color{black}
+            $\displaystyle\frac{1}{T} \sum_{t=1}^T$
+        }}
+    \color{purple}
+    \overbrace{
+        \Bigg[
+            \tikzmarknode{scorelabel}{\highlight{blue}{ \color{black}
+                    $\mathcal{C}^{(t)}(x_i)_{\hat{y_i}^{\mathrm{MV}}}$
+                }}
+            -
+            \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
+                    $\displaystyle\max_{\ell \neq y_i}\mathcal{C}^{(t)}(x_i)_\ell$
+                }}
+            \Bigg]
+    }{\substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores:
+    }} \\ \text{\sf \footnotesize \textcolor{purple!85}{
+        content of Hinge loss
+    }} } }
+\end{equation*}
+
+
+\begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+    % Score assigned label
+    \path (scorelabel.north) ++ (-3.85,-3.5em) node[anchor=north west,color=blue!85] (scorelabeltext){\textsf{\footnotesize Score of MV label}};
+    \draw [color=blue](scorelabel.south) |- ([xshift=-0.3ex,color=blue]scorelabeltext.south west);
+    % Score other max
+    \path (scoremax.north) ++ (.5,-3.5em) node[anchor=north west,color=gray] (scoremaxtext){\textsf{\footnotesize Other maximum score}};
+    \draw [color=gray](scoremax.south) |- ([xshift=-0.3ex,color=gray]scoremaxtext.south east);
+
+    % Avg
+    \path (avg.north) ++ (-2.5,+1.5em) node[anchor=north west,color=purple] (avgtext){\textsf{\footnotesize Average = Stability}};
+    \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south west);
+\end{tikzpicture}
+
+\pause
+\textbf{Which margin should be used:}
+\begin{itemize}[label=$\bullet$]
+    \item use previous work of margins' properties\footfullcite{lapin2016loss}
 \end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Going to the crowdsourcing setting}{AUMC}
-Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unknown $y_i$ + use previous work of margins' properties\footfullcite{lapin2016loss}
+    \textbf{Naive Extension:} identify issues in concatenated datasets $\{(x_i, y_i^{(j)})\}_{i,j}$
+\begin{itemize}
+    \item Plugin estimate of $y_i$ using $\hat{y}_i^{\mathrm{MV}}$
+    \item Scores ordered: $\mathcal{C}(x_i)_{[1]} \geq \dots \geq \mathcal{C}(x_i)_{[K]}$
+\end{itemize}
 
 \begin{equation*}
     \mathrm{AUMC}(x_i, \hat{y_i}^{\mathrm{MV}}) =
@@ -284,7 +370,7 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Going to the crowdsourcing setting}{WAUM}
-    \textbf{Weighted Areas Under the Margins:}
+    \textbf{Weighted Areas Under the Margins:} identify issues in concatenated datasets $\{(x_i, y_i^{(j)})\}_{i,j}$
     \begin{itemize}
         \item Scale effects in the scores discarded, need normalization\footfullcite{ju2018relative}
     \end{itemize}
@@ -295,12 +381,11 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
     \textbf{With:}
     \begin{itemize}[label=$\bullet$]
         \item $\sigma(x_i) = \sigma(\mathcal{C}(x_i))\in\Delta_{K-1}$ (simplex of dim $K-1$)
-        \item Softmax ordered: $\sigma_{[1]}(x_i) \geq \dots \geq \sigma_{[K]}(x_i) > 0$
     \end{itemize}
 
-
+    \vspace{.5cm}
     \begin{align*}
-        \hspace{-.5cm}\mathrm{WAUM}(x_i):=
+        \hspace{.15cm}\mathrm{WAUM}(x_i):=
         \tikzmarknode{avgworker}{\highlight{chocolate}{
                 \color{black}
                 $\displaystyle\frac{1}{S} \sum_{j\in \mathcal{A}(x_i)}^{\phantom{T}}$
@@ -363,9 +448,7 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
 \begin{frame}{Weights in the WAUM}{Leverage both tasks and labels}
     \textbf{Our chosen worker/task score:}
     \begin{itemize}[label=$\bullet$]
-        \item Consider a score of the form: worker term  $\times$  task term (similar to GLAD\footfullcite{whitehill_whose_2009})
-        \item Use multidimensionality of DS confusion matrices
-        \item Use a neural network as a control agent to measure task difficulty\footfullcite{servajean2017crowdsourcing}
+        \item Consider a score of the form\footfullcite{whitehill_whose_2009}: worker skill  $\times$  task difficulty\footfullcite{servajean2017crowdsourcing}
     \end{itemize}
 
     \vspace*{.5cm}
@@ -416,26 +499,10 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
               \vspace{0.05cm}
               \pause
 
-        \item Compute all $\displaystyle\mathrm{AUM}(x_i, y_i^{(j)})$
-              %   $$\displaystyle\mathrm{AUM}(x_i, y_i^{(j)})=\frac{1}{T}\sum_{t=1}^T\big[\mathrm{softmax}^{(t)}_{y_i^{(j)}} (x_i)- \mathrm{softmax}^{(t)}_{[2]}(x_i)\big]$$
+        \item Compute all $\displaystyle\mathrm{WAUM}(x_i)$ during training
               \vspace{0.1cm}
 
               \pause
-
-        \item Compute trust scores $s^{(j)}(x_i)$
-
-              \vspace{-0.1cm}
-
-              \pause
-
-        \item For each task compute $\mathrm{WAUM}(x_i)=\frac{\displaystyle\sum_{j \in \mathcal{A}(x_i)} s^{(j)}(x_i) \mathrm{AUM}(x_i, y_i^{(j)})}{\displaystyle\sum_{j' \in \mathcal{A}(x_i)} s^{(j')}(x_i)}$
-              % \end{itemize}
-              % \begin{align*}
-              %     \mathrm{WAUM}(x_i):= \displaystyle\frac{1}{S}
-              %     \sum_{j\in \mathcal{A}(x_i)}^{\phantom{T}} s^{(j)}(x_i) \displaystyle\frac{1}{T} \sum_{t=1}^T
-              %     \Bigg[\mathrm{softmax}_{y_i^{(j)}}^{(t)}(x_i)-
-              %     \mathrm{softmax}_{[2]}^{(t)}(x_i)\Bigg]
-              % \end{align*}
 
     \end{itemize}
 
@@ -453,7 +520,7 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
             \item \textbf{Estimate confusion matrices} $\hat\pi^{(j)}$ on pruned training dataset
                   \pause
             % \item Get \textbf{soft labels}: normalize $\hat y_i = \bigg(\displaystyle\sum_{j\in\mathcal{A}(x_i)}\pi^{(j)}_{k,k}\mathds{1}_{\{y_i^{(j)}=k\}}\bigg)_{k\in[K]}\in \mathbb{R}^K$
-            \item \textbf{Aggregate} labels and \textbf{Train} a classifier on the newly pruned dataset
+            \item \textbf{Aggregate} labels and \textbf{train} a classifier on the newly pruned dataset
         \end{itemize}
     }
 
@@ -515,6 +582,8 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
     \begin{column}{.3\textwidth}
         \textbf{WAUM}
 
+        (crowdsourcing)
+
         \vspace{.25cm}
 
         \centering
@@ -525,6 +594,8 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
         \begin{column}{.3\textwidth}
             \textbf{AUMC}
 
+            (crowdsourcing)
+
             \vspace{.25cm}
 
             \centering
@@ -532,6 +603,8 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
         \end{column}
         \begin{column}{.3\textwidth}
             \textbf{AUM}
+
+            (no crowdsourcing)
 
             \vspace{.25cm}
 
@@ -588,21 +661,51 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
     \item What is currently done in large-scale settings?
     \item Can we evaluate their performance?
     \begin{itemize}
-    \item<3> \textcolor{red}{To evaluate we need the dataset!}
+    \item<3> \textcolor{red}{To evaluate we need data and code that scale!}
     \end{itemize}
 \end{itemize}
 \end{block}
-
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Pl@ntNet dataset}
+\section{The peerannot library}
+
+\begin{frame}{Peerannot library}{Handle crowdsourced data in classification}
+    \begin{itemize}
+        \item Python library for small and large crowdsourced datasets \\
+        \begin{center} \texttt{pip install peerannot}\end{center}
+        \item Documentation available at: \url{https://peerannot.github.io}
+    \end{itemize}
+    \begin{center}
+        \includegraphics[width=\textwidth]{./images/peerannot_web.png}
+    \end{center}
+\end{frame}
+
+\section{Crowdsourcing in large scale: the case of Pl@ntNet}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Presenting Pl@ntNet pipeline}
 \begin{center}
     \includegraphics[width=.85\textwidth]{../chapters/images/plantnet_schema_global_green.pdf}
 \end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Realeasing a new dataset}{}
+    \begin{itemize}
+        \item South Western European flora obs since $2017$
+        \item $n_{\text{worker}}\simeq 823\ 000$ users answered more than $K\simeq 11 000$ species
+        \item $n_{\text{task}}\simeq 6\ 700\ 000$ observations
+        \item $9\ 000\ 000$ votes casted
+        \item \textbf{Imbalance}: 80\% of observations are represented by 10\% of total votes
+    \end{itemize}
+\pause
+\vspace{1cm}
+\begin{itemize}
+    \item Extraction of $98$ experts (TelaBotanica + expert knowledge)
+    \vspace{1cm}
+    \item \url{https://zenodo.org/records/10782465}
+\end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -615,19 +718,19 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Pl@ntNet aggregation strategy}{Weight function}
-\[f(n_j)=n_j^\alpha -n_j^\beta + \gamma \text{ with }\begin{cases} \alpha&=0.5 \\ \beta &=0.2 \\ \gamma&\simeq 0.74\end{cases}\]
+% \begin{frame}{Pl@ntNet aggregation strategy}{Weight function}
+% \[f(n_j)=n_j^\alpha -n_j^\beta + \gamma \text{ with }\begin{cases} \alpha&=0.5 \\ \beta &=0.2 \\ \gamma&\simeq 0.74\end{cases}\]
 
-\begin{center}
-    \includegraphics[width=.6\textwidth]{../chapters/images_plantnet/weight_function.pdf}
-\end{center}
+% \begin{center}
+%     \includegraphics[width=.6\textwidth]{../chapters/images_plantnet/weight_function.pdf}
+% \end{center}
 
-\begin{itemize}
-    \item With 8 identified species one becomes self-validating
-    \item<2> But observations can be invalidated at any time in the future
-\end{itemize}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{itemize}
+%     \item With 8 identified species one becomes self-validating
+%     \item<2> But observations can be invalidated at any time in the future
+% \end{itemize}
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Pl@ntNet aggregation strategy}{Examples}
@@ -647,7 +750,7 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
         \end{columns}
     \end{onlyenv}
     \begin{onlyenv}<2>
-        Label switch
+        Label switch\phantom{g}
         \begin{columns}
             \begin{column}{.5\textwidth}
                 \begin{center}
@@ -662,7 +765,7 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
         \end{columns}
     \end{onlyenv}
     \begin{onlyenv}<3>
-        Invalidate
+        Invalidate\phantom{g}
         \begin{columns}
             \begin{column}{.5\textwidth}
                 \begin{center}
@@ -680,39 +783,16 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Realeasing a new dataset}{}
-    \begin{itemize}
-        \item South Western European flora obs since $2017$
-        \item $~823\ 000$ users answered more than $11 000$ species
-        \item $~6\ 700\ 000$ observations
-        \item $~9\ 000\ 000$ votes casted
-        \item \textbf{Imbalance}: 80\% of observations are represented by 10\% of total votes
-    \end{itemize}
-\pause
-\vspace{1cm}
-\begin{itemize}
-    \item Extraction of $98$ experts (TelaBotanic + prior knowledge -- thanks to Pierre Bonnet)
-    \vspace{1cm}
-\end{itemize}
-% \centering
-% \includegraphics[width=.75\textwidth]{images/sankey_v2.pdf}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Compared strategies}{}
     \begin{itemize}
         \item<1-> \textbf{Majority Vote} (MV)
-        \item<2-> \textbf{Worker agreement with aggregate (WAWA)} \citep{appen}
-            \begin{itemize}
-                \item Majority vote
-                \item Weight user by how much they agree with the majority
-                \item Weighted majority vote
-            \end{itemize}
-        \item<3-> \textbf{iNaturalist}
+        \item<2-> \textbf{Worker agreement with aggregate (WAWA)}
+        \[    \mathrm{weight}(w_j) = \mathrm{Accuracy}(\{y_i^{(j)}\}_i, \{\hat {y_i}^\mathrm{MV}\}_i)
+        \]
+        \item<3-> \textbf{TwoThird} (from iNaturalist pipeline)
         \begin{itemize}
-            \item Need 2 votes
-            \item $2/3$ of agreements
+            \item[$\bullet$] Need 2 votes
+            \item[$\bullet$] $2/3$ of agreements
         \end{itemize}
     \end{itemize}
 \end{frame}
@@ -721,46 +801,61 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Results}{}
     \centering
-    \begin{columns}[c]
-   \begin{column}{0.4\textwidth}
-       \includegraphics[width=\linewidth, height=3cm]{./images/accuracy_by_vol_class_kept_two_votes__micro-5.pdf}
-           \end{column}
-   \begin{column}{0.4\textwidth}
-       \label{fig:accuracy_vol_class_multiple}
-       \includegraphics[width=\linewidth, height=3cm]{./images/accuracy_by_vol_class_kept_one_disagreeement__micro-5.pdf}
-           \end{column}
- \end{columns}
- \pause
- \begin{block}{In short}
-   \begin{itemize}
-       \item Pl@ntNet aggregation performs better overall
-       \item TwoThird is highly impacted by their reject threshold
-       \item In ambiguous settings (right), strategies weighting users are better
-   \end{itemize}
- \end{block}
+%     \begin{columns}[c]
+%    \begin{column}{0.4\textwidth}
+%        \includegraphics[width=\linewidth, height=3cm]{./images/accuracy_by_vol_class_kept_two_votes__micro-5.pdf}
+%            \end{column}
+%    \begin{column}{0.4\textwidth}
+%        \label{fig:accuracy_vol_class_multiple}
+%        \includegraphics[width=\linewidth, height=3cm]{./images/accuracy_by_vol_class_kept_one_disagreeement__micro-5.pdf}
+%            \end{column}
+%  \end{columns}
+\begin{center}
+\includegraphics[width=\textwidth]{./images/both_accuracies.pdf}
+\end{center}
+%  \pause
+%  \begin{block}{In short}
+%    \begin{itemize}
+%        \item Pl@ntNet aggregation performs better overall
+%        \item TwoThird is highly impacted by their reject threshold
+%        \item In ambiguous settings (right), strategies weighting users are better
+%    \end{itemize}
+%  \end{block}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{More experiments}{}
+\begin{frame}{Integrating the AI vote}{}
+\textbf{Why?}
 \begin{itemize}
-    \item AI vote's integration
-    \begin{itemize}
-        \item<2-> include AI's vote in the aggregation
-        \item<2-> Risks of model collapse
-        \item<2-> Results suggest using AI's vote if the score is above a threhsold $\theta_{\text{score}}=0.7$ can improve performance
-    \end{itemize}
-    \item Penalizing user's mistakes
-    \begin{itemize}
-        \item<3-> users with large number of erroneous votes would be penalized in weight
-        \item<3-> Currently this does not improve performance
-        \item<3-> Taking the Accuracy of each user in the weight function shows however close performance from the current strategy
-    \end{itemize}
+    \item More data
+    \item Could correct non-xpert users
+    \item Could invalidate bad quality observation
 \end{itemize}
+\pause
+\vspace{2cm}
+\textbf{Main danger}
+\begin{itemize}
+    \item Redundancy: users are already guided by AI predictions
+\end{itemize}
+
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}{Strategies to integrate the AI vote}{}
+\begin{itemize}
+    \item AI \textbf{as worker}: naive integration
+    \item AI \textbf{fixed weight}: weight=1.7 to invalidate two new users by $<\theta_{\text{conf}}$
+    \item AI \textbf{invalidating}: fixed weight but can only invalidate observations
+    \item AI \textbf{confident}: fixed weight on data with $\mathbb{P}(\text{predicted species}) > \theta_{\text{score}}$
+\end{itemize}
+\pause
+\vspace{1cm}
+\begin{center}
+$\Longrightarrow$ \textcolor{red}{confident AI with $\theta_{\text{score}}=0.7$ performs best\dots \\ but invalidating AI could be preferred for safety} $\Longleftarrow$
+\end{center}
+\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -768,29 +863,23 @@ Naive extension: Use the MV label $\hat{y_i}^{\mathrm{MV}}$ instead of the unkno
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Conclusion and perspectives}{Key points}
+\textbf{In short:}
+\begin{itemize}
+    \item \textbf{Identifying ambiguous data} in crowdsourced datasets
+    \item Creation of the \textbf{\texttt{peerannot} library} to run reproducible experiments
+    \item Release a \textbf{new large scale dataset}
+    \item \textbf{Evaluation} and \textbf{improvements} of the Pl@ntNet crowdsourcing setting
+\end{itemize}
+    \pause
+    \vspace{1cm}
+\textbf{Perspectives:}
     \begin{itemize}
-        \item We released a new dataset for large-scale crowdsourced data: \url{https://zenodo.org/records/10782465}
-        \item We evaluated the current label aggregation in Pl@ntNet against other scaling ones and show better performance overall
+        \item Need for better data collection: \textbf{recommendation system}
+        \item Extend the library for \textbf{multiclass} classification and \textbf{regression}
     \end{itemize}
     \pause
-    \vspace{1.5cm}
-    \begin{itemize}
-        \item There is a need to \emph{better collect votes} and not \emph{waste} expert knowledge $\rightarrow$ recommendation system
-        \item We worked on the aggregation of species determination, users can enter other information -- the observation is a flower/organ/\emph{etc.}
-    \end{itemize}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}[plain,noframenumbering]{}{}
-    \centering \Huge{
-    \emph{Thank you}}
-
-    \vspace{1cm}
-\begin{block}{Peerannot library}
-    \centering
-    \large{
-    \url{https://peerannot.github.io}}
-\end{block}
+    \begin{flushright}
+        Thank you!
+    \end{flushright}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

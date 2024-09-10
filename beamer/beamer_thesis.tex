@@ -118,6 +118,16 @@
   \def\beamer@finalnospec{}%
 }
 \makeatother
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,7 +146,7 @@
 {%shown in title frame
     {\textbf{Tanguy Lefort}\\ IMAG, Univ Montpellier, CNRS \\ INRIA, LIRMM,}%
     \vspace{1cm}\\
-    {Supervised by\\ \hspace{.5cm} \textbf{Benjamin Charlier} \\ \hspace{.5cm}\textbf{Alexis Joly} \\ \hspace{.5cm} and \textbf{Joseph Salmon}}%
+    {Supervised by\\ \hspace{.5cm} \textbf{Benjamin Charlier} \\ \hspace{.5cm} \textbf{Alexis Joly} \\ \hspace{.5cm} and \textbf{Joseph Salmon}}%
 }
 \institute[
 ]
