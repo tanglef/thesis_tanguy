@@ -1,21 +1,22 @@
 % \section{Intro}
 
-\begin{frame}{How to train your classifier}{}
+\begin{frame}{How to train your classifier}{Deep learning image classification pipeline}
 
 \foreach \i in {1,...,6} {
     \begin{onlyenv}<\i>
-        \includegraphics[width=\textwidth]{./images/questioning_labels_\i.pdf}
+        \includegraphics[width=1.1\textwidth]{./images/questioning_labels_\i.pdf}
     \end{onlyenv}
 }
 \end{frame}
 
-\begin{frame}{Ask citizens to label our data}{Framework and notations}
+\begin{frame}{Ask citizens to label our data}{Framework and notation}
     \begin{itemize}
-        \item Workers sort a given task into one of the $K$ classes
+        \item Workers sort a given task into one of the $\mathbf{K}$ \textbf{classes}
     \end{itemize}
 \visible<1-2>{
    \includegraphics[width=\textwidth, clip,trim={0cm 4cm 0cm 0cm}]{./images/notations_1.pdf}
 }%
+\vspace{.5cm}
 \visible<2->{
 \begin{itemize}
     \item $ y_i^{(j)}\in [K]:= \text{ answer of worker } j \text{ to task }i$
@@ -37,25 +38,27 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Main contributions}{}
 
-\begin{itemize}[itemsep=20pt]
-    \item<1-> Can we improve performance by leveraging better-quality data?
     \begin{itemize}
-        \item<4-> Creation of the \textbf{WAUM}\footfullcite{lefort2022improve}: a metric to identify ambiguous images %
-    \end{itemize}
-    \item<2-> Can we standardize crowdsourcing dataset's tools in \texttt{python} for reproducibility?
+        \item<1-> Can we improve performance by leveraging better-quality data?
         \begin{itemize}
-            \item<5-> Creation of \textbf{peerannot} library \footfullcite{lefort2024}:
-            \begin{onlyenv}<5->
+            \item<4-> Creation of the \textbf{WAUM}\footfullcite{lefort2022improve}: a metric to identify ambiguous images %
+        \end{itemize}
+        \vspace{10pt} % Add consistent space between items
+        \item<2-> Can we standardize crowdsourcing dataset's tools in \texttt{python} for reproducibility?
+        \visible<5->{
+        \begin{itemize}
+            \item Creation of \textbf{peerannot} library\footfullcite{lefort2024}:
                 \begin{center}
                     \url{https://peerannot.github.io}
                 \end{center}
-            \end{onlyenv}
         \end{itemize}
-    \item<3-> What can we do in a large-scale setting? Application to \texttt{Pl@ntNet}
+        }
+        \vspace{10pt}
+        \item<3-> What can we do in a large-scale setting? Application to \texttt{Pl@ntNet}
         \begin{itemize}
             \item<6-> Creation and evaluation of a \textbf{new benchmark dataset}\footfullcite{lefort2024cooperative}
         \end{itemize}
-\end{itemize}
+    \end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -176,13 +179,11 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 \section{Identify ambiguous tasks in crowdsourced datasets}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{When images have underlying ambiguity}{}
-    \begin{onlyenv}<1>
-        \includegraphics[width=\textwidth, clip,trim={0cm 4cm 0cm 0cm}]{./images/notations_1.pdf}
-     \end{onlyenv}
-     \begin{onlyenv}<2>
-        \includegraphics[width=\textwidth]{./images/notations_1.pdf}
-    \end{onlyenv}
+\begin{frame}[t]{When images have underlying ambiguity}{}
+    \vspace{1.5cm}
+        \includegraphics<1>[width=\textwidth, clip,trim={0cm 4cm 0cm 0cm}]{./images/notations_1.pdf}
+        % \phantom{-4cm} % Adjust space to match the trim
+     \includegraphics<2>[width=\textwidth]{./images/notations_1.pdf}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -193,10 +194,10 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 \end{itemize}
 \vspace{.5cm}
 \begin{columns}
-    \begin{column}{.45\textwidth}
+    \begin{column}{.47\textwidth}
         \includegraphics[width=\textwidth]{./../chapters/images/high_aum_mnist.pdf}
     \end{column}
-    \begin{column}{.45\textwidth}
+    \begin{column}{.47\textwidth}
         \includegraphics[width=\textwidth]{./../chapters/images/mid_aum_mnist.pdf}
     \end{column}
 \end{columns}
@@ -206,7 +207,9 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
     \textbf{Goal:} identify issues in classical datasets $(x_1, y_1),\dots,(x_n, y_n)\in \mathcal{X}\times [K]$
 \begin{itemize}
     \item AUM\footfullcite{pleiss_identifying_2020}: monitor margin during training
-    \item Classifier: at training epoch $t \in [T]$, $\mathcal{C}^{(t)}(x_i)\in\mathbb{R}^K$ a vector of \textcolor{red}{scores} (logits)
+    \item Classifier: at training epoch $t \in [T]$, $\mathcal{C}^{(t)}(x_i)\in\mathbb{R}^K$ a vector of \textcolor{red}{scores}
+    \item Scores ordered: $\mathcal{C}(x_i)_{[1]} \geq \dots \geq \mathcal{C}(x_i)_{[K]}$
+
 \end{itemize}
 
 \vspace{0.2cm}
@@ -225,7 +228,7 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
                 }}
             -
             \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
-                    $\displaystyle\max_{\ell \neq y_i}\mathcal{C}^{(t)}(x_i)_\ell$
+                    $\displaystyle\mathcal{C}^{(t)}(x_i)_{[2]}$
                 }}
             \Bigg]
     }^{\substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores:
@@ -259,65 +262,64 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 \end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Ambiguity in classical supervised setting}{Area Under the Margin (AUM)}
-    \textbf{Naive Extension:} identify issues in concatenated datasets $\{(x_i, y_i^{(j)})\}_{i,j}$
-\begin{itemize}
-    \item Plugin estimate of $y_i$ using $\hat{y}_i^{\mathrm{MV}}$
-\end{itemize}
+% \begin{frame}{Ambiguity in classical supervised setting}{Area Under the Margin (AUM)}
+%     \textbf{Naive Extension:} identify issues in concatenated datasets $\{(x_i, y_i^{(j)})\}_{i,j}$
+% \begin{itemize}
+%     \item Plugin estimate of $y_i$ using $\hat{y}_i^{\mathrm{MV}}$
+% \end{itemize}
 
-\vspace{0.2cm}
+% \vspace{0.2cm}
 
-\begin{equation*}
-    \widetilde{\mathrm{AUM}}(x_i, \hat{y_i}^{\mathrm{MV}}) =
-    \tikzmarknode{avg}{\highlight{purple}{
-            \color{black}
-            $\displaystyle\frac{1}{T} \sum_{t=1}^T$
-        }}
-    \color{purple}
-    \overbrace{
-        \Bigg[
-            \tikzmarknode{scorelabel}{\highlight{blue}{ \color{black}
-                    $\mathcal{C}^{(t)}(x_i)_{\hat{y_i}^{\mathrm{MV}}}$
-                }}
-            -
-            \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
-                    $\displaystyle\max_{\ell \neq y_i}\mathcal{C}^{(t)}(x_i)_\ell$
-                }}
-            \Bigg]
-    }{\substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores:
-    }} \\ \text{\sf \footnotesize \textcolor{purple!85}{
-        content of Hinge loss
-    }} } }
-\end{equation*}
+% \begin{equation*}
+%     \widetilde{\mathrm{AUM}}(x_i, \hat{y_i}^{\mathrm{MV}}) =
+%     \tikzmarknode{avg}{\highlight{purple}{
+%             \color{black}
+%             $\displaystyle\frac{1}{T} \sum_{t=1}^T$
+%         }}
+%     \color{purple}
+%     \overbrace{
+%         \Bigg[
+%             \tikzmarknode{scorelabel}{\highlight{blue}{ \color{black}
+%                     $\mathcal{C}^{(t)}(x_i)_{\hat{y_i}^{\mathrm{MV}}}$
+%                 }}
+%             -
+%             \tikzmarknode{scoremax}{\highlight{gray}{ \color{black}
+%                     $\displaystyle\mathcal{C}^{(t)}(x_i)_{[2]}$
+%                 }}
+%             \Bigg]
+%     }{\substack{\text{\sf \footnotesize \textcolor{purple!85}{Margin between scores:
+%     }} \\ \text{\sf \footnotesize \textcolor{purple!85}{
+%         content of Hinge loss
+%     }} } }
+% \end{equation*}
 
 
-\begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
-    % Score assigned label
-    \path (scorelabel.north) ++ (-3.85,-3.5em) node[anchor=north west,color=blue!85] (scorelabeltext){\textsf{\footnotesize Score of MV label}};
-    \draw [color=blue](scorelabel.south) |- ([xshift=-0.3ex,color=blue]scorelabeltext.south west);
-    % Score other max
-    \path (scoremax.north) ++ (.5,-3.5em) node[anchor=north west,color=gray] (scoremaxtext){\textsf{\footnotesize Other maximum score}};
-    \draw [color=gray](scoremax.south) |- ([xshift=-0.3ex,color=gray]scoremaxtext.south east);
+% \begin{tikzpicture}[overlay,remember picture,>=stealth,nodes={align=left,inner ysep=1pt},<-]
+%     % Score assigned label
+%     \path (scorelabel.north) ++ (-3.85,-3.5em) node[anchor=north west,color=blue!85] (scorelabeltext){\textsf{\footnotesize Score of MV label}};
+%     \draw [color=blue](scorelabel.south) |- ([xshift=-0.3ex,color=blue]scorelabeltext.south west);
+%     % Score other max
+%     \path (scoremax.north) ++ (.5,-3.5em) node[anchor=north west,color=gray] (scoremaxtext){\textsf{\footnotesize Other maximum score}};
+%     \draw [color=gray](scoremax.south) |- ([xshift=-0.3ex,color=gray]scoremaxtext.south east);
 
-    % Avg
-    \path (avg.north) ++ (-2.5,+1.5em) node[anchor=north west,color=purple] (avgtext){\textsf{\footnotesize Average = Stability}};
-    \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south west);
-\end{tikzpicture}
+%     % Avg
+%     \path (avg.north) ++ (-2.5,+1.5em) node[anchor=north west,color=purple] (avgtext){\textsf{\footnotesize Average = Stability}};
+%     \draw [color=purple](avg.north) |- ([xshift=-0.3ex,color=purple] avgtext.south west);
+% \end{tikzpicture}
 
-\pause
-\textbf{Which margin should be used:}
-\begin{itemize}[label=$\bullet$]
-    \item use previous work of margins' properties\footfullcite{lapin2016loss}
-\end{itemize}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \pause
+% \textbf{Which margin should be used:}
+% \begin{itemize}[label=$\bullet$]
+%     \item use previous work of margins' properties\footfullcite{lapin2016loss}
+% \end{itemize}
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}{Going to the crowdsourcing setting}{AUMC}
     \textbf{Naive Extension:} identify issues in concatenated datasets $\{(x_i, y_i^{(j)})\}_{i,j}$
 \begin{itemize}
     \item Plugin estimate of $y_i$ using $\hat{y}_i^{\mathrm{MV}}$
-    \item Scores ordered: $\mathcal{C}(x_i)_{[1]} \geq \dots \geq \mathcal{C}(x_i)_{[K]}$
 \end{itemize}
 
 \begin{equation*}
@@ -375,7 +377,6 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
         \item Scale effects in the scores discarded, need normalization\footfullcite{ju2018relative}
     \end{itemize}
 
-    \pause
     \vspace{0.2cm}
 
     \textbf{With:}
@@ -448,11 +449,13 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 \begin{frame}{Weights in the WAUM}{Leverage both tasks and labels}
     \textbf{Our chosen worker/task score:}
     \begin{itemize}[label=$\bullet$]
-        \item Consider a score of the form\footfullcite{whitehill_whose_2009}: worker skill  $\times$  task difficulty\footfullcite{servajean2017crowdsourcing}
+        \item Consider a score (following Servajean et al. (2017)\footfullcite{servajean2017crowdsourcing}) of the form\footfullcite{whitehill_whose_2009}:
+    \begin{itemize}
+        \item[]\begin{center} worker skill  $\times$  task difficulty\end{center}
+    \end{itemize}
     \end{itemize}
 
     \vspace*{.5cm}
-    \pause
 
     \begin{equation*}
         s^{(j)}(x_i) =
@@ -532,18 +535,18 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
     \begin{center}
     \includegraphics[width=.75\textwidth]{./images/cifar-10h_creation.pdf}
     \end{center}
-    Labels: cat, dog, car, plane, bird, horse, frog, deer, ship, truck
+    Labels:\texttt{cat,dog,car,plane,bird,horse,frog,deer,ship,truck}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \pause
     \begin{columns}
-        \begin{column}{.3\textwidth}
+        \begin{column}{.33\textwidth}
             \    \includegraphics[width=\textwidth]{../chapters/images/image_n_hist7681_paper.pdf}
         \end{column}
-        \begin{column}{.3\textwidth}
+        \begin{column}{.33\textwidth}
             \    \includegraphics[width=\textwidth]{../chapters/images/image_n_hist6750_paper.pdf}
 
         \end{column}
-        \begin{column}{.3\textwidth}
+        \begin{column}{.33\textwidth}
 
             \includegraphics[width=\textwidth]{../chapters/images/image_n_hist9246_paper.pdf}
 
@@ -557,7 +560,7 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 \begin{itemize}
     \item 1000 training / 500 validation / 1188 test images
     \item 59 workers: each task has up to 3 votes
-    \item 8 classes: highway, insidecity, tallbuilding, street, forest, coast, mountain, opencountry
+    \item 8 classes: \texttt{highway,insidecity,tallbuilding,street,forest,coast,mountain,opencountry}
 \end{itemize}
 
 \pause
@@ -577,43 +580,41 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Qualitative results}{}
-    \begin{columns}
-    \begin{column}{.3\textwidth}
-        \textbf{WAUM}
-
-        (crowdsourcing)
-
-        \vspace{.25cm}
-
-        \centering
-           \includegraphics[width=\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_waums_cut.pdf}
-
-        \end{column}
-
-        \begin{column}{.3\textwidth}
-            \textbf{AUMC}
-
-            (crowdsourcing)
-
-            \vspace{.25cm}
-
-            \centering
-               \includegraphics[width=\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/AUMC_yang_cut.pdf}
-        \end{column}
-        \begin{column}{.3\textwidth}
-            \textbf{AUM}
-
-            (no crowdsourcing)
-
-            \vspace{.25cm}
-
-            \centering
-            \includegraphics[width=\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_aum_cut.pdf}
-        \end{column}
-
-    \end{columns}
-
+\begin{frame}[t]{Qualitative results}{}
+    \begin{tabular}{ccc}
+        \textbf{WAUM} & \textbf{AUMC} & \textbf{AUM} \\
+        {(crowdsourcing)} & {(crowdsourcing)} & {(no crowdsourcing)} \\
+        \begin{onlyenv}<1-2>
+        \includegraphics[width=.3\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_waums_cut.pdf}
+        \end{onlyenv}%
+        \begin{onlyenv}<3>
+            \includegraphics[width=.3\textwidth, clip, trim={10cm 0cm 0cm 30cm}]{../chapters/images/lowest_waums_cut.pdf}
+        \end{onlyenv}%
+        \begin{onlyenv}<4>
+            \includegraphics[width=.3\textwidth, clip, trim={0cm 18cm 10cm 12cm}]{../chapters/images/lowest_waums_cut.pdf}
+        \end{onlyenv}%
+        &
+        \begin{onlyenv}<1>
+            \includegraphics[width=.3\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/AUMC_yang_cut.pdf}
+        \end{onlyenv}%
+        \begin{onlyenv}<2>
+            \includegraphics[width=.3\textwidth, clip, trim={10cm 0cm 0cm 30cm}]{../chapters/images/AUMC_yang_cut.pdf}
+        \end{onlyenv}%
+        \begin{onlyenv}<3->
+            \includegraphics[width=.3\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/AUMC_yang_cut.pdf}
+        \end{onlyenv}%
+            &
+            \begin{onlyenv}<1>
+        \includegraphics[width=.3\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_aum_cut.pdf}
+            \end{onlyenv}%
+            \begin{onlyenv}<2>
+                \includegraphics[width=.3\textwidth, clip, trim={7cm 0cm 3cm 30cm}]{../chapters/images/lowest_aum_cut.pdf}
+            \end{onlyenv}%
+            \begin{onlyenv}<3->
+            \includegraphics[width=.3\textwidth, clip, trim={0cm 0cm 0cm 12cm}]{../chapters/images/lowest_aum_cut.pdf}
+            \end{onlyenv}%
+        \\
+    \end{tabular}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -672,7 +673,7 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 
 \begin{frame}{Peerannot library}{Handle crowdsourced data in classification}
     \begin{itemize}
-        \item Python library for small and large crowdsourced datasets \\
+        \item Python library for small and large crowdsourced datasets
         \begin{center} \texttt{pip install peerannot}\end{center}
         \item Documentation available at: \url{https://peerannot.github.io}
     \end{itemize}
@@ -680,6 +681,22 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
         \includegraphics[width=\textwidth]{./images/peerannot_web.png}
     \end{center}
 \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Peerannot library}{Comparison with existing library CrowdKit}
+    \begin{itemize}[itemsep=10pt]
+        \item \textbf{Handle large datasets}: we implemented on-the-fly queries to avoid storing all data in memory (json data format)
+        \item<2-> CLI (Command Line Interface) for \textbf{efficient pipelines running jobs}
+        \item <3-> \textbf{More identification metrics} and aggregation strategies for classification
+        \item <4-> \textbf{Seamless integration} with \texttt{PyTorch} pipelines:
+        \begin{itemize}
+            \item[$\bullet$] directly train \texttt{Torchvision} classifiers on the data
+            \item[$\bullet$] keep the same framework end-to-end
+            \item[$\bullet$] support top-$k$ and calibration metrics at evaluation time
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Crowdsourcing in large scale: the case of Pl@ntNet}
 
@@ -733,7 +750,7 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Pl@ntNet aggregation strategy}{Examples}
+\begin{frame}{Pl@ntNet aggregation strategy}{Examples with $K=3$}
     \begin{onlyenv}<1>
         Initial setting
         \begin{columns}
@@ -830,31 +847,43 @@ Probabilistic model $\longrightarrow$ Likelihood (to maximize via the Expectatio
 \textbf{Why?}
 \begin{itemize}
     \item More data
-    \item Could correct non-xpert users
+    \item Could correct non-expert users
     \item Could invalidate bad quality observation
 \end{itemize}
 \pause
 \vspace{2cm}
 \textbf{Main danger}
 \begin{itemize}
-    \item Redundancy: users are already guided by AI predictions
+    \item Model collapse\footfullcite{shumailov2024ai}: users are already guided by AI predictions
 \end{itemize}
-
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Strategies to integrate the AI vote}{}
 \begin{itemize}
-    \item AI \textbf{as worker}: naive integration
-    \item AI \textbf{fixed weight}: weight=1.7 to invalidate two new users by $<\theta_{\text{conf}}$
-    \item AI \textbf{invalidating}: fixed weight but can only invalidate observations
-    \item AI \textbf{confident}: fixed weight on data with $\mathbb{P}(\text{predicted species}) > \theta_{\text{score}}$
+    \item<1-> AI \textbf{as worker}: naive integration
+    \item<2-> AI \textbf{fixed weight:}
+    \begin{itemize}
+        \item[$\bullet$]weight fixed to $1.7$
+        \item[$\bullet$]can invalidate two new users but is not self-validating
+    \end{itemize}
+    \item<3-> AI \textbf{invalidating:}
+     \begin{itemize}
+        \item[$\bullet$]weight fixed to $1.7$
+        \item[$\bullet$]can only invalidate observation
+    \end{itemize}
+    \item<4-> AI \textbf{confident:}
+    \begin{itemize}
+        \item[$\bullet$]weight fixed to $1.7$
+        \item[$\bullet$]can participate if confidence in prediction high enough ($\theta_{\text{score}}$)
+    \end{itemize}
 \end{itemize}
-\pause
-\vspace{1cm}
+\visible<5>{
+\vspace{.5cm}
 \begin{center}
 $\Longrightarrow$ \textcolor{red}{confident AI with $\theta_{\text{score}}=0.7$ performs best\dots \\ but invalidating AI could be preferred for safety} $\Longleftarrow$
 \end{center}
+}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -875,7 +904,7 @@ $\Longrightarrow$ \textcolor{red}{confident AI with $\theta_{\text{score}}=0.7$ 
 \textbf{Perspectives:}
     \begin{itemize}
         \item Need for better data collection: \textbf{recommendation system}
-        \item Extend the library for \textbf{multiclass} classification and \textbf{regression}
+        \item Extend the library for \textbf{multilabel} classification and \textbf{regression}
     \end{itemize}
     \pause
     \begin{flushright}

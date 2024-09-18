@@ -175,4 +175,43 @@
     \footnotesize
     \printbibliography
 \end{frame}
+
+\appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Pl@ntNet aggregation strategy}{Weight function}
+\[f(n_j)=n_j^\alpha -n_j^\beta + \gamma \text{ with }\begin{cases} \alpha&=0.5 \\ \beta &=0.2 \\ \gamma&\simeq 0.74\end{cases}\]
+
+\begin{center}
+    \includegraphics[width=.6\textwidth]{../chapters/images_plantnet/weight_function.pdf}
+\end{center}
+
+\begin{itemize}
+    \item With 8 identified species one becomes self-validating
+    \item<2> But observations can be invalidated at any time in the future
+\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Comparison with Entropy}
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \textbf{CIFAR-10H}
+        \begin{center}
+            \includegraphics[width=\textwidth]{../chapters/images/scatter_entropy_vs_waum_CIFAR-10H.pdf}
+        \end{center}
+    \end{column}
+    \begin{column}{.5\textwidth}
+        \textbf{LabelMe}
+        \begin{center}
+            \includegraphics[width=\textwidth]{../chapters/images/scatter_entropy_vs_waum_LabelMe.pdf}
+        \end{center}
+    \end{column}
+\end{columns}
+\vspace{.5cm}
+\begin{itemize}
+  \item Entropy is irrelevant with few votes per task
+\end{itemize}
+\end{frame}
+
 \end{document}
